@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import QRCode from 'qrcode'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { Button } from '@/components/ui/button'
-import { Lock, Upload, FileText, Type, CheckCircle, AlertCircle, X, Download } from 'lucide-react'
+import { Lock, Upload, FileText, Type, CheckCircle, AlertCircle, X, Download, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { encryptData, generateFileCommitment, fileToUint8Array, generateEncryptionKey, generateHash } from '@/lib/crypto-utils'
 
@@ -27,6 +27,7 @@ export default function CreateIDPage() {
   const [qrDataUrl, setQrDataUrl] = useState<string>('')
   const [error, setError] = useState<string>('')
   const [creationComplete, setCreationComplete] = useState(false)
+  const [userInfo, setUserInfo] = useState<{ photo?: string; documents: string[]; notes: string[] }>({ documents: [], notes: [] })
 
   if (!isConnected || !address) {
     return (
@@ -64,13 +65,11 @@ export default function CreateIDPage() {
     try {
       setError('')
 
-      // Validate file size
       if (file.size > 50 * 1024 * 1024) {
         setError('File exceeds 50MB limit')
         return
       }
 
-      // Validate file type
       if (type === 'photo' && !file.type.startsWith('image/')) {
         setError('Photo must be an image file')
         return
@@ -82,6 +81,16 @@ export default function CreateIDPage() {
 
       const data = await fileToUint8Array(file)
       setInputs([...inputs, { type, name: file.name, data }])
+
+      if (type === 'photo') {
+        const reader = new FileReader()
+        reader.onload = (event) => {
+          setUserInfo(prev => ({ ...prev, photo: event.target?.result as string }))
+        }
+        reader.readAsDataURL(file)
+      } else if (type === 'document') {
+        setUserInfo(prev => ({ ...prev, documents: [...prev.documents, file.name] }))
+      }
     } catch (err) {
       setError('Failed to read file')
       console.error('[v0] File read error:', err)
@@ -95,11 +104,22 @@ export default function CreateIDPage() {
     }
     setError('')
     setInputs([...inputs, { type: 'text', name: `Text entry ${inputs.filter(i => i.type === 'text').length + 1}`, data: textInput.trim() }])
+    setUserInfo(prev => ({ ...prev, notes: [...prev.notes, textInput.trim()] }))
     setTextInput('')
   }
 
   const handleRemoveInput = (index: number) => {
+    const removed = inputs[index]
     setInputs(inputs.filter((_, i) => i !== index))
+    
+    if (removed.type === 'photo') {
+      setUserInfo(prev => ({ ...prev, photo: undefined }))
+    } else if (removed.type === 'document') {
+      setUserInfo(prev => ({ ...prev, documents: prev.documents.filter(d => d !== removed.name) }))
+    } else if (removed.type === 'text') {
+      setUserInfo(prev => ({ ...prev, notes: prev.notes.filter(n => n !== removed.data) }))
+    }
+    
     setError('')
   }
 
@@ -113,10 +133,8 @@ export default function CreateIDPage() {
     setError('')
 
     try {
-      // Generate encryption key from wallet address
       const encryptionKey = await generateEncryptionKey(address || 'default')
 
-      // Encrypt all inputs
       const encryptedInputs: InputMaterial[] = []
       for (const input of inputs) {
         let dataToEncrypt: Uint8Array
@@ -130,34 +148,40 @@ export default function CreateIDPage() {
         encryptedInputs.push({ ...input, encrypted, data: new Uint8Array() })
       }
 
-      // Create combined bundle for commitment
       const bundle = encryptedInputs.map(i => i.encrypted).join('||')
       const bundleData = new TextEncoder().encode(bundle)
       const commitmentHash = await generateHash(bundleData)
       const commitmentDisplay = commitmentHash.slice(0, 16).toUpperCase()
 
-      // Generate QR code
       const qrData = JSON.stringify({
         commitment: commitmentDisplay,
         type: 'shadowid-v1',
         timestamp: new Date().toISOString(),
+        walletAddress: address,
+        userInfo: {
+          hasPhoto: !!userInfo.photo,
+          documentCount: userInfo.documents.length,
+          notesCount: userInfo.notes.length,
+          documentsNames: userInfo.documents,
+          notes: userInfo.notes,
+        },
       })
 
       const qrUrl = await QRCode.toDataURL(qrData, {
         errorCorrectionLevel: 'H',
         type: 'image/png',
-        width: 400,
-        margin: 2,
-        color: { dark: '#ffffff', light: '#000000' },
+        width: 500,
+        margin: 3,
+        color: { dark: '#000000', light: '#ffffff' },
       })
 
       setCommitment(commitmentDisplay)
       setQrDataUrl(qrUrl)
 
-      // Store encrypted data locally
       localStorage.setItem('shadowid-encrypted-bundle', bundle)
       localStorage.setItem('shadowid-commitment', commitmentDisplay)
       localStorage.setItem('shadowid-created-at', new Date().toISOString())
+      localStorage.setItem('shadowid-user-info', JSON.stringify(userInfo))
 
       setCreationComplete(true)
     } catch (err) {
@@ -186,20 +210,37 @@ export default function CreateIDPage() {
             </div>
             <span className="text-lg font-bold">ShadowID</span>
           </Link>
-          <Link href="/dashboard">
-            <Button variant="outline" size="sm" className="rounded-full">
-              Dashboard
-            </Button>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/dashboard">
+              <Button variant="outline" size="sm" className="rounded-full">
+                Dashboard
+              </Button>
+            </Link>
+            <WalletMultiButton />
+          </div>
         </div>
       </nav>
 
       <main className="pt-20 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl">
+          {/* Back Button - Positioned at top with clear spacing */}
+          <div className="mb-8">
+            <Link href="/dashboard">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="rounded-lg border-blue-500/40 text-blue-600 hover:bg-blue-500/10 hover:border-blue-500/60 font-medium flex items-center gap-2 transition-all"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Dashboard
+              </Button>
+            </Link>
+          </div>
+
           {/* Header */}
           <div className="mb-12">
-            <h1 className="text-3xl font-bold tracking-tight mb-2">Create ShadowID</h1>
-            <p className="text-muted-foreground">Private identity creation using zero-knowledge guarantees</p>
+            <h1 className="text-4xl font-bold tracking-tight mb-3">Create ShadowID</h1>
+            <p className="text-lg text-muted-foreground">Private identity creation using zero-knowledge guarantees</p>
           </div>
 
           {!creationComplete ? (
@@ -338,7 +379,7 @@ export default function CreateIDPage() {
                 </div>
               </div>
 
-              <div className="rounded-lg border border-border bg-card p-8 space-y-6">
+              <div className="rounded-lg border border-border bg-card p-8 space-y-8">
                 {/* Encryption Confirmation */}
                 <div>
                   <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-3">Status</p>
@@ -346,43 +387,90 @@ export default function CreateIDPage() {
                 </div>
 
                 {/* Commitment Display */}
-                <div className="border-t border-border/50 pt-6">
-                  <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-3">Identity Commitment</p>
-                  <div className="bg-muted/20 rounded-lg p-4 border border-border/30">
-                    <p className="font-mono font-bold text-lg text-accent break-all">{commitment}</p>
+                <div className="border-t border-border/50 pt-8">
+                  <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-4">Identity Commitment</p>
+                  <div className="bg-muted/20 rounded-lg p-6 border border-border/30">
+                    <p className="font-mono font-bold text-xl text-accent break-all leading-relaxed">{commitment}</p>
                   </div>
-                  <p className="text-xs text-muted-foreground/70 mt-2">This commitment is what will be registered and verified later. It contains no identity data.</p>
+                  <p className="text-xs text-muted-foreground/70 mt-3">This commitment is what will be registered and verified later. It contains no identity data.</p>
+                </div>
+
+                {/* User Information Summary */}
+                <div className="border-t border-border/50 pt-8">
+                  <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-4">Identity Contents Summary</p>
+                  <div className="grid grid-cols-3 gap-4 bg-muted/10 rounded-lg p-4 border border-border/20">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-accent">{userInfo.photo ? '✓' : '–'}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Photo</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-accent">{userInfo.documents.length}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Document{userInfo.documents.length !== 1 ? 's' : ''}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-accent">{userInfo.notes.length}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Note{userInfo.notes.length !== 1 ? 's' : ''}</p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* QR Code Display */}
                 {qrDataUrl && (
-                  <div className="border-t border-border/50 pt-6">
-                    <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-4">Verification QR Code</p>
-                    <div className="flex justify-center bg-muted/20 rounded-lg p-4 border border-border/30">
-                      <img src={qrDataUrl} alt="ShadowID QR Code" className="w-64 h-64" />
+                  <div className="border-t border-border/50 pt-8">
+                    <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-6">Verification QR Code</p>
+                    <div className="flex flex-col items-center">
+                      <div className="bg-white rounded-lg p-6 border-4 border-accent/20 shadow-lg">
+                        <img 
+                          src={qrDataUrl} 
+                          alt="ShadowID QR Code" 
+                          className="w-72 h-72"
+                          style={{ imageRendering: 'crisp-edges' }}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground/70 mt-6 text-center max-w-xl">
+                        Share this QR code to allow others verify claims without revealing identity details. When scanned, it displays your identity information summary and commitment.
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground/70 mt-3">Share this QR code to allow others verify claims without revealing identity details.</p>
-                    <Button
-                      onClick={downloadQR}
-                      variant="outline"
-                      className="w-full mt-3 rounded-lg"
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Download QR Code
-                    </Button>
+
+                    {/* QR Code Download */}
+                    <div className="mt-6 flex gap-3">
+                      <Button
+                        onClick={downloadQR}
+                        variant="outline"
+                        className="flex-1 rounded-lg"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download QR Code (PNG)
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          const qrText = `ShadowID Commitment: ${commitment}\n\nUser Information:\n- Photo: ${userInfo.photo ? 'Yes' : 'No'}\n- Documents: ${userInfo.documents.length}\n- Notes: ${userInfo.notes.length}`
+                          navigator.clipboard.writeText(qrText)
+                          alert('QR information copied to clipboard')
+                        }}
+                        variant="outline"
+                        className="flex-1 rounded-lg"
+                      >
+                        Copy QR Data
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
 
-              {/* Navigation */}
-              <div className="flex gap-3">
+              {/* Navigation - Positioned at bottom without overlay */}
+              <div className="flex gap-3 pt-6 border-t border-border/50">
                 <Link href="/dashboard" className="flex-1">
-                  <Button variant="outline" className="w-full rounded-lg">
+                  <Button 
+                    variant="outline" 
+                    className="w-full rounded-lg border-blue-500/40 text-blue-600 hover:bg-blue-500/10 hover:border-blue-500/60 font-medium flex items-center justify-center gap-2"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
                     Back to Dashboard
                   </Button>
                 </Link>
                 <Link href="/qr-codes" className="flex-1">
-                  <Button className="w-full rounded-lg bg-accent hover:bg-accent/90 text-accent-foreground">
+                  <Button className="w-full rounded-lg bg-accent hover:bg-accent/90 text-accent-foreground font-medium">
                     View All QR Codes
                   </Button>
                 </Link>
