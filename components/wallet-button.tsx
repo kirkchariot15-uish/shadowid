@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import '@provablehq/aleo-wallet-adaptor-react-ui/dist/styles.css';
 
 // Dynamically import WalletMultiButton with SSR disabled so the Aleo adapter
 // package is never loaded during static prerendering.
