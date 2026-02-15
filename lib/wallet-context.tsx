@@ -7,7 +7,10 @@ interface WalletContextType {
   setIsWalletConnected: (connected: boolean) => void
 }
 
-const WalletContext = createContext<WalletContextType | undefined>(undefined)
+const WalletContext = createContext<WalletContextType>({
+  isWalletConnected: false,
+  setIsWalletConnected: () => {},
+})
 
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [isWalletConnected, setIsWalletConnected] = useState(false)
@@ -20,9 +23,5 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 }
 
 export function useWallet() {
-  const context = useContext(WalletContext)
-  if (context === undefined) {
-    throw new Error('useWallet must be used within a WalletProvider')
-  }
-  return context
+  return useContext(WalletContext)
 }
