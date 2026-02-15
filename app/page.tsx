@@ -64,7 +64,7 @@ export default function Page() {
               <div className="relative w-full max-w-md">
                 {/* Physical card replica */}
                 <div className={`relative rounded-2xl transition-all duration-300 ${
-                  isWalletConnected
+                  isConnected
                     ? 'bg-gradient-to-br from-slate-800 via-slate-850 to-slate-900 border border-slate-700/60 shadow-2xl'
                     : 'bg-gradient-to-br from-card to-card border border-border/60 shadow-lg'
                 }`}>
@@ -84,18 +84,18 @@ export default function Page() {
                           Private Identity Credential
                         </p>
                         <h3 className={`text-2xl font-black transition-colors ${
-                          isWalletConnected ? 'text-foreground' : 'text-muted-foreground/60'
+                          isConnected ? 'text-foreground' : 'text-muted-foreground/60'
                         }`}>
                           ShadowID
                         </h3>
                       </div>
                       <div className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${
-                        isWalletConnected 
+                        isConnected 
                           ? 'bg-accent/20 border border-accent/40' 
                           : 'bg-muted/20 border border-border/40'
                       }`}>
                         <div className={`text-xs font-bold ${
-                          isWalletConnected ? 'text-accent' : 'text-muted-foreground/40'
+                          isConnected ? 'text-accent' : 'text-muted-foreground/40'
                         }`}>
                           σ
                         </div>
@@ -104,19 +104,19 @@ export default function Page() {
 
                     {/* Divider */}
                     <div className={`h-px transition-colors ${
-                      isWalletConnected ? 'bg-slate-700/50' : 'bg-border/30'
+                      isConnected ? 'bg-slate-700/50' : 'bg-border/30'
                     }`} />
 
                     {/* Avatar Placeholder & Main Identity */}
                     <div className="flex items-center gap-6">
                       {/* Silhouetted Avatar */}
                       <div className={`flex h-20 w-20 items-center justify-center rounded-lg flex-shrink-0 transition-colors ${
-                        isWalletConnected
+                        isConnected
                           ? 'bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/30'
                           : 'bg-muted/20 border border-border/30'
                       }`}>
                         <svg className={`h-12 w-12 transition-colors ${
-                          isWalletConnected ? 'text-accent/60' : 'text-muted-foreground/30'
+                          isConnected ? 'text-accent/60' : 'text-muted-foreground/30'
                         }`} fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                         </svg>
@@ -126,77 +126,77 @@ export default function Page() {
                       <div className="flex-1 space-y-2">
                         <div>
                           <p className={`text-xs uppercase tracking-widest font-semibold mb-1 transition-colors ${
-                            isWalletConnected ? 'text-accent/60' : 'text-muted-foreground/40'
+                            isConnected ? 'text-accent/60' : 'text-muted-foreground/40'
                           }`}>
                             Identity ID
                           </p>
                           <p className={`text-lg font-mono font-bold tracking-wider transition-colors ${
-                            isWalletConnected ? 'text-accent' : 'text-muted-foreground/40'
+                            isConnected ? 'text-accent' : 'text-muted-foreground/40'
                           }`}>
-                            {isWalletConnected ? '0x38F2E4' : '\u2022\u2022\u2022\u2022\u2022\u2022'}
+                            {isConnected ? '0x38F2E4' : '\u2022\u2022\u2022\u2022\u2022\u2022'}
                           </p>
                         </div>
                         <p className={`text-xs transition-colors ${
-                          isWalletConnected ? 'text-muted-foreground/70' : 'text-muted-foreground/40'
+                          isConnected ? 'text-muted-foreground/70' : 'text-muted-foreground/40'
                         }`}>
-                          Status: {isWalletConnected ? 'Active' : 'Inactive'}
+                          Status: {isConnected ? 'Active' : 'Inactive'}
                         </p>
                       </div>
                     </div>
 
                     {/* Divider */}
                     <div className={`h-px transition-colors ${
-                      isWalletConnected ? 'bg-slate-700/50' : 'bg-border/30'
+                      isConnected ? 'bg-slate-700/50' : 'bg-border/30'
                     }`} />
 
                     {/* Footer Metadata */}
                     <div className="grid grid-cols-3 gap-4 text-center">
                       <div>
                         <p className={`text-xs uppercase tracking-widest font-semibold mb-1 transition-colors ${
-                          isWalletConnected ? 'text-muted-foreground/70' : 'text-muted-foreground/40'
+                          isConnected ? 'text-muted-foreground/70' : 'text-muted-foreground/40'
                         }`}>
                           Network
                         </p>
                         <p className={`text-sm font-bold transition-colors ${
-                          isWalletConnected ? 'text-foreground' : 'text-muted-foreground/40'
+                          isConnected ? 'text-foreground' : 'text-muted-foreground/40'
                         }`}>
-                          {isWalletConnected ? 'Aleo' : '\u2014'}
+                          {isConnected ? 'Aleo' : '\u2014'}
                         </p>
                       </div>
                       <div>
                         <p className={`text-xs uppercase tracking-widest font-semibold mb-1 transition-colors ${
-                          isWalletConnected ? 'text-muted-foreground/70' : 'text-muted-foreground/40'
+                          isConnected ? 'text-muted-foreground/70' : 'text-muted-foreground/40'
                         }`}>
                           Mode
                         </p>
                         <p className={`text-sm font-bold transition-colors ${
-                          isWalletConnected ? 'text-accent' : 'text-muted-foreground/40'
+                          isConnected ? 'text-accent' : 'text-muted-foreground/40'
                         }`}>
-                          {isWalletConnected ? 'Private' : '\u2014'}
+                          {isConnected ? 'Private' : '\u2014'}
                         </p>
                       </div>
                       <div>
                         <p className={`text-xs uppercase tracking-widest font-semibold mb-1 transition-colors ${
-                          isWalletConnected ? 'text-muted-foreground/70' : 'text-muted-foreground/40'
+                          isConnected ? 'text-muted-foreground/70' : 'text-muted-foreground/40'
                         }`}>
                           Verification
                         </p>
                         <p className={`text-sm font-bold transition-colors ${
-                          isWalletConnected ? 'text-accent' : 'text-muted-foreground/40'
+                          isConnected ? 'text-accent' : 'text-muted-foreground/40'
                         }`}>
-                          {isWalletConnected ? 'ZK' : '\u2014'}
+                          {isConnected ? 'ZK' : '\u2014'}
                         </p>
                       </div>
                     </div>
 
                     {/* Status Note */}
                     <div className={`pt-4 border-t transition-colors ${
-                      isWalletConnected ? 'border-slate-700/50' : 'border-border/30'
+                      isConnected ? 'border-slate-700/50' : 'border-border/30'
                     }`}>
                       <p className={`text-xs text-center transition-colors ${
-                        isWalletConnected ? 'text-muted-foreground/60' : 'text-muted-foreground/40'
+                        isConnected ? 'text-muted-foreground/60' : 'text-muted-foreground/40'
                       }`}>
-                        {isWalletConnected ? 'Encryption active' : 'Connect a wallet to activate identity features'}
+                        {isConnected ? 'Encryption active' : 'Connect a wallet to activate identity features'}
                       </p>
                     </div>
                   </div>
@@ -216,26 +216,26 @@ export default function Page() {
               {/* Prove facts */}
               <div>
                 <p className="text-sm font-semibold uppercase tracking-widest mb-5">
-                  {isWalletConnected ? 'You can prove:' : 'Provable attributes'}
+                  {isConnected ? 'You can prove:' : 'Provable attributes'}
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   {['Over 18', 'Verified Contributor', 'DAO Member', 'Credential Holder'].map((fact) => (
                     <div
                       key={fact}
                       className={`flex items-center gap-2 rounded-lg border px-4 py-3 transition-all ${
-                        isWalletConnected
+                        isConnected
                           ? 'border-accent/30 bg-accent/10'
                           : 'border-border/50 bg-muted/20 opacity-50'
                       }`}
                     >
                       <div
                         className={`h-2 w-2 rounded-full flex-shrink-0 ${
-                          isWalletConnected ? 'bg-accent' : 'bg-muted-foreground/30'
+                          isConnected ? 'bg-accent' : 'bg-muted-foreground/30'
                         }`}
                       />
                       <span
                         className={`text-sm font-medium ${
-                          isWalletConnected ? 'text-foreground' : 'text-muted-foreground/50'
+                          isConnected ? 'text-foreground' : 'text-muted-foreground/50'
                         }`}
                       >
                         {fact}
@@ -246,7 +246,7 @@ export default function Page() {
               </div>
 
               {/* Wallet requirement message */}
-              {!isWalletConnected && (
+              {!isConnected && (
                 <div className="mt-8 p-4 rounded-lg border border-border/50 bg-muted/10">
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     Connect your Aleo wallet to initialize your private identity layer.
@@ -261,23 +261,18 @@ export default function Page() {
       {/* CTA Section */}
       <section className="relative py-16 px-4 sm:px-6 lg:px-8 border-t border-border">
         <div className="mx-auto max-w-2xl text-center">
-          <Button
-            onClick={() => {
-              if (!isWalletConnected) {
-                setIsWalletConnected(true)
-              }
-            }}
-            disabled={isConnected}
-            size="lg"
-            className={`rounded-full font-semibold transition-all ${
-              isConnected
-                ? 'bg-accent/50 hover:bg-accent/50 text-accent-foreground cursor-default'
-                : 'bg-accent hover:bg-accent/90 text-accent-foreground'
-            }`}
-          >
-            <Wallet className="h-4 w-4 mr-2" />
-            {isConnected ? 'Wallet Connected – Private Mode Active' : 'Connect Wallet to Access Identity Features'}
-          </Button>
+          {isConnected ? (
+            <Button
+              disabled
+              size="lg"
+              className="rounded-full font-semibold bg-accent/50 text-accent-foreground cursor-default"
+            >
+              <Wallet className="h-4 w-4 mr-2" />
+              Wallet Connected – Private Mode Active
+            </Button>
+          ) : (
+            <WalletMultiButton />
+          )}
           <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
             No personal info is collected. Zero-knowledge privacy preserved.
           </p>
