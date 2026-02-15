@@ -45,29 +45,9 @@ export default function Page() {
             Your Identity,{' '}
             <span className="text-accent">Not Your Data</span>
           </h1>
-          <p className="text-xl text-muted-foreground text-balance mb-8 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl text-muted-foreground text-balance max-w-2xl mx-auto leading-relaxed">
             ShadowID is a self-sovereign identity layer that lets you prove who you are without revealing your personal information or activity history.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              onClick={() => {
-                if (!isWalletConnected) {
-                  setIsWalletConnected(true)
-                }
-              }}
-              size="lg"
-              className="rounded-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
-            >
-              {isWalletConnected ? 'Generate Identity' : 'Get Started'}
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="rounded-full border-accent/50 text-foreground hover:border-accent hover:bg-accent/5"
-            >
-              Learn More
-            </Button>
-          </div>
         </div>
       </section>
 
@@ -265,12 +245,38 @@ export default function Page() {
               {!isWalletConnected && (
                 <div className="mt-8 p-4 rounded-lg border border-border/50 bg-muted/10">
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Connect a wallet to activate identity features. Your private identity will be initialized on the Aleo network.
+                    Connect your Aleo wallet to initialize your private identity layer.
                   </p>
                 </div>
               )}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="relative py-16 px-4 sm:px-6 lg:px-8 border-t border-border">
+        <div className="mx-auto max-w-2xl text-center">
+          <Button
+            onClick={() => {
+              if (!isWalletConnected) {
+                setIsWalletConnected(true)
+              }
+            }}
+            disabled={isWalletConnected}
+            size="lg"
+            className={`rounded-full font-semibold transition-all ${
+              isWalletConnected
+                ? 'bg-accent/50 hover:bg-accent/50 text-accent-foreground cursor-default'
+                : 'bg-accent hover:bg-accent/90 text-accent-foreground'
+            }`}
+          >
+            <Wallet className="h-4 w-4 mr-2" />
+            {isWalletConnected ? 'Wallet Connected – Private Mode Active' : 'Connect Wallet to Access Identity Features'}
+          </Button>
+          <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
+            No personal info is collected. Zero-knowledge privacy preserved.
+          </p>
         </div>
       </section>
 
@@ -397,18 +403,18 @@ export default function Page() {
       )}
 
       {/* Problem Section */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8 border-t border-border">
+      <section className="relative py-24 px-4 sm:px-6 lg:px-8 border-t border-border">
         <div className="mx-auto max-w-4xl">
-          <div className="grid md:grid-cols-2 gap-12">
+          <div className="grid md:grid-cols-2 gap-16">
             <div>
-              <h2 className="text-3xl font-bold mb-4">The Problem</h2>
-              <p className="text-muted-foreground leading-relaxed">
+              <h2 className="text-3xl font-bold mb-6 text-foreground">The Problem</h2>
+              <p className="text-muted-foreground leading-relaxed text-balance">
                 Traditional identity systems force a false choice: surrender your data to institutions, or remain anonymous and unverifiable. This enables surveillance, discrimination, and puts dissidents, journalists, and activists at existential risk.
               </p>
             </div>
             <div>
-              <h2 className="text-3xl font-bold mb-4">The Solution</h2>
-              <p className="text-muted-foreground leading-relaxed">
+              <h2 className="text-3xl font-bold mb-6 text-foreground">The Solution</h2>
+              <p className="text-muted-foreground leading-relaxed text-balance">
                 ShadowID uses zero-knowledge cryptography to let you prove specific claims without revealing unnecessary information. Built on Aleo, you maintain complete custody. No central database. No breach possible.
               </p>
             </div>
