@@ -1,3 +1,5 @@
+'use client'
+
 import dynamic from 'next/dynamic'
 
 const QRCodesPage = dynamic(() => import('@/components/qr-codes-page'), {
