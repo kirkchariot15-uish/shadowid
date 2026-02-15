@@ -1,13 +1,14 @@
 'use client'
 
-import { useState } from 'react'
-import { useWallet } from '@/lib/wallet-context'
+import { useAleoWallet } from '@/hooks/use-aleo-wallet'
+import { WalletMultiButton } from '@/components/wallet-button'
 import { Button } from '@/components/ui/button'
 import { Lock, Eye, Users, Shield, Wallet, LockOpen, X } from 'lucide-react'
 import Link from 'next/link'
+import { useState } from 'react'
 
 export default function Page() {
-  const { isWalletConnected, setIsWalletConnected } = useWallet()
+  const { isConnected, address } = useAleoWallet()
   const [showPrivacyGuarantees, setShowPrivacyGuarantees] = useState(false)
 
   return (
@@ -22,7 +23,7 @@ export default function Page() {
             <span className="text-lg font-bold">ShadowID</span>
           </div>
           <div className="flex items-center gap-3">
-            {isWalletConnected && (
+            {isConnected && (
               <Link href="/dashboard">
                 <Button
                   variant="outline"
@@ -33,19 +34,7 @@ export default function Page() {
                 </Button>
               </Link>
             )}
-            <Button
-              onClick={() => setIsWalletConnected(!isWalletConnected)}
-              variant={isWalletConnected ? 'default' : 'outline'}
-              size="sm"
-              className={`rounded-full font-semibold transition-all ${
-                isWalletConnected
-                  ? 'bg-accent hover:bg-accent/90 text-accent-foreground border-accent'
-                  : 'border-accent/50 text-foreground hover:border-accent hover:bg-accent hover:text-accent-foreground'
-              }`}
-            >
-              <Wallet className="h-4 w-4 mr-2" />
-              {isWalletConnected ? 'Wallet Connected' : 'Connect Wallet'}
-            </Button>
+            <WalletMultiButton />
           </div>
         </div>
       </nav>
@@ -90,7 +79,7 @@ export default function Page() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <p className={`text-xs uppercase tracking-widest font-semibold mb-1 transition-colors ${
-                          isWalletConnected ? 'text-accent/70' : 'text-muted-foreground/50'
+                          isConnected ? 'text-accent/70' : 'text-muted-foreground/50'
                         }`}>
                           Private Identity Credential
                         </p>
@@ -278,16 +267,16 @@ export default function Page() {
                 setIsWalletConnected(true)
               }
             }}
-            disabled={isWalletConnected}
+            disabled={isConnected}
             size="lg"
             className={`rounded-full font-semibold transition-all ${
-              isWalletConnected
+              isConnected
                 ? 'bg-accent/50 hover:bg-accent/50 text-accent-foreground cursor-default'
                 : 'bg-accent hover:bg-accent/90 text-accent-foreground'
             }`}
           >
             <Wallet className="h-4 w-4 mr-2" />
-            {isWalletConnected ? 'Wallet Connected – Private Mode Active' : 'Connect Wallet to Access Identity Features'}
+            {isConnected ? 'Wallet Connected – Private Mode Active' : 'Connect Wallet to Access Identity Features'}
           </Button>
           <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
             No personal info is collected. Zero-knowledge privacy preserved.
@@ -296,7 +285,7 @@ export default function Page() {
       </section>
 
       {/* Identity Layer Initialized Section */}
-      {isWalletConnected && (
+            {isConnected && (
         <section className="relative py-16 px-4 sm:px-6 lg:px-8 border-t border-border bg-accent/3">
           <div className="mx-auto max-w-4xl">
             <div className="flex items-center gap-3 mb-12">
@@ -536,7 +525,7 @@ export default function Page() {
         <div className="mx-auto max-w-4xl text-center">
           <h2 className="text-4xl font-bold mb-4">Take Control of Your Identity</h2>
           <p className="text-lg text-muted-foreground">
-            {isWalletConnected ? 'Your private identity layer is initialized.' : 'Private. Verifiable. Yours.'}
+            {isConnected ? 'Your private identity layer is initialized.' : 'Private. Verifiable. Yours.'}
           </p>
         </div>
       </section>
