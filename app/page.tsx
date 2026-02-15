@@ -377,9 +377,6 @@ export default function Page() {
     </div>
   )
 }
-
-            {/* Card Display */}
-            <div className="flex justify-center lg:justify-end order-2 lg:order-1">
               <div className="relative w-full max-w-md">
                 {/* Enhanced glow */}
                 <div className="absolute -inset-6 bg-gradient-to-r from-accent/40 to-accent/20 blur-2xl rounded-3xl opacity-40 animate-pulse"></div>
