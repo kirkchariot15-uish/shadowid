@@ -377,8 +377,7 @@ export default function Page() {
     </div>
   )
 }
-        <div className="mx-auto max-w-5xl">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+
             {/* Card Display */}
             <div className="flex justify-center lg:justify-end order-2 lg:order-1">
               <div className="relative w-full max-w-md">
