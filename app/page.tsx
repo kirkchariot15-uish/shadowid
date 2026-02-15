@@ -57,77 +57,76 @@ export default function Page() {
       </section>
 
       {/* ShadowID Card Section */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8 border-t border-border bg-gradient-to-b from-secondary/5 to-background">
-        <div className="mx-auto max-w-4xl">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+      <section className="relative py-24 px-4 sm:px-6 lg:px-8 border-t border-border">
+        <div className="mx-auto max-w-5xl">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Card Display */}
-            <div className="flex justify-center md:justify-end">
-              <div className="relative w-full max-w-sm">
-                {/* Glow effect background */}
-                <div className="absolute inset-0 bg-accent/20 blur-3xl rounded-2xl opacity-30 animate-pulse"></div>
+            <div className="flex justify-center lg:justify-end order-2 lg:order-1">
+              <div className="relative w-full max-w-md">
+                {/* Enhanced glow */}
+                <div className="absolute -inset-6 bg-gradient-to-r from-accent/40 to-accent/20 blur-2xl rounded-3xl opacity-40 animate-pulse"></div>
                 
                 {/* Card */}
-                <div className="relative bg-gradient-to-br from-card to-secondary border border-accent/20 rounded-2xl p-8 shadow-2xl">
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-8">
+                <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 border border-accent/40 rounded-3xl p-10 shadow-2xl">
+                  {/* Top accent bar */}
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-accent to-transparent rounded-t-3xl"></div>
+
+                  {/* Branding */}
+                  <div className="flex items-center justify-between mb-12">
                     <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Identity Artifact</p>
-                      <h3 className="text-2xl font-bold">ShadowID</h3>
+                      <p className="text-xs text-accent/60 uppercase tracking-widest font-semibold">Private Identity</p>
+                      <h3 className="text-3xl font-black text-foreground mt-1">ShadowID</h3>
                     </div>
-                    <Lock className="h-5 w-5 text-accent" />
+                    <Lock className="h-6 w-6 text-accent/80" />
                   </div>
 
-                  {/* Divider */}
-                  <div className="h-px bg-gradient-to-r from-accent/20 to-transparent mb-6"></div>
+                  {/* Main identifier display - the hero */}
+                  <div className="mb-10 p-6 bg-accent/5 border border-accent/30 rounded-xl">
+                    <p className="text-xs text-accent/70 uppercase tracking-widest font-semibold mb-3">Identity Hash</p>
+                    <p className="text-4xl font-black text-accent tracking-wider font-mono">
+                      σ••••••••
+                    </p>
+                  </div>
 
-                  {/* Identity Info */}
-                  <div className="space-y-4 mb-8">
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Status</p>
-                      <p className="text-sm font-medium text-foreground">Private Identity</p>
+                  {/* Compact metadata */}
+                  <div className="space-y-3 mb-8">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Network</span>
+                      <span className="text-foreground font-semibold">Aleo</span>
                     </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Network</p>
-                      <p className="text-sm font-medium text-foreground">Aleo</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Proof Mode</p>
-                      <p className="text-sm font-medium text-foreground">Zero-Knowledge</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Identifier</p>
-                      <p className="text-sm font-mono font-medium text-accent">**** **** ****</p>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Proof Mode</span>
+                      <span className="text-accent font-semibold">Zero-Knowledge</span>
                     </div>
                   </div>
 
-                  {/* Footer */}
-                  <div className="h-px bg-gradient-to-r from-transparent to-accent/20 mb-4"></div>
-                  <p className="text-xs text-muted-foreground text-center">No personal data stored · Fully encrypted</p>
+                  {/* Bottom bar */}
+                  <div className="h-px bg-gradient-to-r from-accent/10 to-transparent mb-4"></div>
+                  <p className="text-xs text-muted-foreground/60 text-center">Fully encrypted · No personal data</p>
                 </div>
               </div>
             </div>
 
             {/* Text Content */}
-            <div>
-              <h2 className="text-3xl font-bold mb-4">Your Private Identity Card</h2>
-              <p className="text-muted-foreground leading-relaxed mb-6">
-                ShadowID generates a cryptographic identity artifact—not an account, not a profile. It's a proof primitive that lives with you, encrypted and under your control.
-              </p>
-              <p className="text-muted-foreground leading-relaxed mb-8">
-                You never reveal who you are. Instead, you prove specific claims about yourself using zero-knowledge cryptography. Only the facts you choose to share are verified.
+            <div className="order-1 lg:order-2">
+              <h2 className="text-4xl lg:text-5xl font-black mb-6 text-balance">
+                Your Private Identity Artifact
+              </h2>
+              <p className="text-lg text-muted-foreground leading-relaxed mb-8">
+                No account. No profile. No personal information stored anywhere. ShadowID is a cryptographic identity primitive that lives with you, controlled entirely by your wallet.
               </p>
 
-              {/* Provable Facts */}
+              {/* Prove facts */}
               <div>
-                <p className="text-sm font-semibold text-foreground mb-4">Examples of provable facts:</p>
+                <p className="text-sm font-semibold text-accent uppercase tracking-widest mb-5">You can prove:</p>
                 <div className="grid grid-cols-2 gap-3">
                   {['Over 18', 'Verified Contributor', 'DAO Member', 'Credential Holder'].map((fact) => (
                     <div
                       key={fact}
-                      className="flex items-center gap-2 rounded-lg border border-accent/20 bg-accent/5 px-3 py-2"
+                      className="flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/10 px-4 py-3 hover:border-accent/60 hover:bg-accent/15 transition-colors"
                     >
-                      <div className="h-1.5 w-1.5 rounded-full bg-accent flex-shrink-0"></div>
-                      <span className="text-sm text-foreground">{fact}</span>
+                      <div className="h-2 w-2 rounded-full bg-accent flex-shrink-0"></div>
+                      <span className="text-sm font-medium text-foreground">{fact}</span>
                     </div>
                   ))}
                 </div>
@@ -143,20 +142,14 @@ export default function Page() {
           <div className="grid md:grid-cols-2 gap-12">
             <div>
               <h2 className="text-3xl font-bold mb-4">The Problem</h2>
-              <p className="text-muted-foreground leading-relaxed mb-4">
-                Traditional identity systems require you to choose between trust and privacy. You either hand over all your data to centralized institutions, or you get treated as anonymous and unverifiable.
-              </p>
               <p className="text-muted-foreground leading-relaxed">
-                This creates surveillance, enables discrimination, and puts dissidents, journalists, and privacy-conscious people at risk.
+                Traditional identity systems force a false choice: surrender your data to institutions, or remain anonymous and unverifiable. This enables surveillance, discrimination, and puts dissidents, journalists, and activists at existential risk.
               </p>
             </div>
             <div>
               <h2 className="text-3xl font-bold mb-4">The Solution</h2>
-              <p className="text-muted-foreground leading-relaxed mb-4">
-                ShadowID uses zero-knowledge cryptography to let you prove specific attributes about yourself without revealing unnecessary information. You control your identity. No one—not even ShadowID—holds your data.
-              </p>
               <p className="text-muted-foreground leading-relaxed">
-                Built on Aleo, a privacy-focused blockchain, it enables verification without surveillance. Real identity for a private world.
+                ShadowID uses zero-knowledge cryptography to let you prove specific claims without revealing unnecessary information. Built on Aleo, you maintain complete custody. No central database. No breach possible.
               </p>
             </div>
           </div>
@@ -207,55 +200,51 @@ export default function Page() {
       {/* Principles Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8 border-t border-border bg-secondary/5">
         <div className="mx-auto max-w-4xl">
-          <h2 className="text-3xl font-bold mb-12 text-center">Core Principles</h2>
+          <h2 className="text-3xl font-bold mb-12 text-center">Built on Four Principles</h2>
           <div className="grid md:grid-cols-2 gap-8">
-            {/* Principle 1 */}
             <div className="rounded-lg border border-accent/20 bg-card p-6">
               <div className="flex items-start gap-4">
                 <Lock className="h-6 w-6 text-accent flex-shrink-0 mt-1" />
                 <div>
-                  <h3 className="font-semibold mb-2 text-lg">User-Owned Identity</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    You own your identity. No central authority can revoke, modify, or censor it. Your wallet is your custody.
+                  <h3 className="font-semibold mb-2">User-Owned</h3>
+                  <p className="text-sm text-muted-foreground">
+                    You own your identity. No authority can revoke, modify, or censor it.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Principle 2 */}
             <div className="rounded-lg border border-accent/20 bg-card p-6">
               <div className="flex items-start gap-4">
                 <Eye className="h-6 w-6 text-accent flex-shrink-0 mt-1" />
                 <div>
-                  <h3 className="font-semibold mb-2 text-lg">Zero-Knowledge by Default</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Verification happens without data transfer. Prove claims cryptographically. Share nothing you don't choose to share.
+                  <h3 className="font-semibold mb-2">Zero-Knowledge</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Prove claims cryptographically. Share only what you choose.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Principle 3 */}
             <div className="rounded-lg border border-accent/20 bg-card p-6">
               <div className="flex items-start gap-4">
                 <Users className="h-6 w-6 text-accent flex-shrink-0 mt-1" />
                 <div>
-                  <h3 className="font-semibold mb-2 text-lg">No Centralized Database</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Identity is not stored on servers. It lives with you, encrypted, immutable, and impossible to breach.
+                  <h3 className="font-semibold mb-2">Decentralized</h3>
+                  <p className="text-sm text-muted-foreground">
+                    No central database. Identity lives with you, encrypted and immutable.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Principle 4 */}
             <div className="rounded-lg border border-accent/20 bg-card p-6">
               <div className="flex items-start gap-4">
                 <Shield className="h-6 w-6 text-accent flex-shrink-0 mt-1" />
                 <div>
-                  <h3 className="font-semibold mb-2 text-lg">Safety-First Design</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Built for real-world safety. Journalists, activists, developers, and privacy-conscious people can verify themselves without exposure.
+                  <h3 className="font-semibold mb-2">Safety-First</h3>
+                  <p className="text-sm text-muted-foreground">
+                    For journalists, activists, developers, and anyone requiring real privacy.
                   </p>
                 </div>
               </div>
@@ -267,11 +256,9 @@ export default function Page() {
       {/* CTA Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8 border-t border-border">
         <div className="mx-auto max-w-4xl text-center">
-          <h2 className="text-3xl font-bold mb-4 text-balance">
-            Take Control of Your Identity
-          </h2>
-          <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-            ShadowID is the identity primitive for a private, decentralized future.
+          <h2 className="text-4xl font-bold mb-4">Take Control of Your Identity</h2>
+          <p className="text-lg text-muted-foreground mb-8">
+            Private. Verifiable. Yours.
           </p>
           <Button
             size="lg"
@@ -285,26 +272,16 @@ export default function Page() {
       {/* Footer */}
       <footer className="border-t border-border bg-secondary/5">
         <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start gap-8">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-accent">
-                  <span className="text-xs font-bold text-accent-foreground">σ</span>
-                </div>
-                <span className="font-bold">ShadowID</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-accent">
+                <span className="text-xs font-bold text-accent-foreground">σ</span>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Self-sovereign identity on Aleo
-              </p>
+              <span className="font-bold">ShadowID</span>
             </div>
-            <div className="text-sm text-muted-foreground leading-relaxed">
-              <p>
-                Your privacy is fundamental. ShadowID proves it without compromising it.
-              </p>
-            </div>
-          </div>
-          <div className="mt-8 pt-8 border-t border-border text-xs text-muted-foreground text-center">
-            <p>© 2025 ShadowID. Built for privacy. Built to last.</p>
+            <p className="text-sm text-muted-foreground">
+              © 2025. Built for privacy.
+            </p>
           </div>
         </div>
       </footer>
