@@ -3,46 +3,17 @@
 import { useState } from 'react'
 import { useWallet } from '@/lib/wallet-context'
 import { Button } from '@/components/ui/button'
-import { Lock, Wallet, LockOpen, Copy, CheckCircle, Upload, Eye, EyeOff, FileText, Calendar, LogOut } from 'lucide-react'
+import { Lock, Wallet, LockOpen, Copy, CheckCircle, Calendar, LogOut } from 'lucide-react'
 import Link from 'next/link'
 
 export default function DashboardPage() {
   const { isWalletConnected, setIsWalletConnected } = useWallet()
-  const [revealedAttributes, setRevealedAttributes] = useState<Record<string, boolean>>({})
-  const [uploadedFiles, setUploadedFiles] = useState<Array<{ name: string; size: string; date: string }>>([])
   const [copied, setCopied] = useState(false)
-
-  const attributes = [
-    { key: 'name', label: 'Full Name', masked: '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' },
-    { key: 'role', label: 'Role / Title', masked: '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' },
-    { key: 'credentialType', label: 'Credential Type', masked: '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' },
-  ]
-
-  const toggleAttribute = (key: string) => {
-    setRevealedAttributes(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }))
-  }
 
   const handleCopyID = () => {
     navigator.clipboard.writeText('0x38F2E4')
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
-  }
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.currentTarget.files
-    if (files) {
-      Array.from(files).forEach(file => {
-        const sizeKB = (file.size / 1024).toFixed(2)
-        setUploadedFiles(prev => [...prev, {
-          name: file.name,
-          size: `${sizeKB} KB`,
-          date: new Date().toLocaleDateString()
-        }])
-      })
-    }
   }
 
   if (!isWalletConnected) {
@@ -115,55 +86,40 @@ export default function DashboardPage() {
 
       <main className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
+          {/* Header with Navigation */}
           <div className="mb-12">
             <div className="flex items-center gap-3 mb-4">
               <LockOpen className="h-6 w-6 text-accent" />
               <h1 className="text-4xl font-bold">Private Identity Dashboard</h1>
             </div>
-            <p className="text-lg text-muted-foreground mb-4">Wallet Connected – Private Mode Active</p>
+            <p className="text-lg text-muted-foreground mb-6">{`Wallet Connected \u2013 Private Mode Active`}</p>
             <div className="flex flex-wrap gap-2">
               <Link href="/create-id">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-full font-semibold border-accent/50 text-foreground hover:border-accent hover:bg-accent/5"
-                >
+                <Button variant="outline" size="sm" className="rounded-full font-semibold border-accent/50 text-foreground hover:border-accent hover:bg-accent/5">
                   Create ID
                 </Button>
               </Link>
               <Link href="/qr-codes">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-full font-semibold border-accent/50 text-foreground hover:border-accent hover:bg-accent/5"
-                >
+                <Button variant="outline" size="sm" className="rounded-full font-semibold border-accent/50 text-foreground hover:border-accent hover:bg-accent/5">
                   QR Codes
                 </Button>
               </Link>
               <Link href="/selective-disclosure">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-full font-semibold border-accent/50 text-foreground hover:border-accent hover:bg-accent/5"
-                >
+                <Button variant="outline" size="sm" className="rounded-full font-semibold border-accent/50 text-foreground hover:border-accent hover:bg-accent/5">
                   Selective Disclosure
                 </Button>
               </Link>
             </div>
           </div>
-            <p className="text-lg text-muted-foreground">{`Wallet Connected \u2013 Private Mode Active`}</p>
-          </div>
 
-          {/* Main Card with QR */}
+          {/* ShadowID Card + QR */}
           <div className="mb-16 grid lg:grid-cols-3 gap-8">
-            {/* ShadowID Card */}
             <div className="lg:col-span-2">
               <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-6">Your Identity Credential</h2>
               <div className="relative rounded-2xl bg-gradient-to-br from-slate-800 via-slate-850 to-slate-900 border border-slate-700/60 shadow-2xl p-8 space-y-8">
                 <div className="absolute inset-0 rounded-2xl opacity-30 pointer-events-none" style={{
                   backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)',
                 }} />
-
                 <div className="relative space-y-8">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -188,11 +144,7 @@ export default function DashboardPage() {
                         <p className="text-xs uppercase tracking-widest font-semibold mb-1 text-accent/60">Identity ID</p>
                         <div className="flex items-center gap-2">
                           <p className="text-lg font-mono font-bold tracking-wider text-accent">0x38F2E4</p>
-                          <button
-                            onClick={handleCopyID}
-                            className="p-1 hover:bg-accent/10 rounded transition-colors"
-                            title="Copy ID"
-                          >
+                          <button onClick={handleCopyID} className="p-1 hover:bg-accent/10 rounded transition-colors" title="Copy ID">
                             <Copy className="h-4 w-4 text-muted-foreground/60" />
                           </button>
                         </div>
@@ -228,7 +180,6 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* QR Code Section */}
             <div>
               <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-6">Identity Commitment</h2>
               <div className="rounded-lg border border-border bg-card p-8 flex flex-col items-center text-center space-y-4">
@@ -243,94 +194,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Selective Disclosure Section */}
-          <div className="mb-12">
-            <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-6">Selective Disclosure</h2>
-            <div className="rounded-lg border border-border bg-card p-8">
-              <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
-                Reveal individual attributes locally. Data never leaves your browser. Each attribute can be copied independently.
-              </p>
-              <div className="space-y-4">
-                {attributes.map((attr) => (
-                  <div key={attr.key} className="flex items-center justify-between p-4 rounded-lg border border-border/50 bg-muted/5 hover:bg-muted/10 transition-colors">
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold text-foreground mb-1">{attr.label}</p>
-                      <p className={`text-sm font-mono ${revealedAttributes[attr.key] ? 'text-accent' : 'text-muted-foreground/50'}`}>
-                        {revealedAttributes[attr.key] ? 'Alex Morgan' : attr.masked}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => toggleAttribute(attr.key)}
-                        className="p-2 hover:bg-accent/10 rounded transition-colors"
-                        title={revealedAttributes[attr.key] ? 'Hide' : 'Reveal'}
-                      >
-                        {revealedAttributes[attr.key] ? (
-                          <Eye className="h-4 w-4 text-accent" />
-                        ) : (
-                          <EyeOff className="h-4 w-4 text-muted-foreground/60" />
-                        )}
-                      </button>
-                      <button
-                        className="p-2 hover:bg-accent/10 rounded transition-colors disabled:opacity-50"
-                        disabled={!revealedAttributes[attr.key]}
-                        title="Copy attribute"
-                      >
-                        <Copy className="h-4 w-4 text-muted-foreground/60" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Credential Upload Section */}
-          <div className="mb-12">
-            <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-6">Proof and Credential Storage</h2>
-            <div className="rounded-lg border border-border bg-card p-8">
-              <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
-                Encrypt and store credentials locally for future proof generation. All encryption is client-side. No data is sent on-chain until you generate a zero-knowledge proof.
-              </p>
-              <div className="border-2 border-dashed border-border/50 rounded-lg p-8 mb-8 text-center hover:border-accent/30 transition-colors">
-                <label className="flex flex-col items-center gap-2 cursor-pointer">
-                  <Upload className="h-8 w-8 text-muted-foreground/60" />
-                  <span className="text-sm font-semibold text-foreground">Upload credentials (PDF, Image, Video)</span>
-                  <span className="text-xs text-muted-foreground">Client-side encryption - No storage on-chain</span>
-                  <input
-                    type="file"
-                    multiple
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    accept=".pdf,.png,.jpg,.jpeg,.gif,.mp4,.mov,.webm"
-                  />
-                </label>
-              </div>
-
-              {uploadedFiles.length > 0 && (
-                <div className="space-y-3">
-                  <p className="text-sm font-semibold text-foreground mb-4">Encrypted Files ({uploadedFiles.length})</p>
-                  {uploadedFiles.map((file, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-3 rounded-lg border border-border/50 bg-muted/5">
-                      <div className="flex items-center gap-3 flex-1">
-                        <FileText className="h-4 w-4 text-accent/60" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">{file.name}</p>
-                          <p className="text-xs text-muted-foreground/60">{`${file.size} \u00b7 ${file.date}`}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-accent">
-                        <CheckCircle className="h-4 w-4" />
-                        Encrypted
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Audit and Revocation Section */}
+          {/* Audit Logs */}
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-6">Verification and Audit Logs</h2>
             <div className="rounded-lg border border-border bg-card p-8">
