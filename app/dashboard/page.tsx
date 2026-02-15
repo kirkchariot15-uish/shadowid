@@ -2,7 +2,7 @@
 
 import { useWallet } from '@/lib/wallet-context'
 import { Button } from '@/components/ui/button'
-import { Lock, Wallet, LockOpen, CheckCircle2, AlertCircle, Info } from 'lucide-react'
+import { Lock, Wallet, LockOpen, Shield, Network, Info, Copy, CheckCircle, Circle } from 'lucide-react'
 import Link from 'next/link'
 
 export default function DashboardPage() {
@@ -39,8 +39,8 @@ export default function DashboardPage() {
               <Lock className="h-16 w-16 text-muted-foreground/40" />
             </div>
             <h1 className="text-4xl font-bold mb-4">Dashboard Locked</h1>
-            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Connect your wallet to access your private identity dashboard and manage your zero-knowledge identity layer.
+            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
+              Connect your wallet to access your private identity dashboard. Your zero-knowledge identity layer will be initialized on the Aleo network.
             </p>
             <Button
               onClick={() => setIsWalletConnected(true)}
@@ -74,7 +74,7 @@ export default function DashboardPage() {
             className="rounded-full font-semibold bg-accent hover:bg-accent/90 text-accent-foreground"
           >
             <Wallet className="h-4 w-4 mr-2" />
-            Wallet Connected
+            Disconnect
           </Button>
         </div>
       </nav>
@@ -93,7 +93,7 @@ export default function DashboardPage() {
 
           {/* ShadowID Card */}
           <div className="mb-16">
-            <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-6">Identity Credential</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-6">Your Identity Credential</h2>
             <div className="relative rounded-2xl bg-gradient-to-br from-slate-800 via-slate-850 to-slate-900 border border-slate-700/60 shadow-2xl p-8 space-y-8">
               {/* Subtle texture */}
               <div className="absolute inset-0 rounded-2xl opacity-30 pointer-events-none" style={{
@@ -131,9 +131,17 @@ export default function DashboardPage() {
                       <p className="text-xs uppercase tracking-widest font-semibold mb-1 text-accent/60">
                         Identity ID
                       </p>
-                      <p className="text-lg font-mono font-bold tracking-wider text-accent">0x38F2E4</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-lg font-mono font-bold tracking-wider text-accent">0x38F2E4</p>
+                        <button className="p-1 hover:bg-accent/10 rounded transition-colors">
+                          <Copy className="h-4 w-4 text-muted-foreground/60" />
+                        </button>
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground/70">Status: Active</p>
+                    <p className="text-xs text-muted-foreground/70 flex items-center gap-1">
+                      <CheckCircle className="h-3 w-3 text-accent" />
+                      Status: Active
+                    </p>
                   </div>
                 </div>
 
@@ -147,83 +155,127 @@ export default function DashboardPage() {
                     <p className="text-sm font-bold text-foreground">Aleo</p>
                   </div>
                   <div>
-                    <p className="text-xs uppercase tracking-widest font-semibold mb-1 text-muted-foreground/70">Mode</p>
-                    <p className="text-sm font-bold text-accent">Private</p>
+                    <p className="text-xs uppercase tracking-widest font-semibold mb-1 text-muted-foreground/70">Privacy Mode</p>
+                    <p className="text-sm font-bold text-accent">Active</p>
                   </div>
                   <div>
-                    <p className="text-xs uppercase tracking-widest font-semibold mb-1 text-muted-foreground/70">Verification</p>
-                    <p className="text-sm font-bold text-accent">ZK</p>
+                    <p className="text-xs uppercase tracking-widest font-semibold mb-1 text-muted-foreground/70">Encryption</p>
+                    <p className="text-sm font-bold text-accent">ZK-Protected</p>
                   </div>
                 </div>
 
                 {/* Status */}
                 <div className="pt-4 border-t border-slate-700/50">
-                  <p className="text-xs text-center text-muted-foreground/60">Encryption active · Zero-knowledge protected</p>
+                  <p className="text-xs text-center text-muted-foreground/60">All operations are end-to-end encrypted</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Dashboard Sections */}
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* Verification Status */}
+          {/* Key Information Sections */}
+          <div className="grid md:grid-cols-2 gap-8 mb-8">
+            {/* Privacy Guarantees */}
             <div className="rounded-lg border border-border bg-card p-8">
               <div className="flex items-start gap-4 mb-6">
-                <CheckCircle2 className="h-6 w-6 text-accent/70 flex-shrink-0 mt-0.5" />
+                <Shield className="h-6 w-6 text-accent flex-shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="text-lg font-semibold">Verification Status</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Zero-knowledge proofs</p>
+                  <h3 className="text-lg font-semibold">Privacy Guarantees</h3>
+                  <p className="text-xs text-muted-foreground mt-1">How your data is protected</p>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Your identity credentials are stored locally and encrypted. When you generate a verification proof, it will appear here as a zero-knowledge attestation. No personal data is revealed during verification.
-              </p>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <Circle className="h-1.5 w-1.5 text-accent mt-1.5 flex-shrink-0" />
+                  <span>Identity stored locally, encrypted with your wallet</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Circle className="h-1.5 w-1.5 text-accent mt-1.5 flex-shrink-0" />
+                  <span>Zero-knowledge proofs reveal only what you choose</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Circle className="h-1.5 w-1.5 text-accent mt-1.5 flex-shrink-0" />
+                  <span>No central server, no data breach risk</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Circle className="h-1.5 w-1.5 text-accent mt-1.5 flex-shrink-0" />
+                  <span>Aleo blockchain enforces cryptographic privacy</span>
+                </li>
+              </ul>
             </div>
 
-            {/* Network Info */}
+            {/* Network & Protocol */}
             <div className="rounded-lg border border-border bg-card p-8">
               <div className="flex items-start gap-4 mb-6">
-                <Info className="h-6 w-6 text-accent/70 flex-shrink-0 mt-0.5" />
+                <Network className="h-6 w-6 text-accent flex-shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="text-lg font-semibold">Network Information</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Aleo blockchain</p>
+                  <h3 className="text-lg font-semibold">Network & Protocol</h3>
+                  <p className="text-xs text-muted-foreground mt-1">Technical details</p>
                 </div>
               </div>
-              <div className="space-y-4 text-sm text-muted-foreground">
+              <div className="space-y-4 text-sm">
                 <div>
-                  <p className="font-semibold text-foreground mb-1">Network</p>
-                  <p>Aleo (Privacy-Focused Blockchain)</p>
+                  <p className="font-semibold text-foreground mb-1">Blockchain</p>
+                  <p className="text-muted-foreground">Aleo – Privacy-first blockchain</p>
                 </div>
                 <div>
-                  <p className="font-semibold text-foreground mb-1">Mode</p>
-                  <p>Private – All transactions and identity operations use zero-knowledge proofs</p>
+                  <p className="font-semibold text-foreground mb-1">Proof System</p>
+                  <p className="text-muted-foreground">Zero-Knowledge (ZK) proofs</p>
                 </div>
-              </div>
-            </div>
-
-            {/* Verification Logs */}
-            <div className="md:col-span-2 rounded-lg border border-border bg-card p-8">
-              <div className="flex items-start gap-4 mb-6">
-                <AlertCircle className="h-6 w-6 text-accent/70 flex-shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="text-lg font-semibold">Zero-Knowledge Verification Logs</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Privacy-protected proofs</p>
+                  <p className="font-semibold text-foreground mb-1">Identity Type</p>
+                  <p className="text-muted-foreground">Self-Sovereign (wallet-controlled)</p>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                When you generate zero-knowledge proofs to verify claims (age, DAO membership, credentials, etc.), they will appear here as encrypted records. Each proof is tamper-proof and cryptographically bound to your identity, but reveals no underlying data.
-              </p>
             </div>
           </div>
 
-          {/* Footer Info */}
-          <div className="mt-12 p-6 rounded-lg border border-accent/20 bg-accent/5">
-            <p className="text-sm text-muted-foreground">
-              <span className="font-semibold text-accent">Privacy by Design:</span> All identity operations are encrypted locally. Your private identity layer communicates with the Aleo blockchain using zero-knowledge proofs only. No personal data ever leaves your wallet.
-            </p>
+          {/* Capability Status */}
+          <div className="rounded-lg border border-border bg-card p-8">
+            <div className="flex items-start gap-4 mb-6">
+              <Info className="h-6 w-6 text-accent flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-lg font-semibold">Available Capabilities</h3>
+                <p className="text-xs text-muted-foreground mt-1">What you can do with your ShadowID</p>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-2 gap-6 text-sm">
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-foreground">Generate Zero-Knowledge Proofs</p>
+                    <p className="text-muted-foreground text-xs mt-1">Prove claims cryptographically without revealing data</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-foreground">Selective Disclosure</p>
+                    <p className="text-muted-foreground text-xs mt-1">Share only specific attributes you choose</p>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-foreground">Verify Credentials</p>
+                    <p className="text-muted-foreground text-xs mt-1">Prove membership, status, or attributes privately</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-foreground">Privacy-Preserved Logging</p>
+                    <p className="text-muted-foreground text-xs mt-1">Track proofs and interactions without exposure</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </main>
     </div>
   )
 }
+
