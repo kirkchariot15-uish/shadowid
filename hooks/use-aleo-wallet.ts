@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState } from 'react';
+import { useWallet } from '@provablehq/aleo-wallet-adaptor-react';
 
 interface ExecuteTransactionParams {
   program: string;
@@ -15,66 +16,9 @@ interface TransactionResult {
   error?: string;
 }
 
-// Default return value for SSR / before the Aleo provider is mounted
-const SSR_DEFAULTS = {
-  isConnected: false,
-  connecting: false,
-  reconnecting: false,
-  address: null as string | null,
-  publicKey: null as string | null,
-  wallet: null as string | null,
-  wallets: [] as unknown[],
-  selectedWallet: null,
-  network: null,
-  isLoading: false,
-  error: null as string | null,
-  switchNetwork: async () => {},
-  executeTransaction: async () => {
-    throw new Error('Wallet not connected');
-  },
-  signMessage: async () => {
-    throw new Error('Wallet not connected');
-  },
-  requestRecords: async () => {
-    throw new Error('Wallet not connected');
-  },
-  decrypt: async () => {
-    throw new Error('Wallet not connected');
-  },
-  getTransactionStatus: async () => {
-    throw new Error('Wallet not connected');
-  },
-} as const;
-
 export function useAleoWallet() {
-  const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Track mounted state so we only access the Aleo context client-side
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // During SSR or before mount, the Aleo provider isn't available
-  if (!mounted || typeof window === 'undefined') {
-    return SSR_DEFAULTS;
-  }
-
-  // Dynamically require the hook only on the client after mount
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  return useAleoWalletClient(isLoading, setIsLoading, error, setError);
-}
-
-// This function is ONLY called client-side after mount, so useWallet() is safe
-function useAleoWalletClient(
-  isLoading: boolean,
-  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  error: string | null,
-  setError: React.Dispatch<React.SetStateAction<string | null>>
-) {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { useWallet } = require('@provablehq/aleo-wallet-adaptor-react');
 
   const {
     wallet,
@@ -124,7 +68,7 @@ function useAleoWalletClient(
         setIsLoading(false);
       }
     },
-    [connected, address, walletExecuteTransaction, setIsLoading, setError]
+    [connected, address, walletExecuteTransaction]
   );
 
   const signMessageRequest = useCallback(
@@ -148,7 +92,7 @@ function useAleoWalletClient(
         setIsLoading(false);
       }
     },
-    [connected, address, signMessage, setIsLoading, setError]
+    [connected, address, signMessage]
   );
 
   return {
