@@ -5,7 +5,7 @@ import QRCode from 'qrcode'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { Button } from '@/components/ui/button'
-import { Lock, Upload, FileText, Type, CheckCircle, AlertCircle, X, Download, ArrowLeft } from 'lucide-react'
+import { Lock, Upload, FileText, Type, CheckCircle, AlertCircle, X, Download, ArrowLeft, Loader } from 'lucide-react'
 import Link from 'next/link'
 import { encryptData, generateFileCommitment, fileToUint8Array, generateEncryptionKey, generateHash } from '@/lib/crypto-utils'
 
@@ -23,6 +23,7 @@ export default function CreateIDPage() {
   const [inputs, setInputs] = useState<InputMaterial[]>([])
   const [textInput, setTextInput] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
+  const [isGeneratingQR, setIsGeneratingQR] = useState(false)
   const [commitment, setCommitment] = useState<string>('')
   const [qrDataUrl, setQrDataUrl] = useState<string>('')
   const [error, setError] = useState<string>('')
@@ -167,26 +168,40 @@ export default function CreateIDPage() {
         },
       })
 
-      const qrUrl = await QRCode.toDataURL(qrData, {
-        errorCorrectionLevel: 'H',
-        type: 'image/png',
-        width: 500,
-        margin: 3,
-        color: { dark: '#000000', light: '#ffffff' },
-      })
-
+      // Set generating state before QR code generation
+      setIsGeneratingQR(true)
       setCommitment(commitmentDisplay)
-      setQrDataUrl(qrUrl)
 
-      localStorage.setItem('shadowid-encrypted-bundle', bundle)
-      localStorage.setItem('shadowid-commitment', commitmentDisplay)
-      localStorage.setItem('shadowid-created-at', new Date().toISOString())
-      localStorage.setItem('shadowid-user-info', JSON.stringify(userInfo))
+      // Generate QR code with slight delay to show loading state
+      setTimeout(async () => {
+        try {
+          const qrUrl = await QRCode.toDataURL(qrData, {
+            errorCorrectionLevel: 'H',
+            type: 'image/png',
+            width: 500,
+            margin: 3,
+            color: { dark: '#000000', light: '#ffffff' },
+          })
 
-      setCreationComplete(true)
+          setQrDataUrl(qrUrl)
+
+          localStorage.setItem('shadowid-encrypted-bundle', bundle)
+          localStorage.setItem('shadowid-commitment', commitmentDisplay)
+          localStorage.setItem('shadowid-created-at', new Date().toISOString())
+          localStorage.setItem('shadowid-user-info', JSON.stringify(userInfo))
+
+          setCreationComplete(true)
+          setIsGeneratingQR(false)
+        } catch (qrErr) {
+          setError('Failed to generate QR code. Please try again.')
+          console.error('[v0] QR generation error:', qrErr)
+          setIsGeneratingQR(false)
+        }
+      }, 300)
     } catch (err) {
       setError('Failed to create identity commitment. Please try again.')
       console.error('[v0] Commitment error:', err)
+      setIsGeneratingQR(false)
     } finally {
       setIsProcessing(false)
     }
@@ -371,6 +386,25 @@ export default function CreateIDPage() {
           ) : (
             /* Success State */
             <div className="space-y-6">
+              {isGeneratingQR && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 flex items-center justify-center">
+                  <div className="bg-background border border-border rounded-xl p-8 shadow-2xl space-y-4">
+                    <div className="flex justify-center">
+                      <div className="relative w-16 h-16">
+                        <Loader className="w-full h-full text-accent animate-spin" strokeWidth={1.5} />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-12 h-12 bg-accent/10 rounded-full"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-semibold text-foreground">Generating QR Code</p>
+                      <p className="text-xs text-muted-foreground mt-1">Creating high-quality scannable code...</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-start gap-3 p-4 rounded-lg border border-accent/30 bg-accent/5">
                 <CheckCircle className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
                 <div>
