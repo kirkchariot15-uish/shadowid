@@ -1,14 +1,350 @@
 'use client'
 
+import { useState } from 'react'
 import { useWallet } from '@/lib/wallet-context'
 import { Button } from '@/components/ui/button'
-import { Lock, Wallet, LockOpen, Shield, Network, Info, Copy, CheckCircle, Circle } from 'lucide-react'
+import { Lock, Wallet, LockOpen, Shield, Network, Info, Copy, CheckCircle, Circle, Upload, Eye, EyeOff, FileText, Calendar, LogOut } from 'lucide-react'
 import Link from 'next/link'
 
 export default function DashboardPage() {
   const { isWalletConnected, setIsWalletConnected } = useWallet()
+  const [revealedAttributes, setRevealedAttributes] = useState<Record<string, boolean>>({})
+  const [uploadedFiles, setUploadedFiles] = useState<Array<{ name: string; size: string; date: string }>>([])
+  const [copied, setCopied] = useState(false)
+
+  const attributes = [
+    { key: 'name', label: 'Full Name', masked: '••••••••' },
+    { key: 'role', label: 'Role / Title', masked: '••••••••' },
+    { key: 'credentialType', label: 'Credential Type', masked: '••••••••' },
+  ]
+
+  const toggleAttribute = (key: string) => {
+    setRevealedAttributes(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }))
+  }
+
+  const handleCopyID = () => {
+    navigator.clipboard.writeText('0x38F2E4')
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.currentTarget.files
+    if (files) {
+      Array.from(files).forEach(file => {
+        const sizeKB = (file.size / 1024).toFixed(2)
+        setUploadedFiles(prev => [...prev, {
+          name: file.name,
+          size: `${sizeKB} KB`,
+          date: new Date().toLocaleDateString()
+        }])
+      })
+    }
+  }
 
   if (!isWalletConnected) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        {/* Navigation */}
+        <nav className="fixed top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-md">
+          <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+            <Link href="/" className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
+                <span className="text-sm font-bold text-accent-foreground">σ</span>
+              </div>
+              <span className="text-lg font-bold">ShadowID</span>
+            </Link>
+            <Button
+              onClick={() => setIsWalletConnected(true)}
+              variant="outline"
+              size="sm"
+              className="rounded-full font-semibold transition-all border-accent/50 text-foreground hover:border-accent hover:bg-accent hover:text-accent-foreground"
+            >
+              <Wallet className="h-4 w-4 mr-2" />
+              Connect Wallet
+            </Button>
+          </div>
+        </nav>
+
+        {/* Locked State */}
+        <div className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-4xl text-center">
+            <div className="mb-6 flex justify-center">
+              <Lock className="h-16 w-16 text-muted-foreground/40" />
+            </div>
+            <h1 className="text-4xl font-bold mb-4">Dashboard Locked</h1>
+            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
+              Connect your wallet to access your private identity dashboard. Your zero-knowledge identity layer will be initialized on the Aleo network.
+            </p>
+            <Button
+              onClick={() => setIsWalletConnected(true)}
+              size="lg"
+              className="rounded-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
+            >
+              <Wallet className="h-4 w-4 mr-2" />
+              Connect Wallet to Continue
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Navigation */}
+      <nav className="fixed top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-md">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
+              <span className="text-sm font-bold text-accent-foreground">σ</span>
+            </div>
+            <span className="text-lg font-bold">ShadowID</span>
+          </Link>
+          <Button
+            onClick={() => setIsWalletConnected(false)}
+            variant="default"
+            size="sm"
+            className="rounded-full font-semibold bg-accent hover:bg-accent/90 text-accent-foreground"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Disconnect
+          </Button>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl">
+          {/* Header */}
+          <div className="mb-12">
+            <div className="flex items-center gap-3 mb-4">
+              <LockOpen className="h-6 w-6 text-accent" />
+              <h1 className="text-4xl font-bold">Private Identity Dashboard</h1>
+            </div>
+            <p className="text-lg text-muted-foreground">Wallet Connected – Private Mode Active</p>
+          </div>
+
+          {/* Main Card with QR */}
+          <div className="mb-16 grid lg:grid-cols-3 gap-8">
+            {/* ShadowID Card */}
+            <div className="lg:col-span-2">
+              <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-6">Your Identity Credential</h2>
+              <div className="relative rounded-2xl bg-gradient-to-br from-slate-800 via-slate-850 to-slate-900 border border-slate-700/60 shadow-2xl p-8 space-y-8">
+                <div className="absolute inset-0 rounded-2xl opacity-30 pointer-events-none" style={{
+                  backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)',
+                }} />
+
+                <div className="relative space-y-8">
+                  {/* Header */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <p className="text-xs uppercase tracking-widest font-semibold mb-1 text-accent/70">Private Identity Credential</p>
+                      <h3 className="text-2xl font-black text-foreground">ShadowID</h3>
+                    </div>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/20 border border-accent/40">
+                      <div className="text-xs font-bold text-accent">σ</div>
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-slate-700/50" />
+
+                  {/* Avatar & Identity */}
+                  <div className="flex items-center gap-6">
+                    <div className="flex h-20 w-20 items-center justify-center rounded-lg flex-shrink-0 bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/30">
+                      <svg className="h-12 w-12 text-accent/60" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                      </svg>
+                    </div>
+
+                    <div className="flex-1 space-y-2">
+                      <div>
+                        <p className="text-xs uppercase tracking-widest font-semibold mb-1 text-accent/60">Identity ID</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-lg font-mono font-bold tracking-wider text-accent">0x38F2E4</p>
+                          <button
+                            onClick={handleCopyID}
+                            className="p-1 hover:bg-accent/10 rounded transition-colors"
+                            title="Copy ID"
+                          >
+                            <Copy className="h-4 w-4 text-muted-foreground/60" />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground/70 flex items-center gap-1">
+                        <CheckCircle className="h-3 w-3 text-accent" />
+                        {copied ? 'Copied!' : 'Status: Active'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-slate-700/50" />
+
+                  {/* Metadata */}
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                      <p className="text-xs uppercase tracking-widest font-semibold mb-1 text-muted-foreground/70">Network</p>
+                      <p className="text-sm font-bold text-foreground">Aleo</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-widest font-semibold mb-1 text-muted-foreground/70">Privacy Mode</p>
+                      <p className="text-sm font-bold text-accent">Active</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-widest font-semibold mb-1 text-muted-foreground/70">Encryption</p>
+                      <p className="text-sm font-bold text-accent">ZK-Protected</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-700/50">
+                    <p className="text-xs text-center text-muted-foreground/60">All operations are end-to-end encrypted</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* QR Code Section */}
+            <div>
+              <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-6">Identity Commitment</h2>
+              <div className="rounded-lg border border-border bg-card p-8 flex flex-col items-center text-center space-y-4">
+                <div className="w-40 h-40 bg-gradient-to-br from-accent/10 to-accent/5 border-2 border-accent/30 rounded-lg flex items-center justify-center">
+                  <div className="w-32 h-32 bg-accent/20 rounded flex items-center justify-center">
+                    <p className="text-xs font-mono text-accent/60 text-center px-2">QR: 0x38F2E4...</p>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">Scannable identity commitment hash</p>
+                <p className="text-xs text-muted-foreground/50">No personal data embedded</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Selective Disclosure Section */}
+          <div className="mb-12">
+            <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-6">Selective Disclosure</h2>
+            <div className="rounded-lg border border-border bg-card p-8">
+              <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
+                Reveal individual attributes locally. Data never leaves your browser. Each attribute can be copied or shared via QR independently.
+              </p>
+              <div className="space-y-4">
+                {attributes.map((attr) => (
+                  <div key={attr.key} className="flex items-center justify-between p-4 rounded-lg border border-border/50 bg-muted/5 hover:bg-muted/10 transition-colors">
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-foreground mb-1">{attr.label}</p>
+                      <p className={`text-sm font-mono ${revealedAttributes[attr.key] ? 'text-accent' : 'text-muted-foreground/50'}`}>
+                        {revealedAttributes[attr.key] ? 'Alex Morgan' : attr.masked}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => toggleAttribute(attr.key)}
+                        className="p-2 hover:bg-accent/10 rounded transition-colors"
+                        title={revealedAttributes[attr.key] ? 'Hide' : 'Reveal'}
+                      >
+                        {revealedAttributes[attr.key] ? (
+                          <Eye className="h-4 w-4 text-accent" />
+                        ) : (
+                          <EyeOff className="h-4 w-4 text-muted-foreground/60" />
+                        )}
+                      </button>
+                      <button
+                        className="p-2 hover:bg-accent/10 rounded transition-colors disabled:opacity-50"
+                        disabled={!revealedAttributes[attr.key]}
+                        title="Copy attribute"
+                      >
+                        <Copy className="h-4 w-4 text-muted-foreground/60" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Credential Upload Section */}
+          <div className="mb-12">
+            <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-6">Proof & Credential Storage</h2>
+            <div className="rounded-lg border border-border bg-card p-8">
+              <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
+                Encrypt and store credentials locally for future proof generation. All encryption is client-side. No data is sent on-chain until you generate a zero-knowledge proof.
+              </p>
+              <div className="border-2 border-dashed border-border/50 rounded-lg p-8 mb-8 text-center hover:border-accent/30 transition-colors">
+                <label className="flex flex-col items-center gap-2 cursor-pointer">
+                  <Upload className="h-8 w-8 text-muted-foreground/60" />
+                  <span className="text-sm font-semibold text-foreground">Upload credentials (PDF, Image, Video)</span>
+                  <span className="text-xs text-muted-foreground">Client-side encryption • No storage on-chain</span>
+                  <input
+                    type="file"
+                    multiple
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    accept=".pdf,.png,.jpg,.jpeg,.gif,.mp4,.mov,.webm"
+                  />
+                </label>
+              </div>
+
+              {uploadedFiles.length > 0 && (
+                <div className="space-y-3">
+                  <p className="text-sm font-semibold text-foreground mb-4">Encrypted Files ({uploadedFiles.length})</p>
+                  {uploadedFiles.map((file, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 rounded-lg border border-border/50 bg-muted/5">
+                      <div className="flex items-center gap-3 flex-1">
+                        <FileText className="h-4 w-4 text-accent/60" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{file.name}</p>
+                          <p className="text-xs text-muted-foreground/60">{file.size} • {file.date}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-accent">
+                        <CheckCircle className="h-4 w-4" />
+                        Encrypted
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Audit & Revocation Section */}
+          <div>
+            <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-6">Verification & Audit Logs</h2>
+            <div className="rounded-lg border border-border bg-card p-8">
+              <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
+                Track all zero-knowledge proof generations and credential verifications. All entries are encrypted and privacy-preserved. No personal data is logged.
+              </p>
+              <div className="space-y-3">
+                {[
+                  { date: '2025-02-15', type: 'Identity Initialized', status: 'Active' },
+                  { date: '2025-02-15', type: 'Privacy Mode Activated', status: 'Active' },
+                  { date: '2025-02-15', type: 'Wallet Connected', status: 'Active' },
+                ].map((log, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-4 rounded-lg border border-border/50 bg-muted/5">
+                    <div className="flex items-center gap-4 flex-1">
+                      <Calendar className="h-4 w-4 text-muted-foreground/60" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{log.type}</p>
+                        <p className="text-xs text-muted-foreground/60">{log.date}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-accent/70" />
+                      <span className="text-xs font-semibold text-accent">{log.status}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground/50 mt-6 text-center">Future proof generations and credential revocations will appear here</p>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  )
+}
+
     return (
       <div className="min-h-screen bg-background text-foreground">
         {/* Navigation */}
@@ -172,110 +508,5 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Key Information Sections */}
-          <div className="grid md:grid-cols-2 gap-8 mb-8">
-            {/* Privacy Guarantees */}
-            <div className="rounded-lg border border-border bg-card p-8">
-              <div className="flex items-start gap-4 mb-6">
-                <Shield className="h-6 w-6 text-accent flex-shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="text-lg font-semibold">Privacy Guarantees</h3>
-                  <p className="text-xs text-muted-foreground mt-1">How your data is protected</p>
-                </div>
-              </div>
-              <ul className="space-y-3 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <Circle className="h-1.5 w-1.5 text-accent mt-1.5 flex-shrink-0" />
-                  <span>Identity stored locally, encrypted with your wallet</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Circle className="h-1.5 w-1.5 text-accent mt-1.5 flex-shrink-0" />
-                  <span>Zero-knowledge proofs reveal only what you choose</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Circle className="h-1.5 w-1.5 text-accent mt-1.5 flex-shrink-0" />
-                  <span>No central server, no data breach risk</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Circle className="h-1.5 w-1.5 text-accent mt-1.5 flex-shrink-0" />
-                  <span>Aleo blockchain enforces cryptographic privacy</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Network & Protocol */}
-            <div className="rounded-lg border border-border bg-card p-8">
-              <div className="flex items-start gap-4 mb-6">
-                <Network className="h-6 w-6 text-accent flex-shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="text-lg font-semibold">Network & Protocol</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Technical details</p>
-                </div>
-              </div>
-              <div className="space-y-4 text-sm">
-                <div>
-                  <p className="font-semibold text-foreground mb-1">Blockchain</p>
-                  <p className="text-muted-foreground">Aleo – Privacy-first blockchain</p>
-                </div>
-                <div>
-                  <p className="font-semibold text-foreground mb-1">Proof System</p>
-                  <p className="text-muted-foreground">Zero-Knowledge (ZK) proofs</p>
-                </div>
-                <div>
-                  <p className="font-semibold text-foreground mb-1">Identity Type</p>
-                  <p className="text-muted-foreground">Self-Sovereign (wallet-controlled)</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Capability Status */}
-          <div className="rounded-lg border border-border bg-card p-8">
-            <div className="flex items-start gap-4 mb-6">
-              <Info className="h-6 w-6 text-accent flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="text-lg font-semibold">Available Capabilities</h3>
-                <p className="text-xs text-muted-foreground mt-1">What you can do with your ShadowID</p>
-              </div>
-            </div>
-            <div className="grid md:grid-cols-2 gap-6 text-sm">
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-semibold text-foreground">Generate Zero-Knowledge Proofs</p>
-                    <p className="text-muted-foreground text-xs mt-1">Prove claims cryptographically without revealing data</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-semibold text-foreground">Selective Disclosure</p>
-                    <p className="text-muted-foreground text-xs mt-1">Share only specific attributes you choose</p>
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-semibold text-foreground">Verify Credentials</p>
-                    <p className="text-muted-foreground text-xs mt-1">Prove membership, status, or attributes privately</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-semibold text-foreground">Privacy-Preserved Logging</p>
-                    <p className="text-muted-foreground text-xs mt-1">Track proofs and interactions without exposure</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  )
 }
 
