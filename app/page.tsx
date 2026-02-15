@@ -1,11 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { useWallet } from '@/lib/wallet-context'
 import { Button } from '@/components/ui/button'
 import { Lock, Eye, Users, Shield, Wallet, LockOpen, X } from 'lucide-react'
+import Link from 'next/link'
 
 export default function Page() {
-  const [isWalletConnected, setIsWalletConnected] = useState(false)
+  const { isWalletConnected, setIsWalletConnected } = useWallet()
   const [showPrivacyGuarantees, setShowPrivacyGuarantees] = useState(false)
 
   return (
@@ -19,19 +21,32 @@ export default function Page() {
             </div>
             <span className="text-lg font-bold">ShadowID</span>
           </div>
-          <Button
-            onClick={() => setIsWalletConnected(!isWalletConnected)}
-            variant={isWalletConnected ? 'default' : 'outline'}
-            size="sm"
-            className={`rounded-full font-semibold transition-all ${
-              isWalletConnected
-                ? 'bg-accent hover:bg-accent/90 text-accent-foreground border-accent'
-                : 'border-accent/50 text-foreground hover:border-accent hover:bg-accent hover:text-accent-foreground'
-            }`}
-          >
-            <Wallet className="h-4 w-4 mr-2" />
-            {isWalletConnected ? 'Wallet Connected' : 'Connect Wallet'}
-          </Button>
+          <div className="flex items-center gap-3">
+            {isWalletConnected && (
+              <Link href="/dashboard">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full font-semibold border-accent/50 text-foreground hover:border-accent hover:bg-accent/5"
+                >
+                  Dashboard
+                </Button>
+              </Link>
+            )}
+            <Button
+              onClick={() => setIsWalletConnected(!isWalletConnected)}
+              variant={isWalletConnected ? 'default' : 'outline'}
+              size="sm"
+              className={`rounded-full font-semibold transition-all ${
+                isWalletConnected
+                  ? 'bg-accent hover:bg-accent/90 text-accent-foreground border-accent'
+                  : 'border-accent/50 text-foreground hover:border-accent hover:bg-accent hover:text-accent-foreground'
+              }`}
+            >
+              <Wallet className="h-4 w-4 mr-2" />
+              {isWalletConnected ? 'Wallet Connected' : 'Connect Wallet'}
+            </Button>
+          </div>
         </div>
       </nav>
 
