@@ -115,12 +115,42 @@ export default function DashboardPage() {
 
       <main className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
-          {/* Header */}
           <div className="mb-12">
             <div className="flex items-center gap-3 mb-4">
               <LockOpen className="h-6 w-6 text-accent" />
               <h1 className="text-4xl font-bold">Private Identity Dashboard</h1>
             </div>
+            <p className="text-lg text-muted-foreground mb-4">Wallet Connected – Private Mode Active</p>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/create-id">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full font-semibold border-accent/50 text-foreground hover:border-accent hover:bg-accent/5"
+                >
+                  Create ID
+                </Button>
+              </Link>
+              <Link href="/qr-codes">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full font-semibold border-accent/50 text-foreground hover:border-accent hover:bg-accent/5"
+                >
+                  QR Codes
+                </Button>
+              </Link>
+              <Link href="/selective-disclosure">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full font-semibold border-accent/50 text-foreground hover:border-accent hover:bg-accent/5"
+                >
+                  Selective Disclosure
+                </Button>
+              </Link>
+            </div>
+          </div>
             <p className="text-lg text-muted-foreground">{`Wallet Connected \u2013 Private Mode Active`}</p>
           </div>
 
