@@ -53,6 +53,3 @@ export function WalletMultiButton() {
     </Suspense>
   );
 }
-);
-
-export { WalletMultiButton };
