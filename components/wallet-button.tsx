@@ -1,10 +1,9 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { Suspense } from 'react';
 import '@provablehq/aleo-wallet-adaptor-react-ui/dist/styles.css';
 
-const WalletMultiButtonComponent = dynamic(
+const WalletMultiButton = dynamic(
   () =>
     import('@provablehq/aleo-wallet-adaptor-react-ui').then(
       (mod) => mod.WalletMultiButton
@@ -12,21 +11,11 @@ const WalletMultiButtonComponent = dynamic(
   { 
     ssr: false,
     loading: () => (
-      <button className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium bg-accent text-accent-foreground hover:bg-accent/90">
-        Loading wallet...
+      <button disabled className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium bg-accent/50 text-accent-foreground cursor-not-allowed">
+        Loading...
       </button>
     ),
   }
 );
 
-export function WalletMultiButton() {
-  return (
-    <Suspense fallback={
-      <button className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium bg-accent text-accent-foreground hover:bg-accent/90">
-        Connect Wallet
-      </button>
-    }>
-      <WalletMultiButtonComponent />
-    </Suspense>
-  );
-}
+export { WalletMultiButton };
