@@ -78,106 +78,144 @@ export default function Page() {
             {/* Card Display */}
             <div className="flex justify-center lg:justify-end order-2 lg:order-1">
               <div className="relative w-full max-w-md">
-                {/* Glow only when connected */}
-                {isWalletConnected && (
-                  <div className="absolute -inset-6 bg-gradient-to-r from-accent/40 to-accent/20 blur-2xl rounded-3xl opacity-40 animate-pulse" />
-                )}
+                {/* Physical card replica */}
+                <div className={`relative rounded-2xl transition-all duration-300 ${
+                  isWalletConnected
+                    ? 'bg-gradient-to-br from-slate-800 via-slate-850 to-slate-900 border border-slate-700/60 shadow-2xl'
+                    : 'bg-gradient-to-br from-card to-card border border-border/60 shadow-lg'
+                }`}>
+                  {/* Subtle texture overlay */}
+                  <div className="absolute inset-0 rounded-2xl opacity-30 pointer-events-none" style={{
+                    backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)',
+                  }} />
 
-                {/* Card */}
-                <div
-                  className={`relative rounded-3xl p-10 shadow-2xl transition-all duration-300 ${
-                    isWalletConnected
-                      ? 'bg-gradient-to-b from-slate-900 to-slate-950 border border-accent/40'
-                      : 'bg-card border border-border/50 opacity-60'
-                  }`}
-                >
-                  {/* Top accent bar */}
-                  {isWalletConnected && (
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-accent to-transparent rounded-t-3xl" />
-                  )}
-
-                  {/* Branding */}
-                  <div className="flex items-center justify-between mb-12">
-                    <div>
-                      <p
-                        className={`text-xs uppercase tracking-widest font-semibold ${
-                          isWalletConnected ? 'text-accent/60' : 'text-muted-foreground/50'
-                        }`}
-                      >
-                        {isWalletConnected ? 'Private Identity' : 'Locked'}
-                      </p>
-                      <h3 className="text-3xl font-black text-foreground mt-1">ShadowID</h3>
-                    </div>
-                    {isWalletConnected ? (
-                      <LockOpen className="h-6 w-6 text-accent/80" />
-                    ) : (
-                      <Lock className="h-6 w-6 text-muted-foreground/50" />
-                    )}
-                  </div>
-
-                  {/* Main identifier display */}
-                  <div
-                    className={`mb-10 p-6 rounded-xl transition-all ${
-                      isWalletConnected
-                        ? 'bg-accent/5 border border-accent/30'
-                        : 'bg-muted/30 border border-border/30'
-                    }`}
-                  >
-                    <p
-                      className={`text-xs uppercase tracking-widest font-semibold mb-3 ${
-                        isWalletConnected ? 'text-accent/70' : 'text-muted-foreground/50'
-                      }`}
-                    >
-                      Identity Hash
-                    </p>
-                    {isWalletConnected ? (
-                      <p className="text-4xl font-black text-accent tracking-wider font-mono">
-                        {'σ\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'}
-                      </p>
-                    ) : (
-                      <p className="text-4xl font-black text-muted-foreground/30 tracking-wider font-mono">
-                        {'\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Compact metadata */}
-                  <div className="space-y-3 mb-8">
-                    <div className="flex justify-between items-center text-sm">
-                      <span className={isWalletConnected ? 'text-muted-foreground' : 'text-muted-foreground/50'}>
-                        Network
-                      </span>
-                      <span
-                        className={`font-semibold ${
-                          isWalletConnected ? 'text-foreground' : 'text-muted-foreground/40'
-                        }`}
-                      >
-                        {isWalletConnected ? 'Aleo' : '\u2014'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className={isWalletConnected ? 'text-muted-foreground' : 'text-muted-foreground/50'}>
-                        Privacy Mode
-                      </span>
-                      <span
-                        className={`font-semibold ${
+                  {/* Card Content */}
+                  <div className="relative p-8 space-y-8">
+                    {/* Header Section */}
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className={`text-xs uppercase tracking-widest font-semibold mb-1 transition-colors ${
+                          isWalletConnected ? 'text-accent/70' : 'text-muted-foreground/50'
+                        }`}>
+                          Private Identity Credential
+                        </p>
+                        <h3 className={`text-2xl font-black transition-colors ${
+                          isWalletConnected ? 'text-foreground' : 'text-muted-foreground/60'
+                        }`}>
+                          ShadowID
+                        </h3>
+                      </div>
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${
+                        isWalletConnected 
+                          ? 'bg-accent/20 border border-accent/40' 
+                          : 'bg-muted/20 border border-border/40'
+                      }`}>
+                        <div className={`text-xs font-bold ${
                           isWalletConnected ? 'text-accent' : 'text-muted-foreground/40'
-                        }`}
-                      >
-                        {isWalletConnected ? 'Active' : '\u2014'}
-                      </span>
+                        }`}>
+                          σ
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Divider */}
+                    <div className={`h-px transition-colors ${
+                      isWalletConnected ? 'bg-slate-700/50' : 'bg-border/30'
+                    }`} />
+
+                    {/* Avatar Placeholder & Main Identity */}
+                    <div className="flex items-center gap-6">
+                      {/* Silhouetted Avatar */}
+                      <div className={`flex h-20 w-20 items-center justify-center rounded-lg flex-shrink-0 transition-colors ${
+                        isWalletConnected
+                          ? 'bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/30'
+                          : 'bg-muted/20 border border-border/30'
+                      }`}>
+                        <svg className={`h-12 w-12 transition-colors ${
+                          isWalletConnected ? 'text-accent/60' : 'text-muted-foreground/30'
+                        }`} fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                        </svg>
+                      </div>
+
+                      {/* Identity Info */}
+                      <div className="flex-1 space-y-2">
+                        <div>
+                          <p className={`text-xs uppercase tracking-widest font-semibold mb-1 transition-colors ${
+                            isWalletConnected ? 'text-accent/60' : 'text-muted-foreground/40'
+                          }`}>
+                            Identity ID
+                          </p>
+                          <p className={`text-lg font-mono font-bold tracking-wider transition-colors ${
+                            isWalletConnected ? 'text-accent' : 'text-muted-foreground/40'
+                          }`}>
+                            {isWalletConnected ? '0x38F2E4' : '\u2022\u2022\u2022\u2022\u2022\u2022'}
+                          </p>
+                        </div>
+                        <p className={`text-xs transition-colors ${
+                          isWalletConnected ? 'text-muted-foreground/70' : 'text-muted-foreground/40'
+                        }`}>
+                          Status: {isWalletConnected ? 'Active' : 'Inactive'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Divider */}
+                    <div className={`h-px transition-colors ${
+                      isWalletConnected ? 'bg-slate-700/50' : 'bg-border/30'
+                    }`} />
+
+                    {/* Footer Metadata */}
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                      <div>
+                        <p className={`text-xs uppercase tracking-widest font-semibold mb-1 transition-colors ${
+                          isWalletConnected ? 'text-muted-foreground/70' : 'text-muted-foreground/40'
+                        }`}>
+                          Network
+                        </p>
+                        <p className={`text-sm font-bold transition-colors ${
+                          isWalletConnected ? 'text-foreground' : 'text-muted-foreground/40'
+                        }`}>
+                          {isWalletConnected ? 'Aleo' : '\u2014'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className={`text-xs uppercase tracking-widest font-semibold mb-1 transition-colors ${
+                          isWalletConnected ? 'text-muted-foreground/70' : 'text-muted-foreground/40'
+                        }`}>
+                          Mode
+                        </p>
+                        <p className={`text-sm font-bold transition-colors ${
+                          isWalletConnected ? 'text-accent' : 'text-muted-foreground/40'
+                        }`}>
+                          {isWalletConnected ? 'Private' : '\u2014'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className={`text-xs uppercase tracking-widest font-semibold mb-1 transition-colors ${
+                          isWalletConnected ? 'text-muted-foreground/70' : 'text-muted-foreground/40'
+                        }`}>
+                          Verification
+                        </p>
+                        <p className={`text-sm font-bold transition-colors ${
+                          isWalletConnected ? 'text-accent' : 'text-muted-foreground/40'
+                        }`}>
+                          {isWalletConnected ? 'ZK' : '\u2014'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Status Note */}
+                    <div className={`pt-4 border-t transition-colors ${
+                      isWalletConnected ? 'border-slate-700/50' : 'border-border/30'
+                    }`}>
+                      <p className={`text-xs text-center transition-colors ${
+                        isWalletConnected ? 'text-muted-foreground/60' : 'text-muted-foreground/40'
+                      }`}>
+                        {isWalletConnected ? 'Encryption active' : 'Connect a wallet to activate identity features'}
+                      </p>
                     </div>
                   </div>
-
-                  {/* Bottom message */}
-                  <div className="h-px bg-gradient-to-r from-accent/10 to-transparent mb-4" />
-                  <p
-                    className={`text-xs text-center ${
-                      isWalletConnected ? 'text-muted-foreground/60' : 'text-muted-foreground/40'
-                    }`}
-                  >
-                    {isWalletConnected ? 'Fully encrypted \u00b7 No personal data' : 'Connect wallet to activate'}
-                  </p>
                 </div>
               </div>
             </div>
@@ -202,7 +240,7 @@ export default function Page() {
                       key={fact}
                       className={`flex items-center gap-2 rounded-lg border px-4 py-3 transition-all ${
                         isWalletConnected
-                          ? 'border-accent/30 bg-accent/10 hover:border-accent/60 hover:bg-accent/15'
+                          ? 'border-accent/30 bg-accent/10'
                           : 'border-border/50 bg-muted/20 opacity-50'
                       }`}
                     >
@@ -225,9 +263,9 @@ export default function Page() {
 
               {/* Wallet requirement message */}
               {!isWalletConnected && (
-                <div className="mt-8 p-4 rounded-lg border border-accent/20 bg-accent/5">
-                  <p className="text-sm text-muted-foreground">
-                    <span className="font-semibold text-accent">Wallet required</span> to activate private identity features. Connect a wallet to proceed.
+                <div className="mt-8 p-4 rounded-lg border border-border/50 bg-muted/10">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Connect a wallet to activate identity features. Your private identity will be initialized on the Aleo network.
                   </p>
                 </div>
               )}
