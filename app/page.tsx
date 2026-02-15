@@ -377,40 +377,6 @@ export default function Page() {
     </div>
   )
 }
-
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-4xl text-center">
-          <div className="inline-block mb-6 px-4 py-2 rounded-full border border-accent/30 bg-accent/5 text-sm text-muted-foreground">
-            Built on Aleo · Zero-Knowledge Proofs
-          </div>
-          <h1 className="text-5xl sm:text-6xl font-bold tracking-tight text-balance mb-6">
-            Your Identity,{' '}
-            <span className="text-accent">Not Your Data</span>
-          </h1>
-          <p className="text-xl text-muted-foreground text-balance mb-8 max-w-2xl mx-auto leading-relaxed">
-            ShadowID is a self-sovereign identity layer that lets you prove who you are without revealing your personal information or activity history.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              size="lg"
-              className="rounded-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
-            >
-              Get Started
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="rounded-full border-accent/50 text-foreground hover:border-accent hover:bg-accent/5"
-            >
-              Learn More
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* ShadowID Card Section */}
-      <section className="relative py-24 px-4 sm:px-6 lg:px-8 border-t border-border">
         <div className="mx-auto max-w-5xl">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Card Display */}
