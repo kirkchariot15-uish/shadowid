@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
-import { WalletMultiButton } from '@provablehq/aleo-wallet-adaptor-react-ui'
+import { WalletMultiButton } from '@/components/wallet-button'
 import { Button } from '@/components/ui/button'
 import { Lock, Wallet, Copy, Download, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
