@@ -1,13 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { useWallet } from '@/lib/wallet-context'
+import { useAleoWallet } from '@/hooks/use-aleo-wallet'
+import { WalletMultiButton } from '@provablehq/aleo-wallet-adaptor-react-ui'
 import { Button } from '@/components/ui/button'
 import { Lock, Wallet, LockOpen, Copy, CheckCircle, Calendar, LogOut } from 'lucide-react'
 import Link from 'next/link'
 
 export default function DashboardPage() {
-  const { isWalletConnected, setIsWalletConnected } = useWallet()
+  const { isConnected, address } = useAleoWallet()
   const [copied, setCopied] = useState(false)
 
   const handleCopyID = () => {
@@ -16,7 +17,7 @@ export default function DashboardPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  if (!isWalletConnected) {
+  if (!isConnected || !address) {
     return (
       <div className="min-h-screen bg-background text-foreground">
         <nav className="fixed top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-md">
@@ -27,15 +28,9 @@ export default function DashboardPage() {
               </div>
               <span className="text-lg font-bold">ShadowID</span>
             </Link>
-            <Button
-              onClick={() => setIsWalletConnected(true)}
-              variant="outline"
-              size="sm"
-              className="rounded-full font-semibold transition-all border-accent/50 text-foreground hover:border-accent hover:bg-accent hover:text-accent-foreground"
-            >
-              <Wallet className="h-4 w-4 mr-2" />
-              Connect Wallet
-            </Button>
+            <div className="wallet-button-wrapper">
+              <WalletMultiButton />
+            </div>
           </div>
         </nav>
 
@@ -48,14 +43,9 @@ export default function DashboardPage() {
             <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
               Connect your wallet to access your private identity dashboard. Your zero-knowledge identity layer will be initialized on the Aleo network.
             </p>
-            <Button
-              onClick={() => setIsWalletConnected(true)}
-              size="lg"
-              className="rounded-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
-            >
-              <Wallet className="h-4 w-4 mr-2" />
-              Connect Wallet to Continue
-            </Button>
+            <div className="flex justify-center">
+              <WalletMultiButton />
+            </div>
           </div>
         </div>
       </div>
@@ -73,13 +63,12 @@ export default function DashboardPage() {
             <span className="text-lg font-bold">ShadowID</span>
           </Link>
           <Button
-            onClick={() => setIsWalletConnected(false)}
-            variant="default"
+            disabled
             size="sm"
-            className="rounded-full font-semibold bg-accent hover:bg-accent/90 text-accent-foreground"
+            className="rounded-full font-semibold bg-accent/50 text-accent-foreground cursor-not-allowed"
           >
             <LogOut className="h-4 w-4 mr-2" />
-            Disconnect
+            Connected: {address?.slice(0, 8)}...
           </Button>
         </div>
       </nav>
