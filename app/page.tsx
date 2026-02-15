@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Lock, Eye, Users, Shield, Wallet, LockOpen } from 'lucide-react'
+import { Lock, Eye, Users, Shield, Wallet, LockOpen, X } from 'lucide-react'
 
 export default function Page() {
   const [isWalletConnected, setIsWalletConnected] = useState(false)
+  const [showPrivacyGuarantees, setShowPrivacyGuarantees] = useState(false)
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -235,6 +236,128 @@ export default function Page() {
         </div>
       </section>
 
+      {/* Identity Layer Initialized Section */}
+      {isWalletConnected && (
+        <section className="relative py-16 px-4 sm:px-6 lg:px-8 border-t border-border bg-accent/3">
+          <div className="mx-auto max-w-4xl">
+            <div className="flex items-center gap-3 mb-12">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/20 border border-accent/40">
+                <LockOpen className="h-5 w-5 text-accent" />
+              </div>
+              <h2 className="text-2xl font-bold">Identity Layer Initialized</h2>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-12">
+              {/* Available Actions */}
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-6">Available Actions</h3>
+                <div className="space-y-3">
+                  <Button
+                    onClick={() => setShowPrivacyGuarantees(true)}
+                    variant="outline"
+                    className="w-full justify-start rounded-lg border-accent/30 text-foreground hover:border-accent hover:bg-accent/5 transition-all"
+                  >
+                    <Eye className="h-4 w-4 mr-3" />
+                    View Privacy Guarantees
+                  </Button>
+                </div>
+              </div>
+
+              {/* Restricted Capabilities */}
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-6">Restricted Capabilities</h3>
+                <div className="space-y-3">
+                  {[
+                    { name: 'Create Private Identity', reason: 'Requires identity layer activation' },
+                    { name: 'Generate Verification Proof', reason: 'Requires identity layer activation' },
+                    { name: 'Selective Disclosure', reason: 'Requires identity layer activation' },
+                  ].map((capability) => (
+                    <div
+                      key={capability.name}
+                      className="rounded-lg border border-border/50 bg-card/50 p-3 cursor-not-allowed opacity-60"
+                    >
+                      <div className="flex items-start gap-3">
+                        <Lock className="h-4 w-4 text-muted-foreground/50 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-muted-foreground/60">{capability.name}</p>
+                          <p className="text-xs text-muted-foreground/40 mt-1">{capability.reason}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Privacy Guarantees Modal */}
+      {showPrivacyGuarantees && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-card border border-accent/20 rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-2xl">
+            <div className="sticky top-0 flex items-center justify-between p-6 border-b border-border bg-card/95">
+              <h2 className="text-xl font-bold">Privacy Guarantees</h2>
+              <button
+                onClick={() => setShowPrivacyGuarantees(false)}
+                className="p-2 hover:bg-accent/10 rounded-lg transition-colors"
+                aria-label="Close modal"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div>
+                <h3 className="font-semibold mb-2 flex items-center gap-2">
+                  <Lock className="h-4 w-4 text-accent" />
+                  End-to-End Encryption
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  All identity data is encrypted locally on your device. No unencrypted personal information ever leaves your wallet.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2 flex items-center gap-2">
+                  <Eye className="h-4 w-4 text-accent" />
+                  Zero-Knowledge Architecture
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Verification occurs through cryptographic proofs without revealing underlying identity attributes. No third party sees your claims.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2 flex items-center gap-2">
+                  <Users className="h-4 w-4 text-accent" />
+                  No Central Database
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Your identity is never stored on centralized servers. It resides solely with you, bound to your wallet and inaccessible to any third party.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2 flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-accent" />
+                  Aleo Privacy Layer
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Built on Aleo, a privacy-focused blockchain that provides mathematical guarantees against surveillance, data correlation, and linkage attacks.
+                </p>
+              </div>
+
+              <div className="h-px bg-border" />
+
+              <p className="text-xs text-muted-foreground/60">
+                These privacy guarantees are enforced by design through cryptographic protocols and distributed architecture. No manual processes or trust assumptions.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Problem Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8 border-t border-border">
         <div className="mx-auto max-w-4xl">
@@ -353,18 +476,9 @@ export default function Page() {
       <section className="relative py-20 px-4 sm:px-6 lg:px-8 border-t border-border">
         <div className="mx-auto max-w-4xl text-center">
           <h2 className="text-4xl font-bold mb-4">Take Control of Your Identity</h2>
-          <p className="text-lg text-muted-foreground mb-8">
-            {isWalletConnected ? 'Your private identity is ready.' : 'Private. Verifiable. Yours.'}
+          <p className="text-lg text-muted-foreground">
+            {isWalletConnected ? 'Your private identity layer is initialized.' : 'Private. Verifiable. Yours.'}
           </p>
-          {!isWalletConnected && (
-            <Button
-              onClick={() => setIsWalletConnected(true)}
-              size="lg"
-              className="rounded-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
-            >
-              Connect Wallet
-            </Button>
-          )}
         </div>
       </section>
 
