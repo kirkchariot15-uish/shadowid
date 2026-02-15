@@ -56,6 +56,87 @@ export default function Page() {
         </div>
       </section>
 
+      {/* ShadowID Card Section */}
+      <section className="relative py-20 px-4 sm:px-6 lg:px-8 border-t border-border bg-gradient-to-b from-secondary/5 to-background">
+        <div className="mx-auto max-w-4xl">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Card Display */}
+            <div className="flex justify-center md:justify-end">
+              <div className="relative w-full max-w-sm">
+                {/* Glow effect background */}
+                <div className="absolute inset-0 bg-accent/20 blur-3xl rounded-2xl opacity-30 animate-pulse"></div>
+                
+                {/* Card */}
+                <div className="relative bg-gradient-to-br from-card to-secondary border border-accent/20 rounded-2xl p-8 shadow-2xl">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-8">
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Identity Artifact</p>
+                      <h3 className="text-2xl font-bold">ShadowID</h3>
+                    </div>
+                    <Lock className="h-5 w-5 text-accent" />
+                  </div>
+
+                  {/* Divider */}
+                  <div className="h-px bg-gradient-to-r from-accent/20 to-transparent mb-6"></div>
+
+                  {/* Identity Info */}
+                  <div className="space-y-4 mb-8">
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Status</p>
+                      <p className="text-sm font-medium text-foreground">Private Identity</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Network</p>
+                      <p className="text-sm font-medium text-foreground">Aleo</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Proof Mode</p>
+                      <p className="text-sm font-medium text-foreground">Zero-Knowledge</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Identifier</p>
+                      <p className="text-sm font-mono font-medium text-accent">**** **** ****</p>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="h-px bg-gradient-to-r from-transparent to-accent/20 mb-4"></div>
+                  <p className="text-xs text-muted-foreground text-center">No personal data stored · Fully encrypted</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Text Content */}
+            <div>
+              <h2 className="text-3xl font-bold mb-4">Your Private Identity Card</h2>
+              <p className="text-muted-foreground leading-relaxed mb-6">
+                ShadowID generates a cryptographic identity artifact—not an account, not a profile. It's a proof primitive that lives with you, encrypted and under your control.
+              </p>
+              <p className="text-muted-foreground leading-relaxed mb-8">
+                You never reveal who you are. Instead, you prove specific claims about yourself using zero-knowledge cryptography. Only the facts you choose to share are verified.
+              </p>
+
+              {/* Provable Facts */}
+              <div>
+                <p className="text-sm font-semibold text-foreground mb-4">Examples of provable facts:</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {['Over 18', 'Verified Contributor', 'DAO Member', 'Credential Holder'].map((fact) => (
+                    <div
+                      key={fact}
+                      className="flex items-center gap-2 rounded-lg border border-accent/20 bg-accent/5 px-3 py-2"
+                    >
+                      <div className="h-1.5 w-1.5 rounded-full bg-accent flex-shrink-0"></div>
+                      <span className="text-sm text-foreground">{fact}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Problem Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8 border-t border-border">
         <div className="mx-auto max-w-4xl">
