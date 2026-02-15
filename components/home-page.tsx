@@ -270,9 +270,7 @@ export default function HomePage() {
               <Wallet className="h-4 w-4 mr-2" />
               Wallet Connected – Private Mode Active
             </Button>
-          ) : (
-            <WalletMultiButton />
-          )}
+          ) : null}
           <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
             No personal info is collected. Zero-knowledge privacy preserved.
           </p>
