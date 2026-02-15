@@ -1,5 +1,4 @@
 'use client';
-
 import { useCallback, useState } from 'react';
 import { useWallet } from '@provablehq/aleo-wallet-adaptor-react';
 
@@ -17,9 +16,6 @@ interface TransactionResult {
 }
 
 export function useAleoWallet() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
   const {
     wallet,
     address,
@@ -36,6 +32,9 @@ export function useAleoWallet() {
     executeTransaction: walletExecuteTransaction,
     transactionStatus: walletTransactionStatus,
   } = useWallet();
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const executeTransaction = useCallback(
     async (params: ExecuteTransactionParams): Promise<TransactionResult> => {
