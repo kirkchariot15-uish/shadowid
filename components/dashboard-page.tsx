@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { Navigation } from '@/components/navigation'
+import { IDCard } from '@/components/id-card'
 import { Button } from '@/components/ui/button'
 import { Lock, Wallet, LockOpen, Copy, CheckCircle, Calendar, Plus, FileText, Activity } from 'lucide-react'
 import Link from 'next/link'
@@ -141,56 +142,26 @@ export default function DashboardPage() {
             </Link>
           </div>
 
-          {/* Current Identity */}
-          {localStorage.getItem('shadowid-commitment') && (
-            <div className="rounded-lg border border-border bg-card p-8 mb-10">
-              <h2 className="text-xl font-semibold mb-4">Your Current ShadowID</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <p className="text-xs uppercase tracking-wide font-semibold text-muted-foreground mb-3">Commitment</p>
-                  <div className="bg-muted/20 rounded-lg p-4 border border-border">
-                    <p className="font-mono font-bold text-sm text-accent break-all">
-                      {localStorage.getItem('shadowid-commitment')}
-                    </p>
-                  </div>
-                </div>
+          {/* Your ID Card */}
+          {localStorage.getItem('shadowid-commitment') && (() => {
+            const commitment = localStorage.getItem('shadowid-commitment')!
+            const createdAt = localStorage.getItem('shadowid-created-at')!
+            const userInfoStr = localStorage.getItem('shadowid-user-info')
+            const userInfo = userInfoStr ? JSON.parse(userInfoStr) : { hasPhoto: false, documentCount: 0, notesCount: 0 }
 
-                <div>
-                  <p className="text-xs uppercase tracking-wide font-semibold text-muted-foreground mb-3">Created</p>
-                  <div className="bg-muted/20 rounded-lg p-4 border border-border">
-                    <p className="text-sm text-foreground">
-                      {localStorage.getItem('shadowid-created-at')
-                        ? new Date(localStorage.getItem('shadowid-created-at')!).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })
-                        : 'N/A'}
-                    </p>
-                  </div>
-                </div>
+            return (
+              <div className="mb-10">
+                <h2 className="text-xl font-semibold mb-6">Your ShadowID Card</h2>
+                <IDCard
+                  commitment={commitment}
+                  walletAddress={address}
+                  createdAt={createdAt}
+                  userInfo={userInfo}
+                  showActions={true}
+                />
               </div>
-
-              <div className="mt-4 flex gap-3">
-                <Button
-                  onClick={handleCopyID}
-                  variant="outline"
-                  className="gap-2"
-                >
-                  <Copy className={`h-4 w-4 ${copied ? 'text-green-600' : ''}`} />
-                  {copied ? 'Copied!' : 'Copy Commitment'}
-                </Button>
-                <Link href="/create-id" className="flex-1">
-                  <Button className="w-full bg-accent hover:bg-accent/90">
-                    View QR Code
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          )}
+            )
+          })()}
         </div>
       </div>
     </div>
