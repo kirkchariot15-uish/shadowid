@@ -27,7 +27,7 @@ export default function HomePage() {
       <section className="relative pt-40 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl text-center">
           <div className="inline-block mb-6 px-4 py-2 rounded-full border border-accent/30 bg-accent/5 text-sm text-muted-foreground">
-            Built on Aleo · Zero-Knowledge Proofs
+            Built on Aleo • Zero-Knowledge Proofs
           </div>
           <h1 className="text-5xl sm:text-6xl font-bold tracking-tight text-balance mb-6">
             Your Identity,{' '}
@@ -267,7 +267,7 @@ export default function HomePage() {
               className="rounded-full font-semibold bg-accent/50 text-accent-foreground cursor-default"
             >
               <Wallet className="h-4 w-4 mr-2" />
-              Wallet Connected – Private Mode Active
+              Wallet Connected
             </Button>
           ) : null}
           <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
@@ -284,13 +284,13 @@ export default function HomePage() {
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/20 border border-accent/40">
                 <LockOpen className="h-5 w-5 text-accent" />
               </div>
-              <h2 className="text-2xl font-bold">Identity Layer Initialized</h2>
+              <h2 className="text-2xl font-bold">Ready to Get Started</h2>
             </div>
 
             <div className="grid md:grid-cols-2 gap-12">
-              {/* Available Actions */}
+              {/* Actions */}
               <div>
-                <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-6">Available Actions</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-6">Next Steps</h3>
                 <div className="space-y-3">
                   <Button
                     onClick={() => setShowPrivacyGuarantees(true)}
@@ -305,7 +305,7 @@ export default function HomePage() {
 
               {/* Restricted Capabilities */}
               <div>
-                <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-6">Restricted Capabilities</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-6">Requires Wallet</h3>
                 <div className="space-y-3">
                   {[
                     { name: 'Create Private Identity', reason: 'Requires identity layer activation' },
@@ -405,13 +405,13 @@ export default function HomePage() {
             <div>
               <h2 className="text-3xl font-bold mb-6 text-foreground">The Problem</h2>
               <p className="text-muted-foreground leading-relaxed text-balance">
-                Traditional identity systems force a false choice: surrender your data to institutions, or remain anonymous and unverifiable. This enables surveillance, discrimination, and puts dissidents, journalists, and activists at existential risk.
+                Today's identity systems force an impossible choice: surrender your data to institutions or remain anonymous and unverifiable. This enables surveillance and puts vulnerable populations at risk.
               </p>
             </div>
             <div>
               <h2 className="text-3xl font-bold mb-6 text-foreground">The Solution</h2>
               <p className="text-muted-foreground leading-relaxed text-balance">
-                ShadowID uses zero-knowledge cryptography to let you prove specific claims without revealing unnecessary information. Built on Aleo, you maintain complete custody. No central database. No breach possible.
+                ShadowID uses zero-knowledge cryptography to prove specific claims without revealing unnecessary data. Built on Aleo, you maintain complete custody with no central database.
               </p>
             </div>
           </div>
@@ -421,7 +421,7 @@ export default function HomePage() {
       {/* How It Works Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8 border-t border-border">
         <div className="mx-auto max-w-4xl">
-          <h2 className="text-3xl font-bold mb-12 text-center">How ShadowID Works</h2>
+          <h2 className="text-3xl font-bold mb-12 text-center">How It Works</h2>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="relative">
               <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-accent/10 border border-accent/30 mb-4">
@@ -459,7 +459,7 @@ export default function HomePage() {
       {/* Principles Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8 border-t border-border bg-secondary/5">
         <div className="mx-auto max-w-4xl">
-          <h2 className="text-3xl font-bold mb-12 text-center">Built on Four Principles</h2>
+          <h2 className="text-3xl font-bold mb-12 text-center">Four Core Principles</h2>
           <div className="grid md:grid-cols-2 gap-8">
             <div className="rounded-lg border border-accent/20 bg-card p-6">
               <div className="flex items-start gap-4">
@@ -515,7 +515,7 @@ export default function HomePage() {
       {/* CTA Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8 border-t border-border">
         <div className="mx-auto max-w-4xl text-center">
-          <h2 className="text-4xl font-bold mb-4">Take Control of Your Identity</h2>
+          <h2 className="text-4xl font-bold mb-4">Own Your Identity</h2>
           <p className="text-lg text-muted-foreground">
             {isConnected ? 'Your private identity layer is initialized.' : 'Private. Verifiable. Yours.'}
           </p>
@@ -533,7 +533,7 @@ export default function HomePage() {
               <span className="font-bold">ShadowID</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              {'© 2025. Built for privacy.'}
+              {'© 2025 ShadowID • Built for privacy'}
             </p>
           </div>
         </div>
