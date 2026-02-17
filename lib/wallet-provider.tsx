@@ -25,7 +25,7 @@ export function WalletProviderComponent({ children }: { children: ReactNode }) {
       wallets={wallets}
       network={Network.TESTNET}
       decryptPermission={DecryptPermission.UponRequest}
-      autoConnect={false}
+      autoConnect={true}
     >
       <WalletModalProvider>{children}</WalletModalProvider>
     </AleoWalletProvider>
