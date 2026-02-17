@@ -33,9 +33,24 @@ export default function HomePage() {
             Your Identity,{' '}
             <span className="text-accent">Not Your Data</span>
           </h1>
-          <p className="text-xl text-muted-foreground text-balance max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl text-muted-foreground text-balance max-w-2xl mx-auto leading-relaxed mb-10">
             ShadowID is a self-sovereign identity layer that lets you prove who you are without revealing your personal information or activity history.
           </p>
+          
+          {!isConnected && (
+            <div className="flex justify-center mt-8">
+              <WalletMultiButton />
+            </div>
+          )}
+          
+          {isConnected && (
+            <Link href="/dashboard">
+              <Button size="lg" className="rounded-full bg-accent hover:bg-accent/90 font-semibold px-8">
+                Go to Dashboard
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          )}
         </div>
       </section>
 
