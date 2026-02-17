@@ -2,45 +2,29 @@
 
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { WalletMultiButton } from '@/components/wallet-button'
+import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
-import { Lock, Eye, Users, Shield, Wallet, LockOpen, X } from 'lucide-react'
+import { Lock, Eye, Users, Shield, Wallet, LockOpen, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { addActivityLog } from '@/lib/activity-logger'
 
 export default function HomePage() {
   const { isConnected, address } = useAleoWallet()
   const [showPrivacyGuarantees, setShowPrivacyGuarantees] = useState(false)
 
+  useEffect(() => {
+    if (isConnected) {
+      addActivityLog('Visit home page', 'wallet', `Logged in with wallet: ${address?.substring(0, 8)}...`, 'success')
+    }
+  }, [isConnected, address])
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Navigation */}
-      <nav className="fixed top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
-              <span className="text-sm font-bold text-accent-foreground">σ</span>
-            </div>
-            <span className="text-lg font-bold">ShadowID</span>
-          </div>
-          <div className="flex items-center gap-3">
-            {isConnected && (
-              <Link href="/dashboard">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-full font-semibold border-accent/50 text-foreground hover:border-accent hover:bg-accent/5"
-                >
-                  Dashboard
-                </Button>
-              </Link>
-            )}
-            <WalletMultiButton />
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+      <section className="relative pt-40 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl text-center">
           <div className="inline-block mb-6 px-4 py-2 rounded-full border border-accent/30 bg-accent/5 text-sm text-muted-foreground">
             Built on Aleo · Zero-Knowledge Proofs

@@ -4,10 +4,12 @@ import { useState, useRef } from 'react'
 import QRCode from 'qrcode'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { WalletMultiButton } from '@/components/wallet-button'
+import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
 import { Lock, Upload, FileText, Type, CheckCircle, AlertCircle, X, Download, ArrowLeft, Loader } from 'lucide-react'
 import Link from 'next/link'
 import { encryptData, generateFileCommitment, fileToUint8Array, generateEncryptionKey, generateHash } from '@/lib/crypto-utils'
+import { addActivityLog } from '@/lib/activity-logger'
 
 type InputType = 'photo' | 'document' | 'text'
 
@@ -68,20 +70,24 @@ export default function CreateIDPage() {
 
       if (file.size > 50 * 1024 * 1024) {
         setError('File exceeds 50MB limit')
+        addActivityLog('Upload file', 'identity', `Failed: File too large (${(file.size / 1024 / 1024).toFixed(2)}MB)`, 'error')
         return
       }
 
       if (type === 'photo' && !file.type.startsWith('image/')) {
         setError('Photo must be an image file')
+        addActivityLog('Upload photo', 'identity', 'Failed: Invalid file type', 'error')
         return
       }
       if (type === 'document' && !['application/pdf', 'image/png', 'image/jpeg'].includes(file.type)) {
         setError('Document must be PDF, PNG, or JPEG')
+        addActivityLog('Upload document', 'identity', 'Failed: Invalid file type', 'error')
         return
       }
 
       const data = await fileToUint8Array(file)
       setInputs([...inputs, { type, name: file.name, data }])
+      addActivityLog(`Upload ${type}`, 'identity', `Successfully uploaded: ${file.name} (${(file.size / 1024).toFixed(2)}KB)`, 'success')
 
       if (type === 'photo') {
         const reader = new FileReader()
@@ -94,6 +100,7 @@ export default function CreateIDPage() {
       }
     } catch (err) {
       setError('Failed to read file')
+      addActivityLog('Upload file', 'identity', `Failed: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error')
       console.error('[v0] File read error:', err)
     }
   }
@@ -106,6 +113,7 @@ export default function CreateIDPage() {
     setError('')
     setInputs([...inputs, { type: 'text', name: `Text entry ${inputs.filter(i => i.type === 'text').length + 1}`, data: textInput.trim() }])
     setUserInfo(prev => ({ ...prev, notes: [...prev.notes, textInput.trim()] }))
+    addActivityLog('Add identity note', 'identity', `Added text note: "${textInput.trim().substring(0, 50)}..."`, 'success')
     setTextInput('')
   }
 
@@ -190,6 +198,12 @@ export default function CreateIDPage() {
           localStorage.setItem('shadowid-created-at', new Date().toISOString())
           localStorage.setItem('shadowid-user-info', JSON.stringify(userInfo))
 
+          addActivityLog('Create ShadowID', 'identity', `Created commitment: ${commitmentDisplay}`, 'success', {
+            photo: !!userInfo.photo,
+            documents: userInfo.documents.length,
+            notes: userInfo.notes.length
+          })
+
           setCreationComplete(true)
           setIsGeneratingQR(false)
         } catch (qrErr) {
@@ -213,30 +227,14 @@ export default function CreateIDPage() {
     link.href = qrDataUrl
     link.download = `shadowid-commitment-${commitment}.png`
     link.click()
+    addActivityLog('Download QR code', 'qrcode', `Downloaded QR for commitment: ${commitment}`, 'success')
   }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <nav className="fixed top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
-              <span className="text-sm font-bold text-accent-foreground">σ</span>
-            </div>
-            <span className="text-lg font-bold">ShadowID</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link href="/dashboard">
-              <Button variant="outline" size="sm" className="rounded-full">
-                Dashboard
-              </Button>
-            </Link>
-            <WalletMultiButton />
-          </div>
-        </div>
-      </nav>
-
-      <main className="pt-20 pb-20 px-4 sm:px-6 lg:px-8">
+      <Navigation />
+      
+      <main className="pt-24 md:pt-20 pb-32 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl">
           {/* Back Button - Positioned at top with clear spacing */}
           <div className="mb-8">
