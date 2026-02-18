@@ -190,5 +190,3 @@ export default function ProfilePage() {
     </div>
   )
 }
-
-import { CheckCircle } from 'lucide-react'

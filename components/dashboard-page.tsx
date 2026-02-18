@@ -93,7 +93,6 @@ export default function DashboardPage() {
               <p className="text-xs text-muted-foreground mt-2">Testnet</p>
             </div>
           </div>
-          </div>
 
           {/* Primary Actions */}
           <div className="mb-16">
