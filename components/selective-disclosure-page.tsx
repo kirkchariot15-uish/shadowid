@@ -189,10 +189,10 @@ export default function SelectiveDisclosurePage() {
       <main className="pt-24 md:pt-20 pb-32 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-12">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">Selective Disclosure</h1>
-              <p className="text-muted-foreground mt-1">Edit and choose what to share with your QR code</p>
+              <p className="text-muted-foreground mt-2">Edit attributes and generate custom QR codes</p>
             </div>
             <Link href="/dashboard">
               <Button variant="outline" className="border-accent/40 text-accent hover:bg-accent/10 gap-2">
@@ -208,7 +208,7 @@ export default function SelectiveDisclosurePage() {
               {/* Info Banner */}
               <div className="p-4 rounded-lg border border-accent/30 bg-accent/5">
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Edit each attribute to match your information, then toggle the eye icon to reveal. Your QR code updates instantly. All operations happen locally in your browser.
+                  Edit your information, toggle attributes to reveal, and your QR code updates instantly. Everything stays private on your device.
                 </p>
               </div>
 

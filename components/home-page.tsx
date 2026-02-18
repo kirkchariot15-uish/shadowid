@@ -64,13 +64,13 @@ export default function HomePage() {
                 {/* Physical card replica */}
                 <div className={`relative rounded-2xl transition-all duration-300 ${
                   isConnected
-                    ? 'bg-gradient-to-br from-slate-800 via-slate-850 to-slate-900 border border-slate-700/60 shadow-2xl'
-                    : 'bg-gradient-to-br from-card to-card border border-border/60 shadow-lg'
+                    ? 'bg-gradient-to-br from-card via-muted to-background border border-accent/30 shadow-2xl'
+                    : 'bg-gradient-to-br from-card to-muted border border-border shadow-lg'
                 }`}>
-                  {/* Subtle texture overlay */}
-                  <div className="absolute inset-0 rounded-2xl opacity-30 pointer-events-none" style={{
-                    backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)',
-                  }} />
+                  {/* Subtle teal accent glow */}
+                  <div className="absolute inset-0 opacity-10 pointer-events-none">
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-accent rounded-full blur-3xl" />
+                  </div>
 
                   {/* Card Content */}
                   <div className="relative p-8 space-y-8">

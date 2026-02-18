@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Save, Lock, User, FileText } from 'lucide-react'
+import { ArrowLeft, Save, Lock, User, FileText, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 import { getUserProfile, saveUserProfile, UserProfile } from '@/lib/user-profile'
 import { addActivityLog } from '@/lib/activity-logger'
@@ -83,13 +83,13 @@ export default function ProfilePage() {
       <main className="pt-24 md:pt-20 pb-32 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-12">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Profile Settings</h1>
-              <p className="text-muted-foreground mt-1">Customize your ShadowID profile</p>
+              <h1 className="text-3xl font-bold tracking-tight">Profile</h1>
+              <p className="text-muted-foreground mt-2">Optional public profile information for disclosures</p>
             </div>
             <Link href="/dashboard">
-              <Button variant="outline" className="border-blue-500/40 text-blue-600 hover:bg-blue-500/10 gap-2">
+              <Button variant="outline" className="border-accent/40 text-accent hover:bg-accent/10 gap-2">
                 <ArrowLeft className="h-4 w-4" />
                 Back
               </Button>
@@ -111,14 +111,12 @@ export default function ProfilePage() {
           )}
 
           {/* Profile Form */}
-          <div className="rounded-lg border border-border bg-card p-8 space-y-6">
+          <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-8 space-y-8">
             {/* Username */}
             <div>
-              <label className="block text-sm font-semibold text-foreground mb-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <User className="h-4 w-4 text-accent" />
-                  Username (Optional)
-                </div>
+              <label className="block text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                <User className="h-4 w-4 text-accent" />
+                Username (Optional)
               </label>
               <input
                 type="text"
@@ -126,56 +124,54 @@ export default function ProfilePage() {
                 value={profile.username}
                 onChange={(e) => setProfile({ ...profile, username: e.target.value })}
                 maxLength={30}
-                className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+                className="w-full px-4 py-3 rounded-lg border border-accent/20 bg-background text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/50 transition-all"
               />
-              <p className="text-xs text-muted-foreground/70 mt-2">
-                {profile.username.length}/30 characters
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Your username is NOT part of your identity commitment. It's displayed in disclosures only if you choose to share it.
-              </p>
+              <div className="flex justify-between items-start mt-3">
+                <p className="text-xs text-muted-foreground/70">
+                  Displayed in disclosures only if you choose to share it.
+                </p>
+                <p className="text-xs text-accent/60">{profile.username.length}/30</p>
+              </div>
             </div>
 
             {/* Bio */}
             <div>
-              <label className="block text-sm font-semibold text-foreground mb-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <FileText className="h-4 w-4 text-accent" />
-                  Bio (Optional)
-                </div>
+              <label className="block text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                <FileText className="h-4 w-4 text-accent" />
+                Bio (Optional)
               </label>
               <textarea
                 placeholder="Tell us about yourself..."
                 value={profile.bio}
                 onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
                 maxLength={280}
-                rows={6}
-                className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent resize-none"
+                rows={5}
+                className="w-full px-4 py-3 rounded-lg border border-accent/20 bg-background text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/50 resize-none transition-all"
               />
-              <p className="text-xs text-muted-foreground/70 mt-2">
-                {profile.bio.length}/280 characters
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Your bio is encrypted locally and can be included in selective disclosures.
-              </p>
+              <div className="flex justify-between items-start mt-3">
+                <p className="text-xs text-muted-foreground/70">
+                  Encrypted and included in selective disclosures.
+                </p>
+                <p className="text-xs text-accent/60">{profile.bio.length}/280</p>
+              </div>
             </div>
 
             {/* Privacy Notice */}
-            <div className="p-4 rounded-lg border border-border/50 bg-muted/5">
+            <div className="p-4 rounded-lg border border-accent/20 bg-accent/5">
               <p className="text-xs text-muted-foreground leading-relaxed flex items-start gap-2">
-                <Lock className="h-4 w-4 text-accent/60 flex-shrink-0 mt-0.5" />
+                <Lock className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
                 <span>
-                  <strong>Privacy Note:</strong> Your profile (username and bio) is stored encrypted on your device only. It's never transmitted unencrypted. Your identity commitment remains unchanged regardless of profile edits.
+                  Your profile is encrypted locally and never transmitted unencrypted. Your identity commitment stays unchanged.
                 </span>
               </p>
             </div>
 
             {/* Save Button */}
-            <div className="flex gap-3 pt-4 border-t border-border/50">
+            <div className="flex gap-3 pt-4 border-t border-border/30">
               <Button
                 onClick={handleSaveProfile}
                 disabled={isSaving}
-                className="flex-1 bg-accent hover:bg-accent/90 gap-2"
+                className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground gap-2 font-semibold"
               >
                 <Save className="h-4 w-4" />
                 {isSaving ? 'Saving...' : 'Save Profile'}

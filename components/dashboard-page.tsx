@@ -63,83 +63,62 @@ export default function DashboardPage() {
       {/* Main Content - with top padding for navigation */}
       <div className="pt-24 md:pt-20 pb-32 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
-          {/* Header */}
-          <div className="mb-10">
-            <h1 className="text-4xl font-bold tracking-tight mb-2">Dashboard</h1>
-            <p className="text-muted-foreground">Welcome to your ShadowID private identity space</p>
+          {/* Header Section */}
+          <div className="mb-16">
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="text-4xl font-bold tracking-tight mb-2">Your ShadowID</h1>
+                <p className="text-muted-foreground text-lg">Manage your private identity and disclosures</p>
+              </div>
+            </div>
           </div>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-            <div className="rounded-lg border border-border bg-card p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs uppercase tracking-wide font-semibold text-muted-foreground mb-2">Wallet Status</p>
-                  <p className="text-2xl font-bold text-accent">Connected</p>
-                </div>
-                <Wallet className="h-8 w-8 text-accent/40" />
-              </div>
-              <p className="text-xs text-muted-foreground mt-4">
-                {address?.slice(0, 8)}...{address?.slice(-6)}
-              </p>
+          {/* Quick Stats - Cleaner Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+            <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-6">
+              <p className="text-xs uppercase tracking-widest font-semibold text-accent mb-3">Wallet Status</p>
+              <p className="text-2xl font-bold text-foreground">Connected</p>
+              <p className="text-xs text-muted-foreground mt-2">{address?.slice(0, 10)}...</p>
             </div>
-
-            <div className="rounded-lg border border-border bg-card p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs uppercase tracking-wide font-semibold text-muted-foreground mb-2">IDs Created</p>
-                  <p className="text-2xl font-bold text-accent">
-                    {localStorage.getItem('shadowid-commitment') ? '1' : '0'}
-                  </p>
-                </div>
-                <FileText className="h-8 w-8 text-accent/40" />
-              </div>
+            
+            <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-6">
+              <p className="text-xs uppercase tracking-widest font-semibold text-accent mb-3">Privacy Mode</p>
+              <p className="text-2xl font-bold text-foreground">Active</p>
+              <p className="text-xs text-muted-foreground mt-2">Zero-knowledge enabled</p>
             </div>
-
-            <div className="rounded-lg border border-border bg-card p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs uppercase tracking-wide font-semibold text-muted-foreground mb-2">Recent Activity</p>
-                  <p className="text-2xl font-bold text-accent">Active</p>
-                </div>
-                <Activity className="h-8 w-8 text-accent/40" />
-              </div>
+            
+            <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-6">
+              <p className="text-xs uppercase tracking-widest font-semibold text-accent mb-3">Network</p>
+              <p className="text-2xl font-bold text-foreground">Aleo</p>
+              <p className="text-xs text-muted-foreground mt-2">Testnet</p>
             </div>
+          </div>
           </div>
 
           {/* Primary Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-            <Link href="/create-id" className="group">
-              <div className="rounded-lg border border-border bg-card p-8 hover:border-accent/50 transition-all cursor-pointer">
-                <div className="flex items-start justify-between mb-4">
-                  <Plus className="h-8 w-8 text-accent" />
+          <div className="mb-16">
+            <h2 className="text-lg font-semibold mb-6 uppercase tracking-widest">Actions</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Link href="/create-id" className="group">
+                <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-8 hover:border-accent/40 transition-all cursor-pointer">
+                  <Plus className="h-8 w-8 text-accent mb-4" />
+                  <h3 className="font-semibold text-lg mb-2">Create New Identity</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Create a ShadowID with encrypted identity materials.
+                  </p>
                 </div>
-                <h3 className="font-semibold text-lg mb-2">Create New Identity</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Create a new ShadowID with encrypted identity materials. Upload photos, documents, or text.
-                </p>
-                <div className="mt-4 flex items-center gap-2 text-accent text-sm font-medium group-hover:gap-3 transition-all">
-                  Start Creating
-                  <span>→</span>
-                </div>
-              </div>
-            </Link>
+              </Link>
 
-            <Link href="/logs" className="group">
-              <div className="rounded-lg border border-border bg-card p-8 hover:border-accent/50 transition-all cursor-pointer">
-                <div className="flex items-start justify-between mb-4">
-                  <Activity className="h-8 w-8 text-accent" />
+              <Link href="/logs" className="group">
+                <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-8 hover:border-accent/40 transition-all cursor-pointer">
+                  <FileText className="h-8 w-8 text-accent mb-4" />
+                  <h3 className="font-semibold text-lg mb-2">Activity Logs</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    View your identity creation and security events.
+                  </p>
                 </div>
-                <h3 className="font-semibold text-lg mb-2">Activity Logs</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  View detailed activity history of all identity creation, wallet connections, and security events.
-                </p>
-                <div className="mt-4 flex items-center gap-2 text-accent text-sm font-medium group-hover:gap-3 transition-all">
-                  View Logs
-                  <span>→</span>
-                </div>
-              </div>
-            </Link>
+              </Link>
+            </div>
           </div>
 
           {/* Your ID Card */}
@@ -150,8 +129,8 @@ export default function DashboardPage() {
             const userInfo = userInfoStr ? JSON.parse(userInfoStr) : { hasPhoto: false, documentCount: 0, notesCount: 0 }
 
             return (
-              <div className="mb-10">
-                <h2 className="text-xl font-semibold mb-6">Your ShadowID Card</h2>
+              <div className="mt-24 pt-16 border-t border-border">
+                <h2 className="text-lg font-semibold mb-8 uppercase tracking-widest">Your Identity Card</h2>
                 <IDCard
                   commitment={commitment}
                   walletAddress={address}
