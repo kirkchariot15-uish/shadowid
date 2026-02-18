@@ -5,7 +5,7 @@ import QRCode from 'qrcode'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
-import { Lock, Eye, EyeOff, Copy, Download, ArrowLeft, Loader, CheckCircle, QrCode } from 'lucide-react'
+import { Lock, Eye, EyeOff, Copy, Download, ArrowLeft, CheckCircle, QrCode, Edit2, Save, X } from 'lucide-react'
 import Link from 'next/link'
 import { getUserProfile } from '@/lib/user-profile'
 import { addActivityLog } from '@/lib/activity-logger'
@@ -13,63 +13,68 @@ import { addActivityLog } from '@/lib/activity-logger'
 export default function SelectiveDisclosurePage() {
   const { isConnected, address } = useAleoWallet()
   const [revealedAttributes, setRevealedAttributes] = useState<Record<string, boolean>>({})
+  const [editingAttribute, setEditingAttribute] = useState<string | null>(null)
+  const [attributeValues, setAttributeValues] = useState<Record<string, string>>({})
   const [copied, setCopied] = useState<string | null>(null)
   const [userProfile, setUserProfile] = useState<any>(null)
-  const [isGeneratingQR, setIsGeneratingQR] = useState(false)
   const [selectedQRData, setSelectedQRData] = useState<any>(null)
   const [qrUrl, setQrUrl] = useState<string>('')
 
-  const attributes = [
+  const defaultAttributes = [
     {
       key: 'full-name',
       label: 'Full Name',
       category: 'Personal',
-      value: 'Alex Morgan',
-      masked: '••••••••••••',
+      defaultValue: 'Your Full Name',
       description: 'Your legal identity name',
     },
     {
       key: 'role',
       label: 'Role / Title',
       category: 'Professional',
-      value: 'Software Engineer',
-      masked: '•••••••••••••••',
+      defaultValue: 'Your Role',
       description: 'Your professional role or title',
     },
     {
       key: 'credential-type',
       label: 'Credential Type',
       category: 'Credentials',
-      value: 'Verified Contributor',
-      masked: '•••••••••',
+      defaultValue: 'Your Credential',
       description: 'Your credential category',
     },
     {
       key: 'age-range',
       label: 'Age Range',
       category: 'Verification',
-      value: '25-35',
-      masked: '••',
+      defaultValue: 'Your Age Range',
       description: 'Your age category (not exact age)',
     },
     {
       key: 'dao-member',
       label: 'DAO Membership',
       category: 'Credentials',
-      value: 'Active Member',
-      masked: '••••••••',
+      defaultValue: 'Member Status',
       description: 'Your DAO membership status',
     },
     {
       key: 'verification-status',
       label: 'Verification Status',
       category: 'Status',
-      value: 'Verified',
-      masked: '••••••••',
+      defaultValue: 'Your Status',
       description: 'Your verification level',
     },
   ]
 
+  // Initialize attribute values
+  useEffect(() => {
+    const initialized: Record<string, string> = {}
+    defaultAttributes.forEach(attr => {
+      initialized[attr.key] = localStorage.getItem(`disclosure-${attr.key}`) || attr.defaultValue
+    })
+    setAttributeValues(initialized)
+  }, [])
+
+  // Load user profile
   useEffect(() => {
     if (!isConnected || !address) return
 
@@ -85,6 +90,54 @@ export default function SelectiveDisclosurePage() {
     loadProfile()
   }, [isConnected, address])
 
+  // Auto-generate QR code whenever revealed attributes change
+  useEffect(() => {
+    const generateQR = async () => {
+      const selectedAttrs = defaultAttributes.filter(attr => revealedAttributes[attr.key])
+      
+      if (selectedAttrs.length === 0) {
+        setQrUrl('')
+        setSelectedQRData(null)
+        return
+      }
+
+      try {
+        const disclosureData = {
+          type: 'shadowid-disclosure-v1',
+          timestamp: new Date().toISOString(),
+          walletAddress: address,
+          attributes: selectedAttrs.map(attr => ({
+            key: attr.key,
+            label: attr.label,
+            value: attributeValues[attr.key] || attr.defaultValue,
+            category: attr.category,
+          })),
+          profile: userProfile ? {
+            username: userProfile.username,
+            bio: userProfile.bio,
+          } : null,
+          commitmentReference: localStorage.getItem('shadowid-commitment'),
+        }
+
+        const qrData = JSON.stringify(disclosureData)
+        const qrUrl = await QRCode.toDataURL(qrData, {
+          errorCorrectionLevel: 'H',
+          type: 'image/png',
+          width: 500,
+          margin: 3,
+          color: { dark: '#000000', light: '#ffffff' },
+        })
+
+        setSelectedQRData(disclosureData)
+        setQrUrl(qrUrl)
+      } catch (err) {
+        console.error('[v0] QR generation error:', err)
+      }
+    }
+
+    generateQR()
+  }, [revealedAttributes, attributeValues, address, userProfile])
+
   const toggleAttribute = (key: string) => {
     setRevealedAttributes(prev => ({
       ...prev,
@@ -92,54 +145,19 @@ export default function SelectiveDisclosurePage() {
     }))
   }
 
+  const updateAttributeValue = (key: string, value: string) => {
+    setAttributeValues(prev => ({
+      ...prev,
+      [key]: value
+    }))
+    localStorage.setItem(`disclosure-${key}`, value)
+  }
+
   const handleCopyAttribute = (key: string, value: string) => {
     navigator.clipboard.writeText(value)
     setCopied(key)
     addActivityLog('Copy disclosed attribute', 'disclosure', `Copied: ${key}`, 'success')
     setTimeout(() => setCopied(null), 2000)
-  }
-
-  const generateDisclosureQR = async () => {
-    const selectedAttrs = attributes.filter(attr => revealedAttributes[attr.key])
-    if (selectedAttrs.length === 0) return
-
-    setIsGeneratingQR(true)
-    try {
-      const disclosureData = {
-        type: 'shadowid-disclosure-v1',
-        timestamp: new Date().toISOString(),
-        walletAddress: address,
-        attributes: selectedAttrs.map(attr => ({
-          key: attr.key,
-          label: attr.label,
-          value: attr.value,
-          category: attr.category,
-        })),
-        profile: userProfile ? {
-          username: userProfile.username,
-          bio: userProfile.bio,
-        } : null,
-        commitmentReference: localStorage.getItem('shadowid-commitment'),
-      }
-
-      const qrData = JSON.stringify(disclosureData)
-      const qrUrl = await QRCode.toDataURL(qrData, {
-        errorCorrectionLevel: 'H',
-        type: 'image/png',
-        width: 500,
-        margin: 3,
-        color: { dark: '#000000', light: '#ffffff' },
-      })
-
-      setSelectedQRData(disclosureData)
-      setQrUrl(qrUrl)
-      addActivityLog('Generate disclosure QR', 'disclosure', `Generated QR with ${selectedAttrs.length} attribute(s)`, 'success')
-    } catch (err) {
-      console.error('[v0] QR generation error:', err)
-      addActivityLog('Generate disclosure QR', 'disclosure', 'Failed to generate QR', 'error')
-    } finally {
-      setIsGeneratingQR(false)
-    }
   }
 
   const downloadDisclosureQR = () => {
@@ -168,33 +186,16 @@ export default function SelectiveDisclosurePage() {
     <div className="min-h-screen bg-background text-foreground">
       <Navigation />
 
-      {/* QR Generation Loading Overlay */}
-      {isGeneratingQR && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 flex items-center justify-center">
-          <div className="bg-background border border-border rounded-xl p-8 shadow-2xl space-y-4">
-            <div className="flex justify-center">
-              <div className="relative w-16 h-16">
-                <Loader className="w-full h-full text-accent animate-spin" strokeWidth={1.5} />
-              </div>
-            </div>
-            <div className="text-center">
-              <p className="text-sm font-semibold text-foreground">Generating Disclosure QR</p>
-              <p className="text-xs text-muted-foreground mt-1">Encoding selected attributes...</p>
-            </div>
-          </div>
-        </div>
-      )}
-
       <main className="pt-24 md:pt-20 pb-32 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">Selective Disclosure</h1>
-              <p className="text-muted-foreground mt-1">Reveal only the attributes you want to share</p>
+              <p className="text-muted-foreground mt-1">Edit and choose what to share with your QR code</p>
             </div>
             <Link href="/dashboard">
-              <Button variant="outline" className="border-blue-500/40 text-blue-600 hover:bg-blue-500/10 gap-2">
+              <Button variant="outline" className="border-accent/40 text-accent hover:bg-accent/10 gap-2">
                 <ArrowLeft className="h-4 w-4" />
                 Back
               </Button>
@@ -207,79 +208,131 @@ export default function SelectiveDisclosurePage() {
               {/* Info Banner */}
               <div className="p-4 rounded-lg border border-accent/30 bg-accent/5">
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Click the eye icon to reveal attributes. Select multiple attributes and generate a QR code that shares only what you choose. All operations happen locally in your browser.
+                  Edit each attribute to match your information, then toggle the eye icon to reveal. Your QR code updates instantly. All operations happen locally in your browser.
                 </p>
               </div>
 
               {/* Attributes by Category */}
               {categories.map((category) => {
-                const categoryAttributes = attributes.filter(attr => attr.category === category)
+                const categoryAttributes = defaultAttributes.filter(attr => attr.category === category)
                 if (categoryAttributes.length === 0) return null
 
                 return (
                   <div key={category}>
                     <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-4">{category}</h2>
                     <div className="space-y-3">
-                      {categoryAttributes.map((attr) => (
-                        <div
-                          key={attr.key}
-                          className="rounded-lg border border-border bg-card p-6 hover:bg-muted/5 transition-colors"
-                        >
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1 min-w-0">
-                              <h3 className="text-sm font-semibold text-foreground mb-1">{attr.label}</h3>
-                              <p className="text-xs text-muted-foreground/60 mb-3">{attr.description}</p>
-                              <p className={`text-sm font-mono transition-colors ${
-                                revealedAttributes[attr.key] ? 'text-accent font-bold' : 'text-muted-foreground/50'
-                              }`}>
-                                {revealedAttributes[attr.key] ? attr.value : attr.masked}
-                              </p>
-                            </div>
+                      {categoryAttributes.map((attr) => {
+                        const currentValue = attributeValues[attr.key] || attr.defaultValue
+                        const isEditing = editingAttribute === attr.key
+                        const isRevealed = revealedAttributes[attr.key]
 
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              {/* Reveal Toggle */}
-                              <button
-                                onClick={() => toggleAttribute(attr.key)}
-                                className="p-2 hover:bg-accent/10 rounded transition-colors"
-                                title={revealedAttributes[attr.key] ? 'Hide attribute' : 'Reveal attribute'}
-                              >
-                                {revealedAttributes[attr.key] ? (
-                                  <Eye className="h-5 w-5 text-accent" />
-                                ) : (
-                                  <EyeOff className="h-5 w-5 text-muted-foreground/60" />
+                        return (
+                          <div
+                            key={attr.key}
+                            className={`rounded-lg border transition-all ${
+                              isRevealed 
+                                ? 'border-accent/40 bg-accent/5' 
+                                : 'border-border bg-card'
+                            } p-6 hover:bg-muted/5`}
+                          >
+                            <div className="flex items-start justify-between gap-4 mb-3">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="text-sm font-semibold text-foreground">{attr.label}</h3>
+                                <p className="text-xs text-muted-foreground/60">{attr.description}</p>
+                              </div>
+
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                {/* Edit Button */}
+                                {!isEditing && (
+                                  <button
+                                    onClick={() => setEditingAttribute(attr.key)}
+                                    className="p-2 hover:bg-accent/10 rounded transition-colors"
+                                    title="Edit attribute"
+                                  >
+                                    <Edit2 className="h-4 w-4 text-muted-foreground/60 hover:text-accent" />
+                                  </button>
                                 )}
-                              </button>
 
-                              {/* Copy Button */}
-                              {revealedAttributes[attr.key] && (
+                                {/* Reveal Toggle */}
                                 <button
-                                  onClick={() => handleCopyAttribute(attr.key, attr.value)}
+                                  onClick={() => toggleAttribute(attr.key)}
                                   className="p-2 hover:bg-accent/10 rounded transition-colors"
-                                  title="Copy value"
+                                  title={isRevealed ? 'Hide attribute' : 'Reveal attribute'}
                                 >
-                                  <Copy className={`h-5 w-5 ${copied === attr.key ? 'text-green-600' : 'text-muted-foreground/60 hover:text-accent'}`} />
+                                  {isRevealed ? (
+                                    <Eye className="h-5 w-5 text-accent" />
+                                  ) : (
+                                    <EyeOff className="h-5 w-5 text-muted-foreground/60" />
+                                  )}
                                 </button>
-                              )}
-                            </div>
-                          </div>
 
-                          {copied === attr.key && (
-                            <p className="text-xs text-green-600 mt-3">Copied</p>
-                          )}
-                        </div>
-                      ))}
+                                {/* Copy Button */}
+                                {isRevealed && !isEditing && (
+                                  <button
+                                    onClick={() => handleCopyAttribute(attr.key, currentValue)}
+                                    className="p-2 hover:bg-accent/10 rounded transition-colors"
+                                    title="Copy value"
+                                  >
+                                    <Copy className={`h-5 w-5 ${copied === attr.key ? 'text-green-600' : 'text-muted-foreground/60 hover:text-accent'}`} />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Display or Edit Mode */}
+                            {isEditing ? (
+                              <div className="space-y-3">
+                                <input
+                                  type="text"
+                                  value={currentValue}
+                                  onChange={(e) => updateAttributeValue(attr.key, e.target.value)}
+                                  className="w-full px-3 py-2 rounded-lg bg-background border border-accent/30 text-foreground placeholder-muted-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/50 text-sm"
+                                  placeholder={attr.defaultValue}
+                                  autoFocus
+                                />
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => setEditingAttribute(null)}
+                                    className="flex-1 px-3 py-2 rounded-lg bg-accent hover:bg-accent/90 text-accent-foreground font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
+                                  >
+                                    <Save className="h-4 w-4" />
+                                    Save
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingAttribute(null)}
+                                    className="flex-1 px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 text-foreground font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
+                                  >
+                                    <X className="h-4 w-4" />
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className={`text-sm font-mono transition-colors ${
+                                isRevealed ? 'text-accent font-bold' : 'text-muted-foreground/50'
+                              }`}>
+                                {isRevealed ? currentValue : `${'•'.repeat(Math.max(10, currentValue.length))}`}
+                              </div>
+                            )}
+
+                            {copied === attr.key && (
+                              <p className="text-xs text-green-600 mt-3">Copied</p>
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
                 )
               })}
             </div>
 
-            {/* QR Code Generation Panel */}
+            {/* QR Code Live Preview Panel */}
             <div className="lg:col-span-1">
               <div className="rounded-lg border border-border bg-card p-6 sticky top-24 space-y-4">
                 <h3 className="text-sm font-semibold flex items-center gap-2">
                   <QrCode className="h-4 w-4 text-accent" />
-                  Generate QR Code
+                  Live QR Preview
                 </h3>
 
                 <div className="p-3 rounded-lg bg-muted/5 border border-border/30">
@@ -288,17 +341,8 @@ export default function SelectiveDisclosurePage() {
                   </p>
                 </div>
 
-                <Button
-                  onClick={generateDisclosureQR}
-                  disabled={Object.values(revealedAttributes).filter(Boolean).length === 0 || isGeneratingQR}
-                  className="w-full bg-accent hover:bg-accent/90 gap-2"
-                >
-                  <QrCode className="h-4 w-4" />
-                  Generate QR Code
-                </Button>
-
-                {qrUrl && selectedQRData && (
-                  <div className="space-y-4 border-t border-border/50 pt-4">
+                {qrUrl && selectedQRData ? (
+                  <div className="space-y-4">
                     <div className="flex justify-center">
                       <div className="bg-white rounded-lg p-4 border-4 border-accent/20">
                         <img
@@ -310,30 +354,39 @@ export default function SelectiveDisclosurePage() {
                       </div>
                     </div>
 
-                    <div className="space-y-2 text-xs">
-                      <p className="text-muted-foreground text-center">
+                    <div className="space-y-2 text-xs text-center">
+                      <p className="text-muted-foreground">
                         {selectedQRData.attributes.length} attribute{selectedQRData.attributes.length !== 1 ? 's' : ''} encoded
                       </p>
                       {userProfile?.username && (
-                        <p className="text-muted-foreground text-center">
-                          Username: <span className="text-foreground font-semibold">{userProfile.username}</span>
+                        <p className="text-muted-foreground">
+                          User: <span className="text-foreground font-semibold">{userProfile.username}</span>
                         </p>
                       )}
+                      <p className="text-muted-foreground/60">
+                        Updated: {new Date(selectedQRData.timestamp).toLocaleTimeString()}
+                      </p>
                     </div>
 
                     <Button
                       onClick={downloadDisclosureQR}
-                      variant="outline"
-                      className="w-full gap-2"
+                      className="w-full bg-accent hover:bg-accent/90 text-accent-foreground gap-2"
                     >
                       <Download className="h-4 w-4" />
                       Download QR
                     </Button>
                   </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <QrCode className="h-12 w-12 text-muted-foreground/30 mb-3" />
+                    <p className="text-xs text-muted-foreground">
+                      Select attributes to generate QR code
+                    </p>
+                  </div>
                 )}
 
-                <div className="text-xs text-muted-foreground/70 leading-relaxed">
-                  <p><strong>Privacy:</strong> QR codes contain only selected attributes + your profile metadata. Your original commitment remains unchanged.</p>
+                <div className="text-xs text-muted-foreground/70 leading-relaxed border-t border-border/50 pt-4">
+                  <p><strong>Privacy:</strong> QR codes contain only your selected, custom attributes. Your original commitment is never shared.</p>
                 </div>
               </div>
             </div>
