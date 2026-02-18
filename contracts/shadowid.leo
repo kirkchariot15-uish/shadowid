@@ -20,7 +20,7 @@ program shadowid.aleo {
 
     // Register a new identity commitment on-chain
     // Returns an IdentityCommitment record owned by the caller
-    transition register_commitment(
+    async transition register_commitment(
         public commitment_hash: field,
         public timestamp: u64
     ) -> IdentityCommitment {
@@ -35,20 +35,20 @@ program shadowid.aleo {
         return commitment_record then finalize(commitment_hash, self.caller, timestamp);
     }
 
-    finalize register_commitment(
+    async function register_commitment_finalize(
         public commitment_hash: field,
         public owner: address,
         public timestamp: u64
     ) {
         // Store commitment in public mappings
-        Mapping::set(commitments, commitment_hash, owner);
-        Mapping::set(commitment_timestamps, commitment_hash, timestamp);
-        Mapping::set(revocations, commitment_hash, false);
+        commitments.set(commitment_hash, owner);
+        commitment_timestamps.set(commitment_hash, timestamp);
+        revocations.set(commitment_hash, false);
     }
 
     // Revoke an existing identity commitment
     // Only the owner can revoke their commitment
-    transition revoke_commitment(
+    async transition revoke_commitment(
         commitment: IdentityCommitment,
     ) -> IdentityCommitment {
         // Create revoked commitment record
@@ -62,25 +62,25 @@ program shadowid.aleo {
         return revoked_commitment then finalize(commitment.commitment_hash);
     }
 
-    finalize revoke_commitment(
+    async function revoke_commitment_finalize(
         public commitment_hash: field
     ) {
         // Mark commitment as revoked
-        Mapping::set(revocations, commitment_hash, true);
+        revocations.set(commitment_hash, true);
     }
 
     // Check if commitment is revoked
-    transition is_revoked(
+    async transition is_revoked(
         public commitment_hash: field
     ) {
         return then finalize(commitment_hash);
     }
 
-    finalize is_revoked(
+    async function is_revoked_finalize(
         public commitment_hash: field
     ) {
-        // Check revocation status
-        let revoked: bool = Mapping::get_or_use(revocations, commitment_hash, false);
+        // Check revocation status - will assert if revoked
+        let revoked: bool = revocations.get_or_use(commitment_hash, false);
         assert(!revoked);
     }
 }
