@@ -10,6 +10,7 @@ import { Lock, Upload, FileText, Type, CheckCircle, AlertCircle, X, Download, Ar
 import Link from 'next/link'
 import { encryptData, generateFileCommitment, fileToUint8Array, generateEncryptionKey, generateHash } from '@/lib/crypto-utils'
 import { addActivityLog } from '@/lib/activity-logger'
+import { registerCommitmentOnChain } from '@/lib/aleo-contract'
 
 type InputType = 'photo' | 'document' | 'text'
 
@@ -203,6 +204,18 @@ export default function CreateIDPage() {
             documents: userInfo.documents.length,
             notes: userInfo.notes.length
           })
+
+          // Register commitment on Aleo blockchain
+          console.log('[v0] Registering commitment on-chain...')
+          const onChainResult = await registerCommitmentOnChain(commitmentDisplay, address || '')
+          
+          if (onChainResult.success) {
+            console.log('[v0] On-chain registration successful:', onChainResult.transactionId)
+            addActivityLog('Register on-chain', 'blockchain', `Commitment registered on Aleo: ${onChainResult.transactionId}`, 'success')
+          } else {
+            console.error('[v0] On-chain registration failed:', onChainResult.error)
+            addActivityLog('Register on-chain', 'blockchain', `Failed: ${onChainResult.error}`, 'error')
+          }
 
           setCreationComplete(true)
           setIsGeneratingQR(false)
