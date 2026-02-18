@@ -1,0 +1,6 @@
+{
+  "program": "shadowid.aleo",
+  "version": "1.0.0",
+  "description": "ShadowID zero-knowledge identity commitment registry on Aleo blockchain",
+  "license": "MIT"
+}

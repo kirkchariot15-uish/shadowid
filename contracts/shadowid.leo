@@ -69,49 +69,18 @@ program shadowid.aleo {
         Mapping::set(revocations, commitment_hash, true);
     }
 
-    // Verify if a commitment exists and is not revoked
-    transition verify_commitment(
+    // Check if commitment is revoked
+    transition is_revoked(
         public commitment_hash: field
-    ) -> bool {
-        return true then finalize(commitment_hash);
+    ) {
+        return then finalize(commitment_hash);
     }
 
-    finalize verify_commitment(
+    finalize is_revoked(
         public commitment_hash: field
-    ) -> bool {
-        // Check if commitment exists
-        let owner: address = Mapping::get(commitments, commitment_hash);
-        
-        // Check if revoked
-        let is_revoked: bool = Mapping::get_or_use(revocations, commitment_hash, false);
-        
-        // Valid if exists and not revoked
-        return !is_revoked;
-    }
-
-    // Get commitment owner (public verification)
-    transition get_owner(
-        public commitment_hash: field
-    ) -> address {
-        return self.caller then finalize(commitment_hash);
-    }
-
-    finalize get_owner(
-        public commitment_hash: field
-    ) -> address {
-        return Mapping::get(commitments, commitment_hash);
-    }
-
-    // Get commitment timestamp
-    transition get_timestamp(
-        public commitment_hash: field
-    ) -> u64 {
-        return 0u64 then finalize(commitment_hash);
-    }
-
-    finalize get_timestamp(
-        public commitment_hash: field
-    ) -> u64 {
-        return Mapping::get(commitment_timestamps, commitment_hash);
+    ) {
+        // Check revocation status
+        let revoked: bool = Mapping::get_or_use(revocations, commitment_hash, false);
+        assert(!revoked);
     }
 }
