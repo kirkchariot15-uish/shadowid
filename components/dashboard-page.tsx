@@ -5,6 +5,7 @@ import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { Navigation } from '@/components/navigation'
 import { IDCard } from '@/components/id-card'
+import { BlockchainStatus } from '@/components/blockchain-status'
 import { Button } from '@/components/ui/button'
 import { Lock, Wallet, LockOpen, Copy, CheckCircle, Calendar, Plus, FileText, Activity } from 'lucide-react'
 import Link from 'next/link'
@@ -71,6 +72,11 @@ export default function DashboardPage() {
                 <p className="text-muted-foreground text-lg">Manage your private identity and disclosures</p>
               </div>
             </div>
+          </div>
+
+          {/* Blockchain Status Banner */}
+          <div className="mb-8">
+            <BlockchainStatus />
           </div>
 
           {/* Quick Stats - Cleaner Grid */}
