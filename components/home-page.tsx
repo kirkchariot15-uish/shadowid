@@ -1,6 +1,6 @@
 'use client'
 
-import { useAleoWallet } from '@/hooks/use-aleo-wallet'
+import { useWallet } from '@/lib/wallet-provider'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'

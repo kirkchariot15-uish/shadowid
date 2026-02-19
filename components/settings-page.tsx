@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useAleoWallet } from '@/hooks/use-aleo-wallet'
+import { useWallet } from '@/lib/wallet-provider'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { Button } from '@/components/ui/button'
 import { Lock, ArrowLeft, Trash2, AlertTriangle, CheckCircle } from 'lucide-react'
