@@ -2,13 +2,13 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useAleoWallet } from '@/hooks/use-aleo-wallet'
+import { useWallet } from '@/lib/wallet-context'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { Button } from '@/components/ui/button'
 import { Menu, X, Home, FileText, Settings, User, Shield, Award, CheckCircle } from 'lucide-react'
 
 export function NavigationMenu() {
-  const { isConnected, address } = useAleoWallet()
+  const { isConnected, address } = useWallet()
   const [isOpen, setIsOpen] = useState(false)
 
   return (
