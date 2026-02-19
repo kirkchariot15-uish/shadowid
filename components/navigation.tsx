@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { Button } from '@/components/ui/button'
-import { Menu, X, Home, FileText, Settings, LogOut, User, Shield } from 'lucide-react'
+import { Menu, X, Home, FileText, Settings, LogOut, User, Shield, Award, CheckCircle } from 'lucide-react'
 
 export function Navigation() {
   const { isConnected, address } = useAleoWallet()
@@ -72,6 +72,20 @@ export function Navigation() {
               <Button variant="ghost" className="w-full justify-start">
                 <User className="h-4 w-4 mr-3" />
                 Profile
+              </Button>
+            </Link>
+
+            <Link href="/credentials" onClick={() => setIsOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start">
+                <Award className="h-4 w-4 mr-3" />
+                My Credentials
+              </Button>
+            </Link>
+
+            <Link href="/request-attestation" onClick={() => setIsOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start">
+                <CheckCircle className="h-4 w-4 mr-3" />
+                Request Attestation
               </Button>
             </Link>
 

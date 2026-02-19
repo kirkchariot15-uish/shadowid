@@ -1,0 +1,6 @@
+{
+  "program": "shadowid_zk.aleo",
+  "version": "2.0.0",
+  "description": "Zero-knowledge verifiable credentials and selective disclosure",
+  "license": "MIT"
+}
