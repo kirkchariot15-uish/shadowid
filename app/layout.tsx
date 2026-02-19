@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
-import { ClientProviders } from '@/components/client-providers'
+import { WalletProviderComponent } from '@/lib/wallet-provider'
+import { Navigation } from '@/components/navigation'
 
 import './globals.css'
 
@@ -27,9 +28,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased`}>
-        <ClientProviders>
+        <WalletProviderComponent>
+          <Navigation />
           {children}
-        </ClientProviders>
+        </WalletProviderComponent>
       </body>
     </html>
   )
