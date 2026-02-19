@@ -29,18 +29,21 @@ export default function CreateIDPage() {
 
   if (!isConnected || !address) {
     return (
-      <div className="min-h-screen bg-background text-foreground">
-        <div className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <div className="mb-6 flex justify-center">
-              <Lock className="h-16 w-16 text-muted-foreground/40" />
+      <>
+        <Navigation />
+        <div className="min-h-screen bg-background text-foreground">
+          <div className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-2xl text-center">
+              <div className="mb-6 flex justify-center">
+                <Lock className="h-16 w-16 text-muted-foreground/40" />
+              </div>
+              <h1 className="text-3xl font-bold mb-3">Create ShadowID</h1>
+              <p className="text-muted-foreground">Connect your wallet to create your zero-knowledge identity with verifiable credentials.</p>
+              <p className="text-sm text-muted-foreground mt-4">Use the hamburger menu in the top right corner to connect your wallet.</p>
             </div>
-            <h1 className="text-3xl font-bold mb-3">Create ShadowID</h1>
-            <p className="text-muted-foreground">Connect your wallet to create your zero-knowledge identity with verifiable credentials.</p>
-            <p className="text-sm text-muted-foreground mt-4">Use the wallet button in the top right corner to connect.</p>
           </div>
         </div>
-      </div>
+      </>
     )
   }
 

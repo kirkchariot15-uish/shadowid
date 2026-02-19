@@ -1,18 +1,8 @@
-'use client'
-
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Lock, Zap, Shield } from 'lucide-react'
-import { useState, useEffect } from 'react'
-import { IDCardPreview } from '@/components/id-card-preview'
+import { Lock, Zap, Shield, ArrowRight } from 'lucide-react'
 
 export function LandingHero() {
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
   return (
     <main className="min-h-screen bg-background flex flex-col">
       <section className="flex-1 flex flex-col items-center justify-center px-4 py-20 max-w-4xl mx-auto text-center">
@@ -30,7 +20,14 @@ export function LandingHero() {
           ShadowID enables cryptographic proofs that verify your attributes on the blockchain, while keeping your identity completely private.
         </p>
 
-        {mounted && <IDCardPreview />}
+        <div className="flex gap-4 justify-center mb-16">
+          <Link href="/dashboard">
+            <Button size="lg" className="h-12 px-8 gap-2">
+              Get Started
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </Link>
+        </div>
 
         <div className="text-xs text-muted-foreground">
           Deployed on Aleo Testnet • shadowid_v2.aleo
