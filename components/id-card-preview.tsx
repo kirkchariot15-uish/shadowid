@@ -1,9 +1,9 @@
 'use client'
 
-import { useWallet } from '@/lib/wallet-context'
+import { useAleoWallet } from '@/lib/wallet-provider'
 
 export function IDCardPreview() {
-  const { isConnected, address } = useWallet()
+  const { isConnected, address } = useAleoWallet()
 
   return (
     <div className="my-12 w-full max-w-md">

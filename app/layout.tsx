@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
-import { WalletProviderComponent } from '@/lib/wallet-provider-simple'
+import { WalletProviderComponent } from '@/lib/wallet-provider'
 import { Navigation } from '@/components/navigation'
 
 import './globals.css'
