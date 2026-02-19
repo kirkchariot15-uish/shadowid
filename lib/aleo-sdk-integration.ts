@@ -127,34 +127,6 @@ export async function checkNullifierUsed(
 }
 
 /**
- * Register credential commitment on-chain
- */
-export async function registerCommitmentOnChain(
-  commitment: string,
-  privateKey: string,
-  programId: string = 'shadowid_zk.aleo'
-): Promise<OnChainExecutionResult> {
-  try {
-    console.log('[v0] Registering commitment on-chain');
-    
-    return await executeProofOnChain(
-      {
-        programId,
-        functionName: 'register_commitment',
-        inputs: [commitment, Math.floor(Date.now() / 1000).toString()],
-      },
-      privateKey
-    );
-  } catch (error) {
-    console.error('[v0] Commitment registration failed:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-    };
-  }
-}
-
-/**
  * Revoke a credential on-chain
  */
 export async function revokeCommitmentOnChain(
