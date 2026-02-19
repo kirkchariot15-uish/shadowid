@@ -88,7 +88,6 @@ class CredentialStoreManager {
     clearAllEncryptedData()
     console.log('[v0] All credentials cleared')
   }
-}
 
   /**
    * Get credentials by attribute
@@ -285,11 +284,13 @@ class CredentialStoreManager {
 
       for (const cred of parsed.credentials) {
         try {
-          this.add(cred.credential, {
-            tags: cred.tags,
-            notes: cred.notes
-          })
-          imported++
+          const all = this.getAll()
+          const exists = all.some(c => c.credential.id === cred.credential.id)
+          if (!exists) {
+            all.push(cred)
+            localStorage.setItem(this.storageKey, JSON.stringify(all))
+            imported++
+          }
         } catch (err) {
           errors.push(`Failed to import ${cred.credential.id}: ${err}`)
         }

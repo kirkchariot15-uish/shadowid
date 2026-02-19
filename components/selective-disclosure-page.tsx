@@ -82,36 +82,6 @@ export default function SelectiveDisclosurePage() {
         `Generated proof for: ${selectedAttrs.join(', ')}`,
         'success'
       )
-          credentialSubject: {
-            id: address,
-            claims: {}
-          }
-        } as any,
-        proofRequest
-      )
-
-      const qrData = JSON.stringify({
-        type: 'shadowid-zk-proof',
-        commitment: localStorage.getItem('shadowid-commitment'),
-        proof: proof.proof,
-        attributes: selectedAttrs,
-        expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(),
-        nullifier: proof.nullifier
-      })
-
-      setProofData(qrData)
-
-      const qrCode = await QRCode.toDataURL(qrData, {
-        errorCorrectionLevel: 'H',
-        type: 'image/png',
-        width: 500,
-        margin: 3,
-      })
-
-      setQrUrl(qrCode)
-      setProofGenerated(true)
-
-      addActivityLog('Generate ZK Proof', 'disclosure', `Generated proof for ${selectedAttrs.length} attributes`, 'success')
     } catch (err) {
       console.error('[v0] Proof generation error:', err)
       alert('Failed to generate proof')
