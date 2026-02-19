@@ -208,21 +208,6 @@ export function LandingHero() {
           </div>
         </div>
       </section>
-
-      {/* CTA Section */}
-      <section className="bg-accent/10 border-t border-border py-16 px-4">
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready for true privacy?</h2>
-          <p className="text-muted-foreground mb-8">
-            Start creating your zero-knowledge identity today. No personal data required.
-          </p>
-          <Link href="/dashboard">
-            <Button size="lg" className="h-12 px-8">
-              Get Started
-            </Button>
-          </Link>
-        </div>
-      </section>
     </main>
   )
 }
