@@ -1,9 +1,21 @@
 /**
  * Aleo Smart Contract Integration
  * 
+ * Production deployment of shadowid_v1.aleo
+ * Transaction ID: at1xdv7apte46fzxakhz90kvf0s99w8e5yfn3pe9uxzxht4duggmqyskxd8z0
+ * Network: Aleo Testnet
+ * 
  * Utilities for interacting with the ShadowID Leo contract on Aleo blockchain
  * Enables on-chain commitment registration, verification, and revocation
  */
+
+// Deployed contract configuration
+export const ALEO_CONFIG = {
+  programId: 'shadowid_v1.aleo',
+  transactionId: 'at1xdv7apte46fzxakhz90kvf0s99w8e5yfn3pe9uxzxht4duggmqyskxd8z0',
+  network: 'testnet',
+  explorerUrl: 'https://explorer.aleo.org',
+}
 
 export interface OnChainCommitment {
   commitmentHash: string
@@ -233,9 +245,10 @@ export function exportOnChainCertificate(commitment: OnChainCommitment): string 
     registeredAt: new Date(commitment.timestamp * 1000).toISOString(),
     transactionId: commitment.transactionId,
     blockchain: 'Aleo Testnet',
-    contractProgram: 'shadowid.aleo',
+    contractProgram: ALEO_CONFIG.programId,
+    deploymentTx: ALEO_CONFIG.transactionId,
     status: commitment.isRevoked ? 'REVOKED' : 'ACTIVE',
-    verificationUrl: `https://explorer.aleo.org/transaction/${commitment.transactionId}`,
+    verificationUrl: `${ALEO_CONFIG.explorerUrl}/transaction/${commitment.transactionId}`,
   }
 
   return JSON.stringify(certificate, null, 2)
