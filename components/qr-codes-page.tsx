@@ -137,7 +137,7 @@ export default function QRCodesPage() {
               <Lock className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
               <p className="text-foreground font-semibold mb-2">No QR Codes Created</p>
               <p className="text-sm text-muted-foreground mb-6">Create a ShadowID to generate your first QR code</p>
-              <Link href="/create-id">
+              <Link href="/create-identity">
                 <Button className="bg-accent hover:bg-accent/90">
                   Create ShadowID
                 </Button>
@@ -247,7 +247,7 @@ export default function QRCodesPage() {
                             Download QR Code
                           </Button>
                         )}
-                        <Link href="/create-id" className="flex-1">
+                        <Link href="/create-identity" className="flex-1">
                           <Button variant="outline" className="w-full">
                             Create Another
                           </Button>

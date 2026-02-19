@@ -13,14 +13,19 @@ export function NavigationMenu() {
 
   return (
     <>
-      {/* Mobile Menu Button - Visible on all devices */}
+      {/* Hamburger Menu Button - Bottom Right */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-6 right-6 z-40 p-3 rounded-lg bg-accent text-accent-foreground shadow-lg hover:bg-accent/90 transition-all"
+        className="fixed bottom-6 right-6 z-40 p-3 rounded-lg bg-accent text-accent-foreground shadow-lg hover:bg-accent/90 transition-all"
         aria-label="Toggle menu"
       >
         {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
       </button>
+
+      {/* Wallet Button - Top Right */}
+      <div className="fixed top-6 right-6 z-40">
+        <WalletMultiButton />
+      </div>
 
       {/* Navigation Menu - Visible on all devices */}
       {isOpen && (
@@ -44,10 +49,10 @@ export function NavigationMenu() {
               </Button>
             </Link>
 
-            <Link href="/create-id" onClick={() => setIsOpen(false)}>
+            <Link href="/create-identity" onClick={() => setIsOpen(false)}>
               <Button variant="ghost" className="w-full justify-start">
                 <FileText className="h-4 w-4 mr-3" />
-                Create ID
+                Create Identity
               </Button>
             </Link>
 
@@ -100,12 +105,13 @@ export function NavigationMenu() {
               </Button>
             </Link>
 
-            <div className="border-t border-border pt-4 mt-4">
-              <p className="text-xs text-muted-foreground mb-3">
-                Wallet: {address?.slice(0, 8)}...
-              </p>
-              <WalletMultiButton />
-            </div>
+            {isConnected && address && (
+              <div className="border-t border-border pt-4 mt-4">
+                <p className="text-xs text-muted-foreground">
+                  Connected: {address?.slice(0, 8)}...{address?.slice(-6)}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}
