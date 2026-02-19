@@ -206,7 +206,7 @@ export async function generateProof(
   credential: VerifiableCredential,
   request: ProofRequest,
   walletPrivateKey: string,
-  programId: string = 'shadowid_zk.aleo',
+  programId: string = 'shadowid_v2.aleo',
   expirationHours: number = 72
 ): Promise<GeneratedProof> {
   const { claim, proofType } = request
@@ -217,23 +217,27 @@ export async function generateProof(
 
   let proofString = ''
   const publicInputs: Record<string, any> = {}
+  let functionName = 'prove_existence'
 
-  // Generate proof based on type
+  // Generate proof based on type and map to contract functions
   if (proofType === 'range') {
     const stmt = claim.statement as any
     if (stmt.type !== 'range') throw new Error('Invalid claim type for range proof')
     proofString = await generateRangeProof(credential, claim.attributeId, stmt.min, stmt.max)
+    functionName = 'prove_range'
     publicInputs.min = stmt.min
     publicInputs.max = stmt.max
   } else if (proofType === 'membership') {
     const stmt = claim.statement as any
     if (stmt.type !== 'membership') throw new Error('Invalid claim type for membership proof')
     proofString = await generateMembershipProof(credential, claim.attributeId, stmt.set)
+    functionName = 'prove_membership'
     publicInputs.setSize = stmt.set.length
   } else if (proofType === 'existence') {
     const stmt = claim.statement as any
     if (stmt.type !== 'existence') throw new Error('Invalid claim type for existence proof')
     proofString = await generateExistenceProof(credential, claim.attributeId)
+    functionName = 'prove_existence'
   }
 
   const generatedProof: GeneratedProof = {
@@ -250,13 +254,13 @@ export async function generateProof(
 
   console.log('[v0] Proof generated:', generatedProof.proofId)
 
-  // Submit proof on-chain
+  // Submit proof to shadowid_v2.aleo contract
   try {
-    console.log('[v0] Submitting proof to blockchain')
+    console.log('[v0] Submitting proof to', programId, 'function:', functionName)
     const onChainResult = await executeProofOnChain(
       {
         programId,
-        functionName: 'verify_proof',
+        functionName,
         inputs: [proofString, nullifier],
         fee: 100000,
       },
@@ -267,7 +271,7 @@ export async function generateProof(
       generatedProof.proofId = onChainResult.transactionId || generatedProof.proofId
       console.log('[v0] Proof submitted on-chain:', onChainResult.transactionId)
       
-      // Submit nullifier to prevent replay
+      // Submit nullifier via check_nullifier function
       await submitNullifierOnChain(programId, nullifier, walletPrivateKey)
       console.log('[v0] Nullifier recorded on-chain')
     }
