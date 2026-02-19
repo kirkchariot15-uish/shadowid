@@ -10,8 +10,14 @@ import { Menu, X, Home, FileText, Settings, LogOut, User, Shield, Award, CheckCi
 export function Navigation() {
   const { isConnected, address } = useAleoWallet()
   const [isOpen, setIsOpen] = useState(false)
+  const isLandingPage = typeof window !== 'undefined' && window.location.pathname === '/'
 
-  // If wallet not connected, show minimal nav with wallet button only
+  // Hide navigation on landing page when not connected - let the hero take center stage
+  if (!isConnected && isLandingPage) {
+    return null
+  }
+
+  // If wallet not connected and not landing page, show minimal nav
   if (!isConnected) {
     return (
       <div className="fixed top-0 left-0 right-0 z-40 border-b border-border bg-background/95 backdrop-blur-md">
