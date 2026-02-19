@@ -1,8 +1,13 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
-import { WalletProviderComponent } from '@/lib/wallet-provider'
+import dynamic from 'next/dynamic'
 
 import './globals.css'
+
+const WalletProviderComponent = dynamic(
+  () => import('@/lib/wallet-provider').then((mod) => mod.WalletProviderComponent),
+  { ssr: false }
+)
 
 const inter = Inter({ subsets: ['latin'] })
 
