@@ -21,20 +21,8 @@ export default function CreateIDPage() {
 
   if (!isConnected || !address) {
     return (
-      <div className="min-h-screen bg-background text-foreground">
-        <nav className="fixed top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-md">
-          <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
-                <span className="text-sm font-bold text-accent-foreground">σ</span>
-              </div>
-              <span className="text-lg font-bold">ShadowID</span>
-            </Link>
-            <WalletMultiButton />
-          </div>
-        </nav>
-
-        <div className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-background text-foreground flex flex-col">
+        <div className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 flex-1">
           <div className="mx-auto max-w-2xl text-center">
             <div className="mb-6 flex justify-center">
               <Lock className="h-16 w-16 text-muted-foreground/40" />
