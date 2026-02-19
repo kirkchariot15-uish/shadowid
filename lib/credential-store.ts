@@ -81,20 +81,12 @@ class CredentialStoreManager {
   }
 
   /**
-   * Remove a single credential by ID
-   */
-  remove(credentialId: string): void {
-    const all = this.getAll()
-    const filtered = all.filter(c => c.credential.id !== credentialId)
-    localStorage.setItem(this.storageKey, JSON.stringify(filtered))
-  }
-
-  /**
    * Clear all credentials and encrypted data (logout)
    */
   clear(): void {
     localStorage.removeItem(this.storageKey)
     clearAllEncryptedData()
+    console.log('[v0] All credentials cleared')
   }
 
   /**

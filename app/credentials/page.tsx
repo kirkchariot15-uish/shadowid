@@ -1,11 +1,9 @@
-'use client'
+import ManageCredentialsPage from '@/components/manage-credentials-page'
 
-import dynamic from 'next/dynamic'
-
-const ManageCredentialsPage = dynamic(
-  () => import('@/components/manage-credentials-page'),
-  { ssr: false }
-)
+export const metadata = {
+  title: 'My Credentials - ShadowID',
+  description: 'Manage your verifiable credentials',
+}
 
 export default function Page() {
   return <ManageCredentialsPage />
