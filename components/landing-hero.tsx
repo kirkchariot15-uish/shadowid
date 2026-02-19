@@ -6,6 +6,7 @@ import { Lock, Zap, Shield } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { IDCardPreview } from '@/components/id-card-preview'
 
+// Invalidate cache
 export function LandingHero() {
   const [mounted, setMounted] = useState(false)
 

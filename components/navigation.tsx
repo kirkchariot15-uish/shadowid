@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Menu, X, Home, FileText, Settings, LogOut, User, Shield, Award, CheckCircle } from 'lucide-react'
 import { NavigationMenu } from '@/components/navigation-menu'
 
+// Invalidate cache
 export function Navigation() {
   const [mounted, setMounted] = useState(false)
 
