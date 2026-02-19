@@ -9,7 +9,6 @@ import { PuzzleWalletAdapter } from '@provablehq/aleo-wallet-adaptor-puzzle';
 import { SoterWalletAdapter } from '@provablehq/aleo-wallet-adaptor-soter';
 import { DecryptPermission } from '@provablehq/aleo-wallet-adaptor-core';
 import { Network } from '@provablehq/aleo-types';
-import '@provablehq/aleo-wallet-adaptor-react-ui/dist/styles.css';
 
 const wallets = [
   new ShieldWalletAdapter(),
