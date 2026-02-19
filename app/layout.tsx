@@ -5,8 +5,6 @@ import { Navigation } from '@/components/navigation'
 
 import './globals.css'
 
-// Force fresh build
-
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
 export const metadata: Metadata = {
