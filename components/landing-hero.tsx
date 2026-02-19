@@ -2,12 +2,11 @@
 
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Lock, Zap, Shield, ArrowRight } from 'lucide-react'
-import { useAleoWallet } from '@/hooks/use-aleo-wallet'
+import { Lock, Zap, Shield } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { IDCardPreview } from '@/components/id-card-preview'
 
 export function LandingHero() {
-  const { isConnected, address } = useAleoWallet()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -32,14 +31,8 @@ export function LandingHero() {
           ShadowID enables cryptographic proofs that verify your attributes on the blockchain, while keeping your identity completely private.
         </p>
 
-        {/* ID Card Preview - Interactive with wallet connection */}
-        {mounted && (
-          <div className="my-12 w-full max-w-md">
-            <div className={`relative rounded-2xl transition-all duration-300 ${
-              isConnected
-                ? 'bg-gradient-to-br from-card via-muted to-background border-2 border-accent/30 shadow-2xl'
-                : 'bg-gradient-to-br from-card to-muted border border-border shadow-lg'
-            }`}>
+        {/* ID Card Preview - Only render after mount to avoid SSR issues */}
+        {mounted && <IDCardPreview />}
               {/* Glowing accent effect when connected */}
               {isConnected && (
                 <div className="absolute inset-0 opacity-20 pointer-events-none">
