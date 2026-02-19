@@ -1,10 +1,28 @@
+'use client'
+
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Lock, Zap, Shield, ArrowRight } from 'lucide-react'
+import { Lock, Zap, Shield } from 'lucide-react'
+import { WalletMultiButton } from '@/components/wallet-button'
+import { IDCardPreview } from '@/components/id-card-preview'
+import { useState, useEffect } from 'react'
 
 export function LandingHero() {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   return (
     <main className="min-h-screen bg-background flex flex-col">
+      {/* Wallet Button - Top Right */}
+      {mounted && (
+        <div className="fixed top-6 right-6 z-50">
+          <WalletMultiButton />
+        </div>
+      )}
+
       <section className="flex-1 flex flex-col items-center justify-center px-4 py-20 max-w-4xl mx-auto text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/20 bg-accent/5 mb-8">
           <span className="relative inline-block w-2 h-2 bg-accent rounded-full"></span>
@@ -20,16 +38,10 @@ export function LandingHero() {
           ShadowID enables cryptographic proofs that verify your attributes on the blockchain, while keeping your identity completely private.
         </p>
 
-        <div className="flex gap-4 justify-center mb-16">
-          <Link href="/dashboard">
-            <Button size="lg" className="h-12 px-8 gap-2">
-              Get Started
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </Link>
-        </div>
+        {/* ID Card Preview - Interactive with wallet connection */}
+        {mounted && <IDCardPreview />}
 
-        <div className="text-xs text-muted-foreground">
+        <div className="text-xs text-muted-foreground mt-8">
           Deployed on Aleo Testnet • shadowid_v2.aleo
         </div>
       </section>
