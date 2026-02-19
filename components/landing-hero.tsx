@@ -208,6 +208,23 @@ export function LandingHero() {
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="border-t border-border bg-card/50 py-12 px-4 mt-auto">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
+                <span className="text-sm font-bold text-accent-foreground">σ</span>
+              </div>
+              <span className="font-bold">ShadowID</span>
+            </div>
+            <p className="text-sm text-muted-foreground text-center md:text-right">
+              © {new Date().getFullYear()} ShadowID. Zero-knowledge identity for everyone.
+            </p>
+          </div>
+        </div>
+      </footer>
     </main>
   )
 }
