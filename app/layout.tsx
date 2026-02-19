@@ -29,7 +29,6 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased`}>
         <WalletProviderComponent>
-          <Navigation />
           {children}
         </WalletProviderComponent>
       </body>
