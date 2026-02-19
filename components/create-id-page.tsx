@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useWallet } from '@/lib/wallet-context'
+import { useAleoWallet } from '@/hooks/use-aleo-wallet'
+import { WalletMultiButton } from '@/components/wallet-button'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
 import { Lock, Sparkles, CheckCircle2, ArrowLeft, Plus } from 'lucide-react'
@@ -11,12 +12,41 @@ import { STANDARD_ATTRIBUTES } from '@/lib/attribute-schema'
 import { registerCommitmentOnChain } from '@/lib/aleo-sdk-integration'
 import { storeEncryptedCredential } from '@/lib/encrypted-storage'
 
-export function CreateIdentityClient() {
-  const { isConnected, address } = useWallet()
+export default function CreateIDPage() {
+  const { isConnected, address } = useAleoWallet()
   const [selectedAttributes, setSelectedAttributes] = useState<string[]>([])
   const [isCreating, setIsCreating] = useState(false)
   const [creationComplete, setCreationComplete] = useState(false)
   const [commitment, setCommitment] = useState<string>('')
+
+  if (!isConnected || !address) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <nav className="fixed top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-md">
+          <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+            <Link href="/" className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
+                <span className="text-sm font-bold text-accent-foreground">σ</span>
+              </div>
+              <span className="text-lg font-bold">ShadowID</span>
+            </Link>
+            <WalletMultiButton />
+          </div>
+        </nav>
+
+        <div className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <div className="mb-6 flex justify-center">
+              <Lock className="h-16 w-16 text-muted-foreground/40" />
+            </div>
+            <h1 className="text-3xl font-bold mb-3">Create ShadowID</h1>
+            <p className="text-muted-foreground mb-8">Connect your wallet to create your zero-knowledge identity with verifiable credentials.</p>
+            <WalletMultiButton />
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const handleCreateIdentity = async () => {
     if (selectedAttributes.length === 0) {
@@ -26,6 +56,9 @@ export function CreateIdentityClient() {
 
     setIsCreating(true)
     try {
+      console.log('[v0] Creating ShadowID with attributes:', selectedAttributes)
+
+      // Generate commitment hash
       const data = `${address}-${selectedAttributes.join(',')}-${Date.now()}`
       const encoder = new TextEncoder()
       const dataBuffer = encoder.encode(data)
@@ -33,11 +66,17 @@ export function CreateIdentityClient() {
       const hashArray = Array.from(new Uint8Array(hashBuffer))
       const commitmentHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16).toUpperCase()
 
+      console.log('[v0] Commitment generated:', commitmentHash)
+
+      // Create credential object
       const credential = {
         '@context': ['https://www.w3.org/2018/credentials/v1'],
         id: `shadowid:${commitmentHash}`,
         type: ['VerifiableCredential', 'ShadowIDCredential'],
-        issuer: { id: address, name: 'User' },
+        issuer: {
+          id: address,
+          name: 'User'
+        },
         issuanceDate: new Date().toISOString(),
         credentialSubject: {
           id: address,
@@ -55,12 +94,19 @@ export function CreateIdentityClient() {
         }
       }
 
+      // Store credential encrypted locally
       await storeEncryptedCredential(commitmentHash, credential, address)
+      console.log('[v0] Credential encrypted and stored')
 
+      // Register commitment on-chain
       try {
+        console.log('[v0] Registering commitment on blockchain')
         const result = await registerCommitmentOnChain(commitmentHash, address)
         if (result.success) {
+          console.log('[v0] Commitment registered on-chain:', result.transactionId)
           addActivityLog('Register on-chain', 'blockchain', `Commitment on-chain: ${result.transactionId}`, 'success')
+        } else {
+          console.error('[v0] On-chain registration failed:', result.error)
         }
       } catch (error) {
         console.error('[v0] Blockchain registration error:', error)
@@ -78,26 +124,11 @@ export function CreateIdentityClient() {
     }
   }
 
-  if (!isConnected || !address) {
-    return (
-      <>
-        <Navigation />
-        <div className="min-h-screen bg-background text-foreground pt-32 pb-20 px-4">
-          <div className="mx-auto max-w-2xl text-center">
-            <Lock className="h-16 w-16 text-muted-foreground/40 mx-auto mb-6" />
-            <h1 className="text-3xl font-bold mb-3">Create ShadowID</h1>
-            <p className="text-muted-foreground">Connect your wallet using the button in the top right corner to create your zero-knowledge identity.</p>
-          </div>
-        </div>
-      </>
-    )
-  }
-
   if (creationComplete) {
     return (
       <div className="min-h-screen bg-background text-foreground">
         <Navigation />
-        <div className="pt-24 pb-32 px-4">
+        <div className="pt-24 md:pt-20 pb-32 px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-2xl">
             <Link href="/dashboard">
               <Button variant="outline" className="mb-6 gap-2">
@@ -105,26 +136,29 @@ export function CreateIdentityClient() {
                 Back to Dashboard
               </Button>
             </Link>
+
             <div className="text-center py-12">
-              <CheckCircle2 className="h-16 w-16 text-accent mx-auto mb-6" />
+              <div className="mb-6 flex justify-center">
+                <CheckCircle2 className="h-16 w-16 text-accent" />
+              </div>
               <h1 className="text-3xl font-bold mb-3">ShadowID Created</h1>
               <p className="text-muted-foreground mb-4">Your zero-knowledge identity is ready.</p>
               <div className="bg-card/50 border border-accent/20 rounded-lg p-6 mb-6">
                 <p className="text-xs uppercase tracking-widest text-accent mb-2">Identity Commitment</p>
-                <p className="text-xl font-mono font-bold break-all">{commitment}</p>
+                <p className="text-xl font-mono font-bold text-foreground break-all">{commitment}</p>
               </div>
               <p className="text-sm text-muted-foreground mb-8">
-                Selected attributes: {selectedAttributes.join(', ')}
+                Selected attributes: {selectedAttributes.join(', ')}. Request attestations from trusted issuers to activate these claims.
               </p>
               <div className="flex gap-3 justify-center">
                 <Link href="/request-attestation">
-                  <Button className="gap-2">
+                  <Button className="gap-2 bg-accent hover:bg-accent/90">
                     <Plus className="h-4 w-4" />
                     Request Attestations
                   </Button>
                 </Link>
                 <Link href="/dashboard">
-                  <Button variant="outline">Go to Dashboard</Button>
+                  <Button variant="outline">Continue</Button>
                 </Link>
               </div>
             </div>
@@ -137,7 +171,7 @@ export function CreateIdentityClient() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navigation />
-      <div className="pt-24 pb-32 px-4">
+      <div className="pt-24 md:pt-20 pb-32 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl">
           <Link href="/dashboard">
             <Button variant="outline" className="mb-8 gap-2">
@@ -145,17 +179,20 @@ export function CreateIdentityClient() {
               Back
             </Button>
           </Link>
+
           <div className="mb-12">
             <h1 className="text-3xl font-bold mb-2">Create Your ShadowID</h1>
             <p className="text-muted-foreground">Select attributes you want to claim. Request attestations from trusted issuers to verify each claim.</p>
           </div>
+
           <div className="space-y-6">
             <div className="rounded-lg border border-accent/20 bg-accent/5 p-4 flex items-start gap-3">
               <Sparkles className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
               <p className="text-sm text-muted-foreground">
-                Zero-knowledge credentials prove claims without revealing the underlying data. Your identity stays private on your device.
+                Zero-knowledge credentials prove claims without revealing the underlying data. Select attributes, then request attestations from verifiers.
               </p>
             </div>
+
             <div>
               <h2 className="text-lg font-semibold mb-4">Available Attributes</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -176,17 +213,18 @@ export function CreateIdentityClient() {
                     <div className="flex-1">
                       <p className="font-semibold text-sm">{attr.name}</p>
                       <p className="text-xs text-muted-foreground mt-1">{attr.description}</p>
-                      <p className="text-xs text-accent mt-2">Privacy: {attr.privacyLevel}</p>
+                      <p className="text-xs text-accent mt-2">Privacy Level: {attr.privacyLevel}</p>
                     </div>
                   </label>
                 ))}
               </div>
             </div>
+
             <div className="flex gap-3 pt-8 border-t border-border">
               <Button
                 onClick={handleCreateIdentity}
                 disabled={isCreating || selectedAttributes.length === 0}
-                className="flex-1 gap-2"
+                className="flex-1 bg-accent hover:bg-accent/90 gap-2"
               >
                 {isCreating ? 'Creating...' : 'Create ShadowID'}
               </Button>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useWallet } from '@/lib/wallet-context'
+import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Shield, Eye, Lock, RotateCcw, Trash2, Download, BarChart3, AlertCircle, CheckCircle, Clock } from 'lucide-react'
@@ -38,7 +38,7 @@ import {
 } from '@/lib/rate-limiting'
 
 export default function PrivacyDashboard() {
-  const { isConnected, address } = useWallet()
+  const { isConnected, address } = useAleoWallet()
   const [activeTab, setActiveTab] = useState<'overview' | 'credentials' | 'disclosures' | 'audit' | 'session' | 'settings'>('overview')
   const [stats, setStats] = useState<any>(null)
   const [revocationList, setRevocationList] = useState<any>(null)

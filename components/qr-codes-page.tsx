@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useWallet } from '@/lib/wallet-context'
+import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
@@ -24,7 +24,7 @@ interface StoredQRCode {
 }
 
 export default function QRCodesPage() {
-  const { isConnected } = useWallet()
+  const { isConnected } = useAleoWallet()
   const [qrCodes, setQrCodes] = useState<StoredQRCode[]>([])
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
@@ -137,7 +137,7 @@ export default function QRCodesPage() {
               <Lock className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
               <p className="text-foreground font-semibold mb-2">No QR Codes Created</p>
               <p className="text-sm text-muted-foreground mb-6">Create a ShadowID to generate your first QR code</p>
-              <Link href="/create-identity">
+              <Link href="/create-id">
                 <Button className="bg-accent hover:bg-accent/90">
                   Create ShadowID
                 </Button>
@@ -247,7 +247,7 @@ export default function QRCodesPage() {
                             Download QR Code
                           </Button>
                         )}
-                        <Link href="/create-identity" className="flex-1">
+                        <Link href="/create-id" className="flex-1">
                           <Button variant="outline" className="w-full">
                             Create Another
                           </Button>

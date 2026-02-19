@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useWallet } from '@/lib/wallet-context'
+import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { Navigation } from '@/components/navigation'
 import { IDCard } from '@/components/id-card'
@@ -12,7 +12,7 @@ import Link from 'next/link'
 import { addActivityLog } from '@/lib/activity-logger'
 
 export default function DashboardPage() {
-  const { isConnected, address } = useWallet()
+  const { isConnected, address } = useAleoWallet()
   const [credentials, setCredentials] = useState<number>(0)
   const [proofs, setProofs] = useState<number>(0)
 
@@ -111,7 +111,7 @@ export default function DashboardPage() {
           <div className="mb-16">
             <h2 className="text-lg font-semibold mb-6 uppercase tracking-widest">Actions</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Link href="/create-identity" className="group">
+              <Link href="/create-id" className="group">
                 <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-8 hover:border-accent/40 transition-all cursor-pointer">
                   <Plus className="h-8 w-8 text-accent mb-4" />
                   <h3 className="font-semibold text-lg mb-2">Create ShadowID</h3>

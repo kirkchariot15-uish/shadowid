@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 
-const HomePage = dynamic(() => import('@/components/home-page'), {
+const CreateIDPage = dynamic(() => import('@/components/create-id-page'), {
   ssr: false,
   loading: () => (
     <div className="min-h-screen bg-background flex items-center justify-center">
@@ -12,5 +12,5 @@ const HomePage = dynamic(() => import('@/components/home-page'), {
 })
 
 export default function Page() {
-  return <HomePage />
+  return <CreateIDPage />
 }
