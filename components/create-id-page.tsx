@@ -143,7 +143,9 @@ export default function CreateIDPage() {
     setError('')
 
     try {
+      console.log('[v0] Starting identity creation...')
       const encryptionKey = await generateEncryptionKey(address || 'default')
+      console.log('[v0] Encryption key generated')
 
       const encryptedInputs: InputMaterial[] = []
       for (const input of inputs) {
@@ -157,11 +159,13 @@ export default function CreateIDPage() {
         const encrypted = await encryptData(dataToEncrypt, encryptionKey)
         encryptedInputs.push({ ...input, encrypted, data: new Uint8Array() })
       }
+      console.log('[v0] Encrypted', encryptedInputs.length, 'inputs')
 
       const bundle = encryptedInputs.map(i => i.encrypted).join('||')
       const bundleData = new TextEncoder().encode(bundle)
       const commitmentHash = await generateHash(bundleData)
       const commitmentDisplay = commitmentHash.slice(0, 16).toUpperCase()
+      console.log('[v0] Commitment generated:', commitmentDisplay)
 
       const qrData = JSON.stringify({
         commitment: commitmentDisplay,
@@ -184,6 +188,7 @@ export default function CreateIDPage() {
       // Generate QR code with slight delay to show loading state
       setTimeout(async () => {
         try {
+          console.log('[v0] Generating QR code...')
           const qrUrl = await QRCode.toDataURL(qrData, {
             errorCorrectionLevel: 'H',
             type: 'image/png',
@@ -191,13 +196,16 @@ export default function CreateIDPage() {
             margin: 3,
             color: { dark: '#000000', light: '#ffffff' },
           })
+          console.log('[v0] QR code generated successfully')
 
           setQrDataUrl(qrUrl)
 
+          console.log('[v0] Saving to localStorage...')
           localStorage.setItem('shadowid-encrypted-bundle', bundle)
           localStorage.setItem('shadowid-commitment', commitmentDisplay)
           localStorage.setItem('shadowid-created-at', new Date().toISOString())
           localStorage.setItem('shadowid-user-info', JSON.stringify(userInfo))
+          console.log('[v0] Saved to localStorage successfully')
 
           addActivityLog('Create ShadowID', 'identity', `Created commitment: ${commitmentDisplay}`, 'success', {
             photo: !!userInfo.photo,
@@ -207,6 +215,7 @@ export default function CreateIDPage() {
 
           setCreationComplete(true)
           setIsGeneratingQR(false)
+          console.log('[v0] Identity creation completed successfully')
 
           // Register commitment on Aleo blockchain (non-blocking)
           try {
@@ -227,12 +236,15 @@ export default function CreateIDPage() {
         } catch (qrErr) {
           setError('Failed to generate QR code. Please try again.')
           console.error('[v0] QR generation error:', qrErr)
+          console.error('[v0] QR error details:', JSON.stringify(qrErr))
           setIsGeneratingQR(false)
         }
       }, 300)
     } catch (err) {
       setError('Failed to create identity commitment. Please try again.')
-      console.error('[v0] Commitment error:', err)
+      console.error('[v0] Commitment creation error:', err)
+      console.error('[v0] Error type:', err instanceof Error ? err.message : String(err))
+      console.error('[v0] Error stack:', err instanceof Error ? err.stack : 'No stack trace')
       setIsGeneratingQR(false)
     } finally {
       setIsProcessing(false)
