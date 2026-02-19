@@ -1,5 +1,3 @@
-@import '@provablehq/aleo-wallet-adaptor-react-ui/dist/styles.css';
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
