@@ -13,26 +13,24 @@ import { storeEncryptedCredential } from '@/lib/encrypted-storage'
 
 export default function CreateIdentityPage() {
   const [mounted, setMounted] = useState(false)
-  const [isConnected, setIsConnected] = useState(false)
-  const [address, setAddress] = useState<string | null>(null)
-  const [selectedAttributes, setSelectedAttributes] = useState<string[]>([])
-  const [isCreating, setIsCreating] = useState(false)
-  const [creationComplete, setCreationComplete] = useState(false)
-  const [commitment, setCommitment] = useState<string>('')
-
-  // Get wallet info after mount to avoid SSR issues
-  const wallet = mounted ? useAleoWallet() : { isConnected: false, address: null }
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  useEffect(() => {
-    if (mounted && wallet) {
-      setIsConnected(wallet.isConnected)
-      setAddress(wallet.address)
-    }
-  }, [mounted, wallet])
+  if (!mounted) {
+    return null
+  }
+
+  return <CreateIdentityContent />
+}
+
+function CreateIdentityContent() {
+  const { isConnected, address } = useAleoWallet()
+  const [selectedAttributes, setSelectedAttributes] = useState<string[]>([])
+  const [isCreating, setIsCreating] = useState(false)
+  const [creationComplete, setCreationComplete] = useState(false)
+  const [commitment, setCommitment] = useState<string>('')
 
   const handleCreateIdentity = async () => {
     if (selectedAttributes.length === 0) {
