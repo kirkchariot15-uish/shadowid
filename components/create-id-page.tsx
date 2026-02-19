@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
-import { WalletMultiButton } from '@/components/wallet-button'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
 import { Lock, Sparkles, CheckCircle2, ArrowLeft, Plus } from 'lucide-react'
@@ -21,15 +20,16 @@ export default function CreateIDPage() {
 
   if (!isConnected || !address) {
     return (
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <div className="min-h-screen bg-background text-foreground">
+        <Navigation />
         <div className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 flex-1">
           <div className="mx-auto max-w-2xl text-center">
             <div className="mb-6 flex justify-center">
               <Lock className="h-16 w-16 text-muted-foreground/40" />
             </div>
             <h1 className="text-3xl font-bold mb-3">Create ShadowID</h1>
-            <p className="text-muted-foreground mb-8">Connect your wallet to create your zero-knowledge identity with verifiable credentials.</p>
-            <WalletMultiButton />
+            <p className="text-muted-foreground mb-4">Connect your wallet to create your zero-knowledge identity with verifiable credentials.</p>
+            <p className="text-sm text-muted-foreground">Use the wallet button in the top right corner to connect.</p>
           </div>
         </div>
       </div>
