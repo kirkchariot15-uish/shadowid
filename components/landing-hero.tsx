@@ -15,7 +15,6 @@ export function LandingHero() {
 
   return (
     <main className="min-h-screen bg-background flex flex-col">
-      {/* Hero Section */}
       <section className="flex-1 flex flex-col items-center justify-center px-4 py-20 max-w-4xl mx-auto text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/20 bg-accent/5 mb-8">
           <span className="relative inline-block w-2 h-2 bg-accent rounded-full"></span>
@@ -31,16 +30,13 @@ export function LandingHero() {
           ShadowID enables cryptographic proofs that verify your attributes on the blockchain, while keeping your identity completely private.
         </p>
 
-        {/* ID Card Preview - Only render after mount to avoid SSR issues */}
         {mounted && <IDCardPreview />}
 
-        {/* Blockchain Status */}
         <div className="text-xs text-muted-foreground">
           Deployed on Aleo Testnet • shadowid_v2.aleo
         </div>
       </section>
 
-      {/* Differentiators Section */}
       <section className="bg-card/50 py-20 px-4 border-t border-border">
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -71,7 +67,6 @@ export function LandingHero() {
         </div>
       </section>
 
-      {/* Use Cases Section */}
       <section className="py-20 px-4">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl font-bold mb-4 text-center">Real Privacy, Real Use Cases</h2>
@@ -80,7 +75,6 @@ export function LandingHero() {
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Journalist */}
             <div className="border border-border rounded-lg p-8 bg-background/50 hover:border-accent/50 transition-colors">
               <h3 className="font-semibold text-lg mb-3">Journalists & Activists</h3>
               <p className="text-sm text-muted-foreground mb-4">
@@ -89,7 +83,6 @@ export function LandingHero() {
               <div className="text-xs font-medium text-accent">Prove: Press credentials, employment verification</div>
             </div>
 
-            {/* Developer */}
             <div className="border border-border rounded-lg p-8 bg-background/50 hover:border-accent/50 transition-colors">
               <h3 className="font-semibold text-lg mb-3">Developers</h3>
               <p className="text-sm text-muted-foreground mb-4">
@@ -98,7 +91,6 @@ export function LandingHero() {
               <div className="text-xs font-medium text-accent">Prove: Skill level, past projects, community roles</div>
             </div>
 
-            {/* Privacy Advocates */}
             <div className="border border-border rounded-lg p-8 bg-background/50 hover:border-accent/50 transition-colors">
               <h3 className="font-semibold text-lg mb-3">Privacy Advocates</h3>
               <p className="text-sm text-muted-foreground mb-4">
@@ -107,7 +99,6 @@ export function LandingHero() {
               <div className="text-xs font-medium text-accent">Prove: Age, location, compliance without exposure</div>
             </div>
 
-            {/* Enterprise */}
             <div className="border border-border rounded-lg p-8 bg-background/50 hover:border-accent/50 transition-colors">
               <h3 className="font-semibold text-lg mb-3">Enterprise & KYC</h3>
               <p className="text-sm text-muted-foreground mb-4">
@@ -119,7 +110,6 @@ export function LandingHero() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="border-t border-border bg-card/50 py-12 px-4 mt-auto">
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-8">
