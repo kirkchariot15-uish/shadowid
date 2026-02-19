@@ -281,67 +281,6 @@ export async function generateProof(
   return generatedProof
 }
 
-  // Generate appropriate proof based on type
-  switch (claim.statement.type) {
-    case 'range':
-      proofData = await generateRangeProof(
-        credential,
-        claim.attributeId,
-        claim.statement.min,
-        claim.statement.max
-      )
-      publicInputs.min = claim.statement.min
-      publicInputs.max = claim.statement.max
-      break
-
-    case 'membership':
-      proofData = await generateMembershipProof(
-        credential,
-        claim.attributeId,
-        claim.statement.set
-      )
-      publicInputs.setSize = claim.statement.set.length
-      break
-
-    case 'existence':
-      proofData = await generateExistenceProof(
-        credential,
-        claim.attributeId
-      )
-      break
-
-    case 'exact':
-      proofData = await generateExactProof(
-        credential,
-        claim.attributeId,
-        claim.statement.value
-      )
-      publicInputs.value = claim.statement.value
-      break
-
-    default:
-      throw new Error(`Unsupported proof type: ${claim.statement.type}`)
-  }
-
-  const expiresAt = new Date()
-  expiresAt.setHours(expiresAt.getHours() + expirationHours)
-
-  const proof: GeneratedProof = {
-    proofId: `proof-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    credentialId: credential.id,
-    claim,
-    proofType,
-    proofData,
-    publicInputs,
-    nullifier,
-    timestamp,
-    expiresAt: expiresAt.toISOString()
-  }
-
-  console.log('[v0] Generated proof:', proof.proofId)
-  return proof
-}
-
 /**
  * Generate multiple proofs from multiple credentials
  */
