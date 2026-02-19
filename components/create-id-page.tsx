@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
@@ -12,11 +12,20 @@ import { registerCommitmentOnChain } from '@/lib/aleo-sdk-integration'
 import { storeEncryptedCredential } from '@/lib/encrypted-storage'
 
 export default function CreateIDPage() {
+  const [mounted, setMounted] = useState(false)
   const { isConnected, address } = useAleoWallet()
   const [selectedAttributes, setSelectedAttributes] = useState<string[]>([])
   const [isCreating, setIsCreating] = useState(false)
   const [creationComplete, setCreationComplete] = useState(false)
   const [commitment, setCommitment] = useState<string>('')
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return null
+  }
 
   if (!isConnected || !address) {
     return (
