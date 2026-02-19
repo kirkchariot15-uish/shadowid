@@ -103,42 +103,6 @@ export async function submitNullifierOnChain(
   }
 }
 
-    console.log('[v0] Proof verified on-chain');
-    return true;
-  } catch (error) {
-    console.error('[v0] Proof verification failed:', error);
-    return false;
-  }
-}
-
-/**
- * Submit nullifier to prevent double-spending
- */
-export async function submitNullifierOnChain(
-  programId: string,
-  nullifier: string,
-  privateKey: string
-): Promise<OnChainExecutionResult> {
-  try {
-    console.log('[v0] Submitting nullifier on-chain');
-    
-    return await executeProofOnChain(
-      {
-        programId,
-        functionName: 'record_nullifier',
-        inputs: [nullifier],
-      },
-      privateKey
-    );
-  } catch (error) {
-    console.error('[v0] Nullifier submission failed:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-    };
-  }
-}
-
 /**
  * Check if nullifier has been used (prevents double-spending)
  */
