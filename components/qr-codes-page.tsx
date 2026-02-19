@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useWallet } from '@/lib/wallet-provider'
+import { useAleoWallet } from '@/lib/wallet-provider'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'

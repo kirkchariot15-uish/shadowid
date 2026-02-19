@@ -1,10 +1,12 @@
 'use client'
 
 import { ReactNode } from 'react'
-import { AleoWalletProvider, useAleoWallet } from '@/hooks/use-aleo-wallet'
+import { WalletProvider, useWallet } from '@/lib/wallet-context'
 
 export function WalletProviderComponent({ children }: { children: ReactNode }) {
-  return <AleoWalletProvider>{children}</AleoWalletProvider>
+  return <WalletProvider>{children}</WalletProvider>
 }
 
-export { useAleoWallet }
+// Re-export useWallet as useAleoWallet for backward compatibility
+export const useAleoWallet = useWallet
+export { useWallet }

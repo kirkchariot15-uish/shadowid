@@ -6,7 +6,7 @@ import { Lock, Zap, Shield } from 'lucide-react'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { IDCardPreview } from '@/components/id-card-preview'
 import { useState, useEffect } from 'react'
-import { useWallet } from '@/lib/wallet-provider'
+import { useAleoWallet } from '@/lib/wallet-provider'
 import { ArrowRight } from 'lucide-react'
 
 export function LandingHero() {

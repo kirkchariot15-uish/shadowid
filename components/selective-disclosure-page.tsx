@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useWallet } from '@/lib/wallet-provider'
+import { useAleoWallet } from '@/lib/wallet-provider'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Zap, CheckCircle, Download } from 'lucide-react'
