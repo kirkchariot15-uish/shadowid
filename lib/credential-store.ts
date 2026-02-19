@@ -8,6 +8,7 @@
 
 import { AttributeSchema } from './attribute-schema'
 import { CredentialIssuer } from './credential-issuers'
+import { storeEncryptedCredential, getDecryptedCredential, clearAllEncryptedData } from './encrypted-storage'
 
 /**
  * W3C Verifiable Credential v2.0 Structure
@@ -80,12 +81,14 @@ class CredentialStoreManager {
   }
 
   /**
-   * Get credential by ID
+   * Clear all credentials and encrypted data (logout)
    */
-  getById(credentialId: string): StoredCredential | undefined {
-    const all = this.getAll()
-    return all.find(c => c.credential.id === credentialId)
+  clear(): void {
+    localStorage.removeItem(this.storageKey)
+    clearAllEncryptedData()
+    console.log('[v0] All credentials cleared')
   }
+}
 
   /**
    * Get credentials by attribute
@@ -106,12 +109,16 @@ class CredentialStoreManager {
   }
 
   /**
-   * Add new credential
+   * Add new credential with encryption
    */
-  add(credential: VerifiableCredential, metadata?: {
-    tags?: string[]
-    notes?: string
-  }): void {
+  async add(
+    credential: VerifiableCredential,
+    walletPrivateKey: string,
+    metadata?: {
+      tags?: string[]
+      notes?: string
+    }
+  ): Promise<void> {
     const all = this.getAll()
     
     // Check if credential already exists
@@ -129,10 +136,13 @@ class CredentialStoreManager {
       notes: metadata?.notes
     }
 
+    // Store metadata unencrypted, credential data encrypted
     all.push(stored)
     localStorage.setItem(this.storageKey, JSON.stringify(all))
     
-    console.log('[v0] Credential added:', credential.id)
+    // Encrypt and store actual credential data separately
+    await storeEncryptedCredential(credential.id, credential, walletPrivateKey)
+    console.log('[v0] Credential added and encrypted:', credential.id)
   }
 
   /**

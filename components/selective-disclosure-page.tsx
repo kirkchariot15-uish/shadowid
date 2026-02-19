@@ -9,6 +9,7 @@ import Link from 'next/link'
 import QRCode from 'qrcode'
 import { generateProof, ProofRequest } from '@/lib/proof-generator'
 import { addActivityLog } from '@/lib/activity-logger'
+import { getDecryptedCredential } from '@/lib/encrypted-storage'
 
 export default function SelectiveDisclosurePage() {
   const { isConnected, address } = useAleoWallet()
@@ -36,18 +37,51 @@ export default function SelectiveDisclosurePage() {
     try {
       console.log('[v0] Generating ZK proof for attributes:', selectedAttrs)
 
+      // Get encrypted credential
+      const commitmentId = localStorage.getItem('shadowid-commitment') || 'unknown'
+      const credential = await getDecryptedCredential(commitmentId, address || '')
+
       const proofRequest: ProofRequest = {
-        claim: 'attribute_disclosure',
-        proofType: 'selective',
-        attributes: selectedAttrs
+        credentialId: credential.id,
+        claim: {
+          attributeId: selectedAttrs.join(','),
+          statement: { type: 'existence' }
+        },
+        proofType: 'existence'
       }
 
-      const proof = await generateProof(
-        {
-          id: localStorage.getItem('shadowid-commitment') || 'unknown',
-          type: 'VerifiableCredential',
-          issuer: address,
-          issuanceDate: localStorage.getItem('shadowid-created-at') || new Date().toISOString(),
+      // Generate and submit proof on-chain
+      const proof = await generateProof(credential, proofRequest, address || '')
+
+      console.log('[v0] ZK proof generated:', proof.proofId)
+      console.log('[v0] Proof submitted on-chain')
+
+      // Create QR code with proof data
+      const qrData = JSON.stringify({
+        type: 'shadowid-proof',
+        proofId: proof.proofId,
+        attributes: selectedAttrs,
+        expiresAt: proof.expiresAt,
+        nullifier: proof.nullifier
+      })
+
+      const qr = await QRCode.toDataURL(qrData, {
+        errorCorrectionLevel: 'H',
+        type: 'image/png',
+        width: 300,
+        margin: 2
+      })
+
+      setProofData(JSON.stringify(proof))
+      setQrUrl(qr)
+      setProofGenerated(true)
+
+      addActivityLog(
+        'Generate ZK proof',
+        'disclosure',
+        `Generated proof for: ${selectedAttrs.join(', ')}`,
+        'success'
+      )
           credentialSubject: {
             id: address,
             claims: {}

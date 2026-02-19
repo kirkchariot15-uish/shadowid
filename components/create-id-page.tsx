@@ -9,6 +9,8 @@ import { Lock, Sparkles, CheckCircle2, ArrowLeft, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { addActivityLog } from '@/lib/activity-logger'
 import { STANDARD_ATTRIBUTES } from '@/lib/attribute-schema'
+import { registerCommitmentOnChain } from '@/lib/aleo-sdk-integration'
+import { storeEncryptedCredential } from '@/lib/encrypted-storage'
 
 export default function CreateIDPage() {
   const { isConnected, address } = useAleoWallet()
@@ -66,11 +68,49 @@ export default function CreateIDPage() {
 
       console.log('[v0] Commitment generated:', commitmentHash)
 
-      // Store in localStorage
-      localStorage.setItem('shadowid-commitment', commitmentHash)
-      localStorage.setItem('shadowid-created-at', new Date().toISOString())
-      localStorage.setItem('shadowid-attributes', JSON.stringify(selectedAttributes))
-      localStorage.setItem('shadowid-address', address)
+      // Create credential object
+      const credential = {
+        '@context': ['https://www.w3.org/2018/credentials/v1'],
+        id: `shadowid:${commitmentHash}`,
+        type: ['VerifiableCredential', 'ShadowIDCredential'],
+        issuer: {
+          id: address,
+          name: 'User'
+        },
+        issuanceDate: new Date().toISOString(),
+        credentialSubject: {
+          id: address,
+          claims: selectedAttributes.reduce((acc, attr) => {
+            acc[attr] = { attributeId: attr, value: true }
+            return acc
+          }, {} as Record<string, any>)
+        },
+        proof: {
+          type: 'Ed25519Signature2020',
+          created: new Date().toISOString(),
+          verificationMethod: `did:aleo:${address}`,
+          proofPurpose: 'assertionMethod',
+          proofValue: commitmentHash
+        }
+      }
+
+      // Store credential encrypted locally
+      await storeEncryptedCredential(commitmentHash, credential, address)
+      console.log('[v0] Credential encrypted and stored')
+
+      // Register commitment on-chain
+      try {
+        console.log('[v0] Registering commitment on blockchain')
+        const result = await registerCommitmentOnChain(commitmentHash, address)
+        if (result.success) {
+          console.log('[v0] Commitment registered on-chain:', result.transactionId)
+          addActivityLog('Register on-chain', 'blockchain', `Commitment on-chain: ${result.transactionId}`, 'success')
+        } else {
+          console.error('[v0] On-chain registration failed:', result.error)
+        }
+      } catch (error) {
+        console.error('[v0] Blockchain registration error:', error)
+      }
 
       setCommitment(commitmentHash)
       addActivityLog('Create ShadowID', 'identity', `Created ZK identity with ${selectedAttributes.length} attributes`, 'success')

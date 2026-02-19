@@ -1,12 +1,14 @@
 /**
  * Zero-Knowledge Proof Generation Engine
  * 
- * Generates cryptographic proofs for claims without revealing underlying data
+ * Generates cryptographic proofs for claims and submits them on-chain
  * Supports range proofs, membership proofs, and equality proofs
  */
 
 import { VerifiableCredential } from './credential-store'
 import { ProofType } from './attribute-schema'
+import { registerCommitmentOnChain, submitNullifierOnChain, executeProofOnChain } from './aleo-sdk-integration'
+import { storeEncryptedProof } from './encrypted-storage'
 
 export interface ProofRequest {
   credentialId: string
@@ -203,18 +205,81 @@ async function generateExactProof(
 export async function generateProof(
   credential: VerifiableCredential,
   request: ProofRequest,
+  walletPrivateKey: string,
+  programId: string = 'shadowid_zk.aleo',
   expirationHours: number = 72
 ): Promise<GeneratedProof> {
   const { claim, proofType } = request
   const timestamp = new Date().toISOString()
   const nullifier = await generateNullifier(credential.id, timestamp)
+  
+  console.log('[v0] Generating ZK proof for:', claim.attributeId)
 
-  let proofData: string
-  const publicInputs: Record<string, any> = {
-    issuer: credential.issuer.id,
-    attributeId: claim.attributeId,
-    proofType
+  let proofString = ''
+  const publicInputs: Record<string, any> = {}
+
+  // Generate proof based on type
+  if (proofType === 'range') {
+    const stmt = claim.statement as any
+    if (stmt.type !== 'range') throw new Error('Invalid claim type for range proof')
+    proofString = await generateRangeProof(credential, claim.attributeId, stmt.min, stmt.max)
+    publicInputs.min = stmt.min
+    publicInputs.max = stmt.max
+  } else if (proofType === 'membership') {
+    const stmt = claim.statement as any
+    if (stmt.type !== 'membership') throw new Error('Invalid claim type for membership proof')
+    proofString = await generateMembershipProof(credential, claim.attributeId, stmt.set)
+    publicInputs.setSize = stmt.set.length
+  } else if (proofType === 'existence') {
+    const stmt = claim.statement as any
+    if (stmt.type !== 'existence') throw new Error('Invalid claim type for existence proof')
+    proofString = await generateExistenceProof(credential, claim.attributeId)
   }
+
+  const generatedProof: GeneratedProof = {
+    proofId: `proof-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    credentialId: credential.id,
+    claim,
+    proofType,
+    proofData: proofString,
+    publicInputs,
+    nullifier,
+    timestamp,
+    expiresAt: new Date(Date.now() + expirationHours * 3600000).toISOString(),
+  }
+
+  console.log('[v0] Proof generated:', generatedProof.proofId)
+
+  // Submit proof on-chain
+  try {
+    console.log('[v0] Submitting proof to blockchain')
+    const onChainResult = await executeProofOnChain(
+      {
+        programId,
+        functionName: 'verify_proof',
+        inputs: [proofString, nullifier],
+        fee: 100000,
+      },
+      walletPrivateKey
+    )
+
+    if (onChainResult.success) {
+      generatedProof.proofId = onChainResult.transactionId || generatedProof.proofId
+      console.log('[v0] Proof submitted on-chain:', onChainResult.transactionId)
+      
+      // Submit nullifier to prevent replay
+      await submitNullifierOnChain(programId, nullifier, walletPrivateKey)
+      console.log('[v0] Nullifier recorded on-chain')
+    }
+  } catch (error) {
+    console.error('[v0] On-chain submission failed:', error)
+  }
+
+  // Encrypt and store proof locally
+  await storeEncryptedProof(generatedProof.proofId, generatedProof, walletPrivateKey)
+
+  return generatedProof
+}
 
   // Generate appropriate proof based on type
   switch (claim.statement.type) {
