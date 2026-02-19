@@ -1,32 +1,24 @@
 'use client';
-import { ReactNode, useMemo } from 'react';
+import { ReactNode } from 'react';
 import { AleoWalletProvider } from '@provablehq/aleo-wallet-adaptor-react';
 import { WalletModalProvider } from '@provablehq/aleo-wallet-adaptor-react-ui';
+import { ShieldWalletAdapter } from '@provablehq/aleo-wallet-adaptor-shield';
+import { LeoWalletAdapter } from '@provablehq/aleo-wallet-adaptor-leo';
+import { FoxWalletAdapter } from '@provablehq/aleo-wallet-adaptor-fox';
+import { PuzzleWalletAdapter } from '@provablehq/aleo-wallet-adaptor-puzzle';
+import { SoterWalletAdapter } from '@provablehq/aleo-wallet-adaptor-soter';
 import { DecryptPermission } from '@provablehq/aleo-wallet-adaptor-core';
 import { Network } from '@provablehq/aleo-types';
-import '@provablehq/aleo-wallet-adaptor-react-ui/dist/styles.css';
+
+const wallets = [
+  new ShieldWalletAdapter(),
+  new LeoWalletAdapter(),
+  new FoxWalletAdapter(),
+  new PuzzleWalletAdapter(),
+  new SoterWalletAdapter(),
+];
 
 export function WalletProviderComponent({ children }: { children: ReactNode }) {
-  const wallets = useMemo(() => {
-    if (typeof window === 'undefined') return [];
-    try {
-      const { ShieldWalletAdapter } = require('@provablehq/aleo-wallet-adaptor-shield');
-      const { LeoWalletAdapter } = require('@provablehq/aleo-wallet-adaptor-leo');
-      const { FoxWalletAdapter } = require('@provablehq/aleo-wallet-adaptor-fox');
-      const { PuzzleWalletAdapter } = require('@provablehq/aleo-wallet-adaptor-puzzle');
-      const { SoterWalletAdapter } = require('@provablehq/aleo-wallet-adaptor-soter');
-      return [
-        new ShieldWalletAdapter(),
-        new LeoWalletAdapter(),
-        new FoxWalletAdapter(),
-        new PuzzleWalletAdapter(),
-        new SoterWalletAdapter(),
-      ];
-    } catch {
-      return [];
-    }
-  }, []);
-
   return (
     <AleoWalletProvider
       wallets={wallets}
