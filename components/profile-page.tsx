@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAleoWallet } from '@/hooks/use-aleo-wallet'
+import { useWallet } from '@/lib/wallet-context'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Save, Lock, User, FileText, CheckCircle } from 'lucide-react'
@@ -10,7 +10,7 @@ import { getUserProfile, saveUserProfile, UserProfile } from '@/lib/user-profile
 import { addActivityLog } from '@/lib/activity-logger'
 
 export default function ProfilePage() {
-  const { isConnected, address } = useAleoWallet()
+  const { isConnected, address } = useWallet()
   const [profile, setProfile] = useState<UserProfile>({
     username: '',
     bio: '',

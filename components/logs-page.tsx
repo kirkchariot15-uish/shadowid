@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useAleoWallet } from '@/hooks/use-aleo-wallet'
+import { useWallet } from '@/lib/wallet-context'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { Button } from '@/components/ui/button'
 import { Lock, ArrowLeft, Trash2, Filter, Download, ChevronDown } from 'lucide-react'
@@ -9,7 +9,7 @@ import Link from 'next/link'
 import { getActivityLogs, clearActivityLogs, type ActivityLog } from '@/lib/activity-logger'
 
 export default function LogsPage() {
-  const { isConnected } = useAleoWallet()
+  const { isConnected } = useWallet()
   const [logs, setLogs] = useState<ActivityLog[]>([])
   const [filteredLogs, setFilteredLogs] = useState<ActivityLog[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>('all')

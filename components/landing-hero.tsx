@@ -6,12 +6,12 @@ import { Lock, Zap, Shield } from 'lucide-react'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { IDCardPreview } from '@/components/id-card-preview'
 import { useState, useEffect } from 'react'
-import { useAleoWallet } from '@/hooks/use-aleo-wallet'
+import { useWallet } from '@/lib/wallet-context'
 import { ArrowRight } from 'lucide-react'
 
 export function LandingHero() {
   const [mounted, setMounted] = useState(false)
-  const { isConnected } = useAleoWallet()
+  const { isConnected } = useWallet()
 
   useEffect(() => {
     setMounted(true)
