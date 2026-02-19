@@ -205,20 +205,25 @@ export default function CreateIDPage() {
             notes: userInfo.notes.length
           })
 
-          // Register commitment on Aleo blockchain
-          console.log('[v0] Registering commitment on-chain...')
-          const onChainResult = await registerCommitmentOnChain(commitmentDisplay, address || '')
-          
-          if (onChainResult.success) {
-            console.log('[v0] On-chain registration successful:', onChainResult.transactionId)
-            addActivityLog('Register on-chain', 'blockchain', `Commitment registered on Aleo: ${onChainResult.transactionId}`, 'success')
-          } else {
-            console.error('[v0] On-chain registration failed:', onChainResult.error)
-            addActivityLog('Register on-chain', 'blockchain', `Failed: ${onChainResult.error}`, 'error')
-          }
-
           setCreationComplete(true)
           setIsGeneratingQR(false)
+
+          // Register commitment on Aleo blockchain (non-blocking)
+          try {
+            console.log('[v0] Registering commitment on-chain...')
+            const onChainResult = await registerCommitmentOnChain(commitmentDisplay, address || '')
+            
+            if (onChainResult.success) {
+              console.log('[v0] On-chain registration successful:', onChainResult.transactionId)
+              addActivityLog('Register on-chain', 'blockchain', `Commitment registered on Aleo: ${onChainResult.transactionId}`, 'success')
+            } else {
+              console.error('[v0] On-chain registration failed:', onChainResult.error)
+              addActivityLog('Register on-chain', 'blockchain', `Failed: ${onChainResult.error}`, 'error')
+            }
+          } catch (blockchainErr) {
+            console.error('[v0] Blockchain registration error:', blockchainErr)
+            // Don't fail the entire flow if blockchain registration fails
+          }
         } catch (qrErr) {
           setError('Failed to generate QR code. Please try again.')
           console.error('[v0] QR generation error:', qrErr)
