@@ -1,16 +1,10 @@
-'use client'
+import { LandingHero } from '@/components/landing-hero'
 
-import dynamic from 'next/dynamic'
-
-const HomePage = dynamic(() => import('@/components/home-page'), {
-  ssr: false,
-  loading: () => (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="h-8 w-8 rounded-full border-2 border-accent border-t-transparent animate-spin" />
-    </div>
-  ),
-})
+export const metadata = {
+  title: 'ShadowID - Zero-Knowledge Identity',
+  description: 'Prove who you are without revealing why. Cryptographic privacy on the Aleo blockchain.',
+}
 
 export default function Page() {
-  return <HomePage />
+  return <LandingHero />
 }
