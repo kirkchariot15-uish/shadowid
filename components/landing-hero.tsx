@@ -32,18 +32,6 @@ export function LandingHero() {
           ShadowID enables cryptographic proofs that verify your attributes on the blockchain, while keeping your identity completely private.
         </p>
 
-        <div className="flex gap-4 justify-center mb-16">
-          <Link href="/dashboard">
-            <Button size="lg" className="h-12 px-8 gap-2">
-              Create ShadowID
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </Link>
-          <Button variant="outline" size="lg" className="h-12 px-8">
-            View Docs
-          </Button>
-        </div>
-
         {/* ID Card Preview - Interactive with wallet connection */}
         {mounted && (
           <div className="my-12 w-full max-w-md">
