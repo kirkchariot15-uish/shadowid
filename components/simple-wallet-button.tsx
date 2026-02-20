@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { LogOut, Loader2 } from 'lucide-react';
 
 export function SimpleWalletButton() {
-  const { address, isConnected, connect, disconnect, loading, error } = useWallet();
+  const { address, isConnected, connect, disconnect, loading } = useWallet();
   const [open, setOpen] = useState(false);
 
   if (isConnected && address) {

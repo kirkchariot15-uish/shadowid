@@ -48,10 +48,17 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      console.log('[v0] Requesting wallet connection...');
       const accounts = await aleo.requestAccounts();
+      console.log('[v0] Wallet response:', accounts);
+      
       if (accounts?.length > 0) {
-        setAddress(accounts[0]);
+        const firstAccount = accounts[0];
+        console.log('[v0] Connected account:', firstAccount);
+        setAddress(firstAccount);
         setIsConnected(true);
+      } else {
+        setError('No accounts returned from wallet');
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Connection failed';
