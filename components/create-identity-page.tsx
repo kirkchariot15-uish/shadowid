@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
@@ -14,10 +14,26 @@ import { storeEncryptedCredential } from '@/lib/encrypted-storage'
 export function CreateIdentityPage() {
   const { address } = useAleoWallet()
   const isConnected = !!address
+  const [mounted, setMounted] = useState(false)
   const [selectedAttributes, setSelectedAttributes] = useState<string[]>([])
   const [isCreating, setIsCreating] = useState(false)
   const [creationComplete, setCreationComplete] = useState(false)
   const [commitment, setCommitment] = useState<string>('')
+
+  // Ensure component only renders on client with crypto available
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.crypto) {
+      setMounted(true)
+    }
+  }, [])
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="h-8 w-8 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+      </div>
+    )
+  }
 
   const handleCreateIdentity = async () => {
     if (selectedAttributes.length === 0) {
