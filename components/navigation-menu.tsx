@@ -112,10 +112,10 @@ export function NavigationMenu() {
               </Button>
             </Link>
 
-            {publicKey && (
+            {address && (
               <div className="border-t border-border pt-4 mt-4">
                 <p className="text-xs text-muted-foreground">
-                  Connected: {publicKey?.slice(0, 8)}...{publicKey?.slice(-6)}
+                  Connected: {address?.slice(0, 8)}...{address?.slice(-6)}
                 </p>
               </div>
             )}
