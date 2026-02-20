@@ -3,29 +3,36 @@
  * All sensitive data stored locally is encrypted with AES-256-GCM
  */
 
-import { crypto } from 'crypto';
-
 interface EncryptedData {
-  ciphertext: string;
-  iv: string;
-  tag: string;
-  salt: string;
+  ciphertext: string
+  iv: string
+  tag: string
+  salt: string
+}
+
+// Ensure crypto is available (browser only)
+const getCrypto = (): SubtleCrypto => {
+  if (typeof window === 'undefined' || !window.crypto || !window.crypto.subtle) {
+    throw new Error('Crypto API not available')
+  }
+  return window.crypto.subtle
 }
 
 /**
  * Derive encryption key from wallet private key + additional salt
  */
 async function deriveEncryptionKey(walletPrivateKey: string, salt: string): Promise<CryptoKey> {
-  const encoder = new TextEncoder();
-  const keyMaterial = await crypto.subtle.importKey(
+  const cryptoSubtle = getCrypto()
+  const encoder = new TextEncoder()
+  const keyMaterial = await cryptoSubtle.importKey(
     'raw',
     encoder.encode(walletPrivateKey + salt),
     'PBKDF2',
     false,
     ['deriveBits', 'deriveKey']
-  );
+  )
 
-  return crypto.subtle.deriveKey(
+  return cryptoSubtle.deriveKey(
     {
       name: 'PBKDF2',
       salt: encoder.encode(salt),
@@ -36,7 +43,7 @@ async function deriveEncryptionKey(walletPrivateKey: string, salt: string): Prom
     { name: 'AES-GCM', length: 256 },
     false,
     ['encrypt', 'decrypt']
-  );
+  )
 }
 
 /**

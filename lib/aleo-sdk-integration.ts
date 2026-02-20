@@ -45,7 +45,12 @@ export async function executeProofOnChain(
     // Generate a deterministic transaction ID from inputs
     const txData = `${programId}-${request.functionName}-${request.inputs.join(',')}-${Date.now()}`;
     const encoder = new TextEncoder();
-    const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(txData));
+    
+    if (typeof window === 'undefined' || !window.crypto || !window.crypto.subtle) {
+      throw new Error('Crypto API not available in this environment');
+    }
+    
+    const hashBuffer = await window.crypto.subtle.digest('SHA-256', encoder.encode(txData));
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const txId = 'at1' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 59);
 
