@@ -11,7 +11,7 @@ import { STANDARD_ATTRIBUTES } from '@/lib/attribute-schema'
 import { registerCommitmentOnChain } from '@/lib/aleo-sdk-integration'
 import { storeEncryptedCredential } from '@/lib/encrypted-storage'
 
-export function CreateIdentityClient() {
+export function CreateIdentityPage() {
   const { address } = useAleoWallet()
   const isConnected = !!address
   const [selectedAttributes, setSelectedAttributes] = useState<string[]>([])

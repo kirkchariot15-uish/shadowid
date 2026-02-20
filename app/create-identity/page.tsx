@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 
-const CreateIdentityClient = dynamic(() => import('@/components/create-identity-client'), {
+const CreateIdentityPageComponent = dynamic(() => import('@/components/create-identity-page').then(mod => ({ default: mod.CreateIdentityPage })), {
   ssr: false,
   loading: () => (
     <div className="min-h-screen bg-background flex items-center justify-center">
@@ -12,5 +12,5 @@ const CreateIdentityClient = dynamic(() => import('@/components/create-identity-
 })
 
 export default function CreateIdentityPage() {
-  return <CreateIdentityClient />
+  return <CreateIdentityPageComponent />
 }
