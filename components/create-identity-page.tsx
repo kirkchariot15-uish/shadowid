@@ -27,10 +27,15 @@ export function CreateIdentityPage() {
 
     setIsCreating(true)
     try {
+      // Ensure crypto is available
+      if (typeof window === 'undefined' || !window.crypto) {
+        throw new Error('Crypto API not available')
+      }
+
       const data = `${address}-${selectedAttributes.join(',')}-${Date.now()}`
       const encoder = new TextEncoder()
       const dataBuffer = encoder.encode(data)
-      const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer)
+      const hashBuffer = await window.crypto.subtle.digest('SHA-256', dataBuffer)
       const hashArray = Array.from(new Uint8Array(hashBuffer))
       const commitmentHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16).toUpperCase()
 
