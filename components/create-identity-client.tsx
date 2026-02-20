@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useWallet } from '@provablehq/aleo-wallet-adaptor-react'
+import { useWallet } from '@/lib/wallet-context'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
 import { Lock, Sparkles, CheckCircle2, ArrowLeft, Plus } from 'lucide-react'
@@ -12,9 +12,8 @@ import { registerCommitmentOnChain } from '@/lib/aleo-sdk-integration'
 import { storeEncryptedCredential } from '@/lib/encrypted-storage'
 
 export function CreateIdentityClient() {
-  const { publicKey } = useWallet()
-  const isConnected = !!publicKey
-  const address = publicKey
+  const { address } = useWallet()
+  const isConnected = !!address
   const [selectedAttributes, setSelectedAttributes] = useState<string[]>([])
   const [isCreating, setIsCreating] = useState(false)
   const [creationComplete, setCreationComplete] = useState(false)

@@ -7,12 +7,12 @@ import { Lock, Zap, Shield } from 'lucide-react'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { IDCardPreview } from '@/components/id-card-preview'
 
-import { useWallet } from '@provablehq/aleo-wallet-adaptor-react'
+import { useWallet } from '@/lib/wallet-context'
 import { ArrowRight } from 'lucide-react'
 
 export function LandingHero() {
-  const { publicKey } = useWallet()
-  const isConnected = !!publicKey
+  const { address } = useWallet()
+  const isConnected = !!address
 
   return (
     <main className="min-h-screen bg-background flex flex-col">

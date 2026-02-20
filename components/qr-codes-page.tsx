@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useWallet } from '@provablehq/aleo-wallet-adaptor-react'
+import { useWallet } from '@/lib/wallet-context'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
@@ -24,8 +24,8 @@ interface StoredQRCode {
 }
 
 export default function QRCodesPage() {
-  const { publicKey } = useWallet()
-  const isConnected = !!publicKey
+  const { address } = useWallet()
+  const isConnected = !!address
   const [qrCodes, setQrCodes] = useState<StoredQRCode[]>([])
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)

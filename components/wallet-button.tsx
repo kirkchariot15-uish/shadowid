@@ -1,24 +1,44 @@
 'use client'
-import { WalletMultiButton as OfficialWalletMultiButton } from '@provablehq/aleo-wallet-adaptor-react-ui'
-import { useWallet } from '@provablehq/aleo-wallet-adaptor-react'
+import { useWallet } from '@/lib/wallet-context'
+import { Button } from '@/components/ui/button'
+import { LogOut, Loader2 } from 'lucide-react'
 
 export function WalletMultiButton() {
-  const walletState = useWallet()
-  
-  console.log('[v0] WalletButton full state:', {
-    publicKey: walletState.publicKey,
-    connected: walletState.connected,
-    connecting: walletState.connecting,
-    wallet: walletState.wallet,
-    walletName: walletState.wallet?.adapter?.name,
-    select: typeof walletState.select,
-    connect: typeof walletState.connect,
-    disconnect: typeof walletState.disconnect,
-  })
+  const { address, isConnected, connect, disconnect, loading } = useWallet()
+
+  if (isConnected && address) {
+    return (
+      <div className="flex items-center gap-2">
+        <div className="text-sm font-medium text-accent">
+          {address.slice(0, 6)}...{address.slice(-4)}
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={disconnect}
+          className="gap-2"
+        >
+          <LogOut className="h-4 w-4" />
+          Disconnect
+        </Button>
+      </div>
+    )
+  }
 
   return (
-    <div className="[&>button]:bg-accent [&>button]:hover:bg-accent/90 [&>button]:text-accent-foreground">
-      <OfficialWalletMultiButton />
-    </div>
+    <Button
+      onClick={connect}
+      disabled={loading}
+      className="bg-accent hover:bg-accent/90"
+    >
+      {loading ? (
+        <>
+          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          Connecting...
+        </>
+      ) : (
+        'Connect Wallet'
+      )}
+    </Button>
   )
 }

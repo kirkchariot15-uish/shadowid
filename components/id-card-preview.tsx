@@ -1,11 +1,10 @@
 'use client'
 
-import { useWallet } from '@provablehq/aleo-wallet-adaptor-react'
+import { useWallet } from '@/lib/wallet-context'
 
 export function IDCardPreview() {
-  const { publicKey } = useWallet()
-  const isConnected = !!publicKey
-  const address = publicKey
+  const { address } = useWallet()
+  const isConnected = !!address
 
   return (
     <div className="my-12 w-full max-w-md">

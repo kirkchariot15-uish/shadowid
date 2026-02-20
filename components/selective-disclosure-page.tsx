@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useWallet } from '@provablehq/aleo-wallet-adaptor-react'
+import { useWallet } from '@/lib/wallet-context'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Zap, CheckCircle, Download } from 'lucide-react'
@@ -12,9 +12,8 @@ import { addActivityLog } from '@/lib/activity-logger'
 import { getDecryptedCredential } from '@/lib/encrypted-storage'
 
 export default function SelectiveDisclosurePage() {
-  const { publicKey } = useWallet()
-  const isConnected = !!publicKey
-  const address = publicKey
+  const { address } = useWallet()
+  const isConnected = !!address
   const [attributes, setAttributes] = useState<string[]>([])
   const [selectedAttrs, setSelectedAttrs] = useState<string[]>([])
   const [proofGenerated, setProofGenerated] = useState(false)
