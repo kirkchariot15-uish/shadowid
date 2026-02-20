@@ -76,9 +76,10 @@ export function CreateIdentityPage() {
       addActivityLog('Create ShadowID', 'identity', `Created ZK identity with ${selectedAttributes.length} attributes`, 'success')
       setCreationComplete(true)
     } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to create identity'
       console.error('[v0] Identity creation error:', err)
-      alert('Failed to create identity. Please try again.')
-      addActivityLog('Create ShadowID', 'identity', 'Failed to create identity', 'error')
+      alert(`Identity creation failed: ${errorMsg}`)
+      addActivityLog('Create ShadowID', 'identity', `Failed to create identity: ${errorMsg}`, 'error')
     } finally {
       setIsCreating(false)
     }
