@@ -160,7 +160,7 @@ export function CreateIdentityPage() {
             <div>
               <h2 className="text-lg font-semibold mb-4">Available Attributes</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {STANDARD_ATTRIBUTES.map(attr => (
+                {Object.values(STANDARD_ATTRIBUTES).map(attr => (
                   <label key={attr.id} className="flex items-start gap-3 p-4 rounded-lg border border-border hover:border-accent/50 cursor-pointer transition-colors">
                     <input
                       type="checkbox"
