@@ -1,12 +1,28 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useWallet } from '@/lib/wallet-context';
 import { Button } from '@/components/ui/button';
-import { LogOut, Loader2 } from 'lucide-react';
+import { LogOut, Loader2, AlertCircle } from 'lucide-react';
 
 export function SimpleWalletButton() {
-  const { address, isConnected, connect, disconnect, loading } = useWallet();
-  const [open, setOpen] = useState(false);
+  const { address, isConnected, connect, disconnect, loading, error } = useWallet();
+  const [walletNotFound, setWalletNotFound] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    // Check if Aleo wallet is installed
+    const timer = setTimeout(() => {
+      if (!(window as any).aleo) {
+        setWalletNotFound(true);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
 
   if (isConnected && address) {
     return (
@@ -19,12 +35,28 @@ export function SimpleWalletButton() {
           size="sm"
           onClick={() => {
             disconnect();
-            setOpen(false);
           }}
           className="gap-2"
         >
           <LogOut className="h-4 w-4" />
           Disconnect
+        </Button>
+      </div>
+    );
+  }
+
+  if (walletNotFound) {
+    return (
+      <div className="flex items-center gap-2">
+        <AlertCircle className="h-4 w-4 text-red-500" />
+        <Button
+          variant="outline"
+          size="sm"
+          disabled
+          title="Install an Aleo wallet to connect"
+          className="text-xs"
+        >
+          Wallet Not Found
         </Button>
       </div>
     );
