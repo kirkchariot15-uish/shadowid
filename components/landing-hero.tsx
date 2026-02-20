@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Lock, Zap, Shield } from 'lucide-react'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { IDCardPreview } from '@/components/id-card-preview'
-import { useState, useEffect } from 'react'
+
 import { useWallet } from '@provablehq/aleo-wallet-adaptor-react'
 import { ArrowRight } from 'lucide-react'
 
@@ -36,25 +36,23 @@ export function LandingHero() {
         </p>
 
         {/* ID Card Preview - Interactive with wallet connection */}
-        {mounted && <IDCardPreview />}
+        <IDCardPreview />
 
         {/* Show text when not connected, button when connected */}
-        {mounted && (
-          <div className="mt-8">
-            {!isConnected ? (
-              <p className="text-xs text-muted-foreground">
-                Zero-knowledge secured via Aleo Testnet
-              </p>
-            ) : (
-              <Link href="/dashboard">
-                <Button size="lg" className="h-12 px-8 gap-2">
-                  Go to Dashboard
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
-            )}
-          </div>
-        )}
+        <div className="mt-8">
+          {!isConnected ? (
+            <p className="text-xs text-muted-foreground">
+              Zero-knowledge secured via Aleo Testnet
+            </p>
+          ) : (
+            <Link href="/dashboard">
+              <Button size="lg" className="h-12 px-8 gap-2">
+                Go to Dashboard
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          )}
+        </div>
       </section>
 
       <section className="bg-card/50 py-20 px-4 border-t border-border">
