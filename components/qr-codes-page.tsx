@@ -24,7 +24,8 @@ interface StoredQRCode {
 }
 
 export default function QRCodesPage() {
-  const { isConnected } = useAleoWallet()
+  const { publicKey } = useWallet()
+  const isConnected = !!publicKey
   const [qrCodes, setQrCodes] = useState<StoredQRCode[]>([])
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)

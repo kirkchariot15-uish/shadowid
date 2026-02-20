@@ -9,7 +9,9 @@ import Link from 'next/link'
 import { clearActivityLogs } from '@/lib/activity-logger'
 
 export default function SettingsPage() {
-  const { isConnected, address } = useAleoWallet()
+  const { publicKey } = useWallet()
+  const isConnected = !!publicKey
+  const address = publicKey
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleteInput, setDeleteInput] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)

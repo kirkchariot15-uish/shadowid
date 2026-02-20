@@ -10,7 +10,9 @@ import { getUserProfile, saveUserProfile, UserProfile } from '@/lib/user-profile
 import { addActivityLog } from '@/lib/activity-logger'
 
 export default function ProfilePage() {
-  const { isConnected, address } = useAleoWallet()
+  const { publicKey } = useWallet()
+  const isConnected = !!publicKey
+  const address = publicKey
   const [profile, setProfile] = useState<UserProfile>({
     username: '',
     bio: '',

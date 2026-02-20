@@ -9,7 +9,8 @@ import Link from 'next/link'
 import { getActivityLogs, clearActivityLogs, type ActivityLog } from '@/lib/activity-logger'
 
 export default function LogsPage() {
-  const { isConnected } = useAleoWallet()
+  const { publicKey } = useWallet()
+  const isConnected = !!publicKey
   const [logs, setLogs] = useState<ActivityLog[]>([])
   const [filteredLogs, setFilteredLogs] = useState<ActivityLog[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>('all')

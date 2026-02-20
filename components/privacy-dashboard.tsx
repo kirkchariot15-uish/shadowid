@@ -38,7 +38,9 @@ import {
 } from '@/lib/rate-limiting'
 
 export default function PrivacyDashboard() {
-  const { isConnected, address } = useAleoWallet()
+  const { publicKey } = useWallet()
+  const isConnected = !!publicKey
+  const address = publicKey
   const [activeTab, setActiveTab] = useState<'overview' | 'credentials' | 'disclosures' | 'audit' | 'session' | 'settings'>('overview')
   const [stats, setStats] = useState<any>(null)
   const [revocationList, setRevocationList] = useState<any>(null)

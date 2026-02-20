@@ -10,7 +10,9 @@ import { useState, useEffect } from 'react'
 import { addActivityLog } from '@/lib/activity-logger'
 
 export default function HomePage() {
-  const { isConnected, address } = useAleoWallet()
+  const { publicKey } = useWallet()
+  const isConnected = !!publicKey
+  const address = publicKey
   const [showPrivacyGuarantees, setShowPrivacyGuarantees] = useState(false)
 
   useEffect(() => {

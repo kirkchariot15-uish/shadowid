@@ -12,7 +12,9 @@ import { addActivityLog } from '@/lib/activity-logger'
 import { getDecryptedCredential } from '@/lib/encrypted-storage'
 
 export default function SelectiveDisclosurePage() {
-  const { isConnected, address } = useAleoWallet()
+  const { publicKey } = useWallet()
+  const isConnected = !!publicKey
+  const address = publicKey
   const [attributes, setAttributes] = useState<string[]>([])
   const [selectedAttrs, setSelectedAttrs] = useState<string[]>([])
   const [proofGenerated, setProofGenerated] = useState(false)
