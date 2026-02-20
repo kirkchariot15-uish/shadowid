@@ -1,11 +1,6 @@
 'use client'
 
-import dynamic from 'next/dynamic'
-
-const LandingHero = dynamic(
-  () => import('@/components/landing-hero').then((mod) => mod.LandingHero),
-  { ssr: false }
-)
+import { LandingHero } from '@/components/landing-hero'
 
 export default function Page() {
   return <LandingHero />
