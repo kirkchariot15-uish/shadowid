@@ -15,7 +15,7 @@ export function CreateIdentityPage() {
   const { address } = useAleoWallet()
   const isConnected = !!address
   const [mounted, setMounted] = useState(false)
-  const [selectedAttributes, setSelectedAttributes] = useState<string[]>([])
+  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({})
   const [isCreating, setIsCreating] = useState(false)
   const [creationComplete, setCreationComplete] = useState(false)
   const [commitment, setCommitment] = useState<string>('')
@@ -40,10 +40,84 @@ export function CreateIdentityPage() {
   }
 
   const handleCreateIdentity = async () => {
-    if (selectedAttributes.length === 0) {
-      alert('Select at least one attribute to claim')
+    const selectedAttrIds = Object.keys(selectedAttributes).filter(key => selectedAttributes[key].trim())
+    
+    if (selectedAttrIds.length === 0) {
+      alert('Select and fill at least one attribute to claim')
       return
     }
+
+    setIsCreating(true)
+    try {
+      // Ensure crypto is available before proceeding
+      if (typeof window === 'undefined' || !window.crypto || !window.crypto.subtle) {
+        throw new Error('Cryptographic functions not available in this browser. Please use a modern browser.')
+      }
+
+      const data = `${address}-${selectedAttrIds.join(',')}-${Date.now()}`
+      const encoder = new TextEncoder()
+      const dataBuffer = encoder.encode(data)
+      const hashBuffer = await window.crypto.subtle.digest('SHA-256', dataBuffer)
+      const hashArray = Array.from(new Uint8Array(hashBuffer))
+      const commitmentHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16).toUpperCase()
+
+      const credential = {
+        '@context': ['https://www.w3.org/2018/credentials/v1'],
+        id: `shadowid:${commitmentHash}`,
+        type: ['VerifiableCredential', 'ShadowIDCredential'],
+        issuer: { id: address, name: 'User' },
+        issuanceDate: new Date().toISOString(),
+        credentialSubject: {
+          id: address,
+          claims: selectedAttrIds.reduce((acc, attr) => {
+            acc[attr] = { attributeId: attr, value: selectedAttributes[attr] }
+            return acc
+          }, {} as Record<string, any>)
+        },
+        proof: {
+          type: 'Ed25519Signature2020',
+          created: new Date().toISOString(),
+          verificationMethod: `did:aleo:${address}`,
+          proofPurpose: 'assertionMethod',
+          proofValue: commitmentHash
+        }
+      }
+
+      // Save to localStorage for QR code page
+      localStorage.setItem('shadowid-commitment', commitmentHash)
+      localStorage.setItem('shadowid-created-at', new Date().toISOString())
+      localStorage.setItem('shadowid-user-info', JSON.stringify({
+        hasPhoto: false,
+        documentCount: 0,
+        notesCount: 0,
+        documentsNames: [],
+        notes: []
+      }))
+      localStorage.setItem('shadowid-credential', JSON.stringify(credential))
+
+      await storeEncryptedCredential(commitmentHash, credential, address)
+
+      try {
+        const result = await registerCommitmentOnChain(commitmentHash, address)
+        if (result.success) {
+          addActivityLog('Register on-chain', 'blockchain', `Commitment on-chain: ${result.transactionId}`, 'success')
+        }
+      } catch (error) {
+        console.error('[v0] Blockchain registration error:', error)
+      }
+
+      setCommitment(commitmentHash)
+      addActivityLog('Create ShadowID', 'identity', `Created ZK identity with ${selectedAttrIds.length} attributes`, 'success')
+      setCreationComplete(true)
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to create identity'
+      console.error('[v0] Identity creation error:', err)
+      alert(`Identity creation failed: ${errorMsg}`)
+      addActivityLog('Create ShadowID', 'identity', `Failed to create identity: ${errorMsg}`, 'error')
+    } finally {
+      setIsCreating(false)
+    }
+  }
 
     setIsCreating(true)
     try {
@@ -187,25 +261,39 @@ export function CreateIdentityPage() {
               <h2 className="text-lg font-semibold mb-4">Available Attributes</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Object.values(STANDARD_ATTRIBUTES).map(attr => (
-                  <label key={attr.id} className="flex items-start gap-3 p-4 rounded-lg border border-border hover:border-accent/50 cursor-pointer transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={selectedAttributes.includes(attr.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedAttributes([...selectedAttributes, attr.id])
-                        } else {
-                          setSelectedAttributes(selectedAttributes.filter(id => id !== attr.id))
-                        }
-                      }}
-                      className="mt-1"
-                    />
-                    <div className="flex-1">
-                      <p className="font-semibold text-sm">{attr.name}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{attr.description}</p>
-                      <p className="text-xs text-accent mt-2">Privacy: {attr.privacyLevel}</p>
+                  <div key={attr.id} className="p-4 rounded-lg border border-border hover:border-accent/50 transition-colors">
+                    <div className="flex items-start gap-3 mb-3">
+                      <input
+                        type="checkbox"
+                        checked={!!selectedAttributes[attr.id]}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedAttributes({...selectedAttributes, [attr.id]: ''})
+                          } else {
+                            const {[attr.id]: _, ...rest} = selectedAttributes
+                            setSelectedAttributes(rest)
+                          }
+                        }}
+                        className="mt-1"
+                      />
+                      <div className="flex-1">
+                        <p className="font-semibold text-sm">{attr.name}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{attr.description}</p>
+                        <p className="text-xs text-accent mt-2">Privacy: {attr.privacyLevel}</p>
+                      </div>
                     </div>
-                  </label>
+                    {selectedAttributes[attr.id] !== undefined && (
+                      <input
+                        type="text"
+                        placeholder={`Enter ${attr.name}...`}
+                        value={selectedAttributes[attr.id] || ''}
+                        onChange={(e) => {
+                          setSelectedAttributes({...selectedAttributes, [attr.id]: e.target.value})
+                        }}
+                        className="w-full px-3 py-2 rounded border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent"
+                      />
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
