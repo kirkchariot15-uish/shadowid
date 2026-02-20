@@ -43,9 +43,14 @@ export function CreateIdentityPage() {
 
     setIsCreating(true)
     try {
-      // Ensure crypto is available
-      if (typeof window === 'undefined' || !window.crypto) {
-        throw new Error('Crypto API not available')
+      // Ensure crypto is available before proceeding
+      if (typeof window === 'undefined' || !window.crypto || !window.crypto.subtle) {
+        throw new Error('Cryptographic functions not available in this browser. Please use a modern browser.')
+      }
+
+      // Make crypto globally available for Aleo SDK
+      if (typeof (globalThis as any).crypto === 'undefined') {
+        (globalThis as any).crypto = window.crypto
       }
 
       const data = `${address}-${selectedAttributes.join(',')}-${Date.now()}`

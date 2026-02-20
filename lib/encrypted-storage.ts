@@ -54,33 +54,34 @@ export async function encryptOffChainData(
   walletPrivateKey: string
 ): Promise<EncryptedData> {
   try {
-    const salt = crypto.getRandomValues(new Uint8Array(16));
-    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const cryptoSubtle = getCrypto()
+    const salt = window.crypto.getRandomValues(new Uint8Array(16))
+    const iv = window.crypto.getRandomValues(new Uint8Array(12))
     
-    const key = await deriveEncryptionKey(walletPrivateKey, Buffer.from(salt).toString('hex'));
+    const key = await deriveEncryptionKey(walletPrivateKey, Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join(''))
     
-    const encoder = new TextEncoder();
-    const plaintext = encoder.encode(JSON.stringify(data));
+    const encoder = new TextEncoder()
+    const plaintext = encoder.encode(JSON.stringify(data))
     
-    const ciphertext = await crypto.subtle.encrypt(
+    const ciphertext = await cryptoSubtle.encrypt(
       { name: 'AES-GCM', iv },
       key,
       plaintext
-    );
+    )
 
-    const ciphertextArray = new Uint8Array(ciphertext);
-    const tag = ciphertextArray.slice(-16);
-    const encrypted = ciphertextArray.slice(0, -16);
+    const ciphertextArray = new Uint8Array(ciphertext)
+    const tag = ciphertextArray.slice(-16)
+    const encrypted = ciphertextArray.slice(0, -16)
 
     return {
-      ciphertext: Buffer.from(encrypted).toString('hex'),
-      iv: Buffer.from(iv).toString('hex'),
-      tag: Buffer.from(tag).toString('hex'),
-      salt: Buffer.from(salt).toString('hex'),
-    };
+      ciphertext: Array.from(encrypted).map(b => b.toString(16).padStart(2, '0')).join(''),
+      iv: Array.from(iv).map(b => b.toString(16).padStart(2, '0')).join(''),
+      tag: Array.from(tag).map(b => b.toString(16).padStart(2, '0')).join(''),
+      salt: Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join(''),
+    }
   } catch (error) {
-    console.error('[v0] Encryption failed:', error);
-    throw error;
+    console.error('[v0] Encryption failed:', error)
+    throw error
   }
 }
 
@@ -92,17 +93,18 @@ export async function decryptOffChainData(
   walletPrivateKey: string
 ): Promise<any> {
   try {
-    const salt = Buffer.from(encrypted.salt, 'hex');
-    const iv = Buffer.from(encrypted.iv, 'hex');
-    const ciphertext = Buffer.from(encrypted.ciphertext, 'hex');
-    const tag = Buffer.from(encrypted.tag, 'hex');
+    const cryptoSubtle = getCrypto()
+    const salt = new Uint8Array(encrypted.salt.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)))
+    const iv = new Uint8Array(encrypted.iv.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)))
+    const ciphertext = new Uint8Array(encrypted.ciphertext.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)))
+    const tag = new Uint8Array(encrypted.tag.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)))
     
-    const key = await deriveEncryptionKey(walletPrivateKey, encrypted.salt);
+    const key = await deriveEncryptionKey(walletPrivateKey, encrypted.salt)
     
     // Combine ciphertext + tag for decryption
-    const encryptedData = Buffer.concat([ciphertext, tag]);
+    const encryptedData = new Uint8Array([...ciphertext, ...tag])
     
-    const plaintext = await crypto.subtle.decrypt(
+    const plaintext = await cryptoSubtle.decrypt(
       { name: 'AES-GCM', iv },
       key,
       encryptedData
