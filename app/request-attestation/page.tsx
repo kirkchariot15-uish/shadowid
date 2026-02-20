@@ -1,9 +1,11 @@
-import RequestAttestationPage from '@/components/request-attestation-page'
+'use client'
 
-export const metadata = {
-  title: 'Request Attestation - ShadowID',
-  description: 'Request verifiable credentials from trusted issuers',
-}
+import dynamic from 'next/dynamic'
+
+const RequestAttestationPage = dynamic(() => import('@/components/request-attestation-page'), {
+  ssr: false,
+  loading: () => <div className="min-h-screen bg-background" />,
+})
 
 export default function Page() {
   return <RequestAttestationPage />
