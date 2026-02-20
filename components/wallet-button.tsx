@@ -5,7 +5,16 @@ import { useWallet } from '@provablehq/aleo-wallet-adaptor-react'
 export function WalletMultiButton() {
   const walletState = useWallet()
   
-  console.log('[v0] WalletButton - publicKey:', walletState.publicKey, 'connected:', walletState.connected)
+  console.log('[v0] WalletButton full state:', {
+    publicKey: walletState.publicKey,
+    connected: walletState.connected,
+    connecting: walletState.connecting,
+    wallet: walletState.wallet,
+    walletName: walletState.wallet?.adapter?.name,
+    select: typeof walletState.select,
+    connect: typeof walletState.connect,
+    disconnect: typeof walletState.disconnect,
+  })
 
   return (
     <div className="[&>button]:bg-accent [&>button]:hover:bg-accent/90 [&>button]:text-accent-foreground">
