@@ -6,25 +6,19 @@ import { Lock, Zap, Shield } from 'lucide-react'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { IDCardPreview } from '@/components/id-card-preview'
 import { useState, useEffect } from 'react'
-import { useAleoWallet } from '@/lib/wallet-provider'
+import { useWallet } from '@provablehq/aleo-wallet-adaptor-react'
 import { ArrowRight } from 'lucide-react'
 
 export function LandingHero() {
-  const [mounted, setMounted] = useState(false)
-  const { isConnected } = useAleoWallet()
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const { publicKey } = useWallet()
+  const isConnected = !!publicKey
 
   return (
     <main className="min-h-screen bg-background flex flex-col">
       {/* Wallet Button - Top Right */}
-      {mounted && (
-        <div className="fixed top-6 right-6 z-50">
-          <WalletMultiButton />
-        </div>
-      )}
+      <div className="fixed top-6 right-6 z-50">
+        <WalletMultiButton />
+      </div>
 
       <section className="flex-1 flex flex-col items-center justify-center px-4 py-20 max-w-4xl mx-auto text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/20 bg-accent/5 mb-8">

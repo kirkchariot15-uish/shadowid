@@ -1,6 +1,6 @@
-'use client';
-import { SimpleWalletButton } from '@/components/simple-wallet-button';
+'use client'
+import { WalletMultiButton as OfficialWalletMultiButton } from '@provablehq/aleo-wallet-adaptor-react-ui'
 
 export function WalletMultiButton() {
-  return <SimpleWalletButton />;
+  return <OfficialWalletMultiButton />
 }

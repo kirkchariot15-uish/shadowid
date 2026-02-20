@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAleoWallet } from '@/lib/wallet-provider'
+import { useWallet } from '@provablehq/aleo-wallet-adaptor-react'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { Navigation } from '@/components/navigation'
 import { IDCard } from '@/components/id-card'
@@ -12,7 +12,9 @@ import Link from 'next/link'
 import { addActivityLog } from '@/lib/activity-logger'
 
 export default function DashboardPage() {
-  const { isConnected, address } = useAleoWallet()
+  const { publicKey } = useWallet()
+  const isConnected = !!publicKey
+  const address = publicKey
   const [credentials, setCredentials] = useState<number>(0)
   const [proofs, setProofs] = useState<number>(0)
 
