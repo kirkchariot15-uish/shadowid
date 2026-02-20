@@ -1,5 +1,6 @@
 'use client'
 
+// Force cache invalidation - v2.1
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Lock, Zap, Shield } from 'lucide-react'
