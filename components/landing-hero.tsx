@@ -14,8 +14,6 @@ export function LandingHero() {
   const { publicKey } = useWallet()
   const isConnected = !!publicKey
 
-  console.log('[v0] Landing Hero - publicKey:', publicKey, 'isConnected:', isConnected)
-
   return (
     <main className="min-h-screen bg-background flex flex-col">
       {/* Wallet Button - Top Right */}
