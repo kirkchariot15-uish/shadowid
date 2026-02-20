@@ -6,8 +6,10 @@ const nextConfig = {
   generateBuildId: async () => {
     return `build-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
   },
-  // Force clean build - cache bust v100
-  experimental: {},
+  onDemandEntries: {
+    maxInactiveAge: 0,
+    pagesBufferLength: 0,
+  },
 }
 
 export default nextConfig
