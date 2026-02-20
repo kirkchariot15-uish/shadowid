@@ -119,66 +119,6 @@ export function CreateIdentityPage() {
     }
   }
 
-    setIsCreating(true)
-    try {
-      // Ensure crypto is available before proceeding
-      if (typeof window === 'undefined' || !window.crypto || !window.crypto.subtle) {
-        throw new Error('Cryptographic functions not available in this browser. Please use a modern browser.')
-      }
-
-      const data = `${address}-${selectedAttributes.join(',')}-${Date.now()}`
-      const encoder = new TextEncoder()
-      const dataBuffer = encoder.encode(data)
-      const hashBuffer = await window.crypto.subtle.digest('SHA-256', dataBuffer)
-      const hashArray = Array.from(new Uint8Array(hashBuffer))
-      const commitmentHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16).toUpperCase()
-
-      const credential = {
-        '@context': ['https://www.w3.org/2018/credentials/v1'],
-        id: `shadowid:${commitmentHash}`,
-        type: ['VerifiableCredential', 'ShadowIDCredential'],
-        issuer: { id: address, name: 'User' },
-        issuanceDate: new Date().toISOString(),
-        credentialSubject: {
-          id: address,
-          claims: selectedAttributes.reduce((acc, attr) => {
-            acc[attr] = { attributeId: attr, value: true }
-            return acc
-          }, {} as Record<string, any>)
-        },
-        proof: {
-          type: 'Ed25519Signature2020',
-          created: new Date().toISOString(),
-          verificationMethod: `did:aleo:${address}`,
-          proofPurpose: 'assertionMethod',
-          proofValue: commitmentHash
-        }
-      }
-
-      await storeEncryptedCredential(commitmentHash, credential, address)
-
-      try {
-        const result = await registerCommitmentOnChain(commitmentHash, address)
-        if (result.success) {
-          addActivityLog('Register on-chain', 'blockchain', `Commitment on-chain: ${result.transactionId}`, 'success')
-        }
-      } catch (error) {
-        console.error('[v0] Blockchain registration error:', error)
-      }
-
-      setCommitment(commitmentHash)
-      addActivityLog('Create ShadowID', 'identity', `Created ZK identity with ${selectedAttributes.length} attributes`, 'success')
-      setCreationComplete(true)
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to create identity'
-      console.error('[v0] Identity creation error:', err)
-      alert(`Identity creation failed: ${errorMsg}`)
-      addActivityLog('Create ShadowID', 'identity', `Failed to create identity: ${errorMsg}`, 'error')
-    } finally {
-      setIsCreating(false)
-    }
-  }
-
   if (!isConnected || !address) {
     return (
       <>
@@ -215,7 +155,7 @@ export function CreateIdentityPage() {
                 <p className="text-xl font-mono font-bold break-all">{commitment}</p>
               </div>
               <p className="text-sm text-muted-foreground mb-8">
-                Selected attributes: {selectedAttributes.join(', ')}
+                Selected attributes: {Object.keys(selectedAttributes).join(', ')}
               </p>
               <div className="flex gap-3 justify-center">
                 <Link href="/request-attestation">
@@ -300,7 +240,7 @@ export function CreateIdentityPage() {
             <div className="flex gap-3 pt-8 border-t border-border">
               <Button
                 onClick={handleCreateIdentity}
-                disabled={isCreating || selectedAttributes.length === 0}
+                disabled={isCreating || Object.keys(selectedAttributes).length === 0}
                 className="flex-1 gap-2"
               >
                 {isCreating ? 'Creating...' : 'Create ShadowID'}
