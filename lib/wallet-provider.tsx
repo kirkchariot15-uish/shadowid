@@ -21,6 +21,8 @@ const wallets = [
 ]
 
 export function WalletProviderComponent({ children }: { children: ReactNode }) {
+  console.log('[v0] Wallet Provider: Initializing with wallets:', wallets.map(w => w.constructor.name))
+  
   return (
     <AleoWalletProvider
       wallets={wallets}
