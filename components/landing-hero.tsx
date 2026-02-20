@@ -6,12 +6,11 @@ import { Button } from '@/components/ui/button'
 import { Lock, Zap, Shield } from 'lucide-react'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { IDCardPreview } from '@/components/id-card-preview'
-
-import { useWallet } from '@/lib/wallet-context'
+import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { ArrowRight } from 'lucide-react'
 
 export function LandingHero() {
-  const { address } = useWallet()
+  const { address } = useAleoWallet()
   const isConnected = !!address
 
   return (

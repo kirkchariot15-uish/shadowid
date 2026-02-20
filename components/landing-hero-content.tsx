@@ -2,11 +2,11 @@
 
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { useWallet } from '@/lib/wallet-context'
+import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { ArrowRight } from 'lucide-react'
 
 export function LandingHeroContent() {
-  const { address } = useWallet()
+  const { address } = useAleoWallet()
   const isConnected = !!address
 
   return (

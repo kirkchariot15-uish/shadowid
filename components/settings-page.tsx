@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useWallet } from '@/lib/wallet-context'
+import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { Button } from '@/components/ui/button'
 import { Lock, ArrowLeft, Trash2, AlertTriangle, CheckCircle } from 'lucide-react'
@@ -9,7 +9,7 @@ import Link from 'next/link'
 import { clearActivityLogs } from '@/lib/activity-logger'
 
 export default function SettingsPage() {
-  const { address } = useWallet()
+  const { address } = useAleoWallet()
   const isConnected = !!address
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleteInput, setDeleteInput] = useState('')

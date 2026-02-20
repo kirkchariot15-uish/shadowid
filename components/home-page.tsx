@@ -1,6 +1,6 @@
 'use client'
 
-import { useWallet } from '@/lib/wallet-context'
+import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react'
 import { addActivityLog } from '@/lib/activity-logger'
 
 export default function HomePage() {
-  const { address } = useWallet()
+  const { address } = useAleoWallet()
   const isConnected = !!address
   const [showPrivacyGuarantees, setShowPrivacyGuarantees] = useState(false)
 

@@ -3,13 +3,13 @@
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { useWallet } from '@/lib/wallet-context'
+import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { Button } from '@/components/ui/button'
 import { Menu, X, Home, FileText, Settings, User, Shield, Award, CheckCircle } from 'lucide-react'
 
 export function NavigationMenu() {
-  const { address } = useWallet()
+  const { address } = useAleoWallet()
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
   

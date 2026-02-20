@@ -1,9 +1,9 @@
 'use client'
 
-import { useWallet } from '@/lib/wallet-context'
+import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 
 export function IDCardPreview() {
-  const { address } = useWallet()
+  const { address } = useAleoWallet()
   const isConnected = !!address
 
   return (
