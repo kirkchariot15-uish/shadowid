@@ -21,6 +21,7 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [error, setError] = useState('')
+  const [isEditMode, setIsEditMode] = useState(false)
 
   useEffect(() => {
     if (!isConnected || !address) return
@@ -54,6 +55,7 @@ export default function ProfilePage() {
       await saveUserProfile(address, updatedProfile)
       setProfile(updatedProfile)
       setSaveSuccess(true)
+      setIsEditMode(false)
       addActivityLog('Update profile', 'profile', `Updated username: ${profile.username}`, 'success')
 
       setTimeout(() => setSaveSuccess(false), 3000)
@@ -111,7 +113,8 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* Profile Form */}
+          {/* Profile Form / View */}
+          {isEditMode ? (
           <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-8 space-y-8">
             {/* Username */}
             <div>
@@ -177,8 +180,71 @@ export default function ProfilePage() {
                 <Save className="h-4 w-4" />
                 {isSaving ? 'Saving...' : 'Save Profile'}
               </Button>
+              <Button
+                onClick={() => setIsEditMode(false)}
+                variant="outline"
+                className="px-6 border-accent/40"
+              >
+                Cancel
+              </Button>
             </div>
           </div>
+          ) : (
+          <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-8 space-y-8">
+            {/* View Mode - Display Saved Profile */}
+            {profile.username && (
+              <div>
+                <label className="block text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <User className="h-4 w-4 text-accent" />
+                  Username
+                </label>
+                <div className="px-4 py-3 rounded-lg border border-accent/20 bg-background/50 text-foreground">
+                  {profile.username}
+                </div>
+              </div>
+            )}
+
+            {profile.bio && (
+              <div>
+                <label className="block text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-accent" />
+                  Bio
+                </label>
+                <div className="px-4 py-3 rounded-lg border border-accent/20 bg-background/50 text-foreground whitespace-pre-wrap">
+                  {profile.bio}
+                </div>
+              </div>
+            )}
+
+            {!profile.username && !profile.bio && (
+              <div className="py-8 text-center text-muted-foreground">
+                <p>No profile information set yet.</p>
+              </div>
+            )}
+
+            {/* Privacy Notice */}
+            <div className="p-4 rounded-lg border border-accent/20 bg-accent/5">
+              <p className="text-xs text-muted-foreground leading-relaxed flex items-start gap-2">
+                <Lock className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
+                <span>
+                  Your profile is encrypted locally and never transmitted unencrypted.
+                </span>
+              </p>
+            </div>
+
+            {/* Edit Button */}
+            <div className="flex gap-3 pt-4 border-t border-border/30">
+              <Button
+                onClick={() => setIsEditMode(true)}
+                className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground gap-2 font-semibold"
+              >
+                <FileText className="h-4 w-4" />
+                Edit Profile
+              </Button>
+            </div>
+          </div>
+          )}
+          
 
           {/* Info Box */}
           <div className="mt-8 p-4 rounded-lg border border-border/50 bg-muted/5">
