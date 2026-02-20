@@ -23,6 +23,10 @@ export function CreateIdentityPage() {
   // Ensure component only renders on client with crypto available
   useEffect(() => {
     if (typeof window !== 'undefined' && window.crypto) {
+      // Make crypto globally available for Aleo SDK IMMEDIATELY on mount
+      if (typeof (globalThis as any).crypto === 'undefined') {
+        (globalThis as any).crypto = window.crypto
+      }
       setMounted(true)
     }
   }, [])
@@ -46,11 +50,6 @@ export function CreateIdentityPage() {
       // Ensure crypto is available before proceeding
       if (typeof window === 'undefined' || !window.crypto || !window.crypto.subtle) {
         throw new Error('Cryptographic functions not available in this browser. Please use a modern browser.')
-      }
-
-      // Make crypto globally available for Aleo SDK
-      if (typeof (globalThis as any).crypto === 'undefined') {
-        (globalThis as any).crypto = window.crypto
       }
 
       const data = `${address}-${selectedAttributes.join(',')}-${Date.now()}`
