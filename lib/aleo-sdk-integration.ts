@@ -7,6 +7,8 @@
 
 const ALEO_API = 'https://api.explorer.provable.com/v1/testnet';
 const PROGRAM_ID = 'shadowid_v2.aleo';
+const REGISTRY_PROGRAM_ID = process.env.NEXT_PUBLIC_CREDENTIAL_REGISTRY_PROGRAM_ID || 'credential_registry.aleo';
+const VERIFIER_PROGRAM_ID = process.env.NEXT_PUBLIC_QR_VERIFIER_PROGRAM_ID || 'qr_verifier.aleo';
 
 interface ProofExecutionRequest {
   programId: string;
@@ -152,4 +154,91 @@ export async function getProgramInfo(): Promise<{
       transactionId: '',
     };
   }
+}
+
+/**
+ * Register credential on registry program
+ */
+export async function registerCredentialInRegistry(
+  commitment: string,
+  attributeCount: number,
+  walletAddress: string
+): Promise<OnChainExecutionResult> {
+  return executeProofOnChain(
+    {
+      programId: REGISTRY_PROGRAM_ID,
+      functionName: 'register_commitment',
+      inputs: [commitment, attributeCount.toString()],
+    },
+    walletAddress
+  );
+}
+
+/**
+ * Revoke a credential from registry
+ */
+export async function revokeCredentialFromRegistry(
+  commitment: string,
+  walletAddress: string
+): Promise<OnChainExecutionResult> {
+  return executeProofOnChain(
+    {
+      programId: REGISTRY_PROGRAM_ID,
+      functionName: 'revoke_credential',
+      inputs: [commitment],
+    },
+    walletAddress
+  );
+}
+
+/**
+ * Verify credential exists in registry
+ */
+export async function verifyCredentialInRegistry(
+  commitment: string,
+  walletAddress: string
+): Promise<OnChainExecutionResult> {
+  return executeProofOnChain(
+    {
+      programId: REGISTRY_PROGRAM_ID,
+      functionName: 'verify_commitment',
+      inputs: [commitment],
+    },
+    walletAddress
+  );
+}
+
+/**
+ * Record QR code verification on verifier program
+ */
+export async function recordQRVerification(
+  commitmentHash: string,
+  proofId: string,
+  walletAddress: string
+): Promise<OnChainExecutionResult> {
+  return executeProofOnChain(
+    {
+      programId: VERIFIER_PROGRAM_ID,
+      functionName: 'verify_qr_credential',
+      inputs: [commitmentHash, proofId, walletAddress],
+    },
+    walletAddress
+  );
+}
+
+/**
+ * Increment verification count for credential
+ */
+export async function incrementVerificationCount(
+  commitmentHash: string,
+  walletAddress: string
+): Promise<OnChainExecutionResult> {
+  return executeProofOnChain(
+    {
+      programId: VERIFIER_PROGRAM_ID,
+      functionName: 'increment_verification_count',
+      inputs: [commitmentHash],
+    },
+    walletAddress
+  );
 }

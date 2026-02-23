@@ -6,6 +6,7 @@ import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Shield, Eye, Lock, RotateCcw, Trash2, Download, BarChart3, AlertCircle, CheckCircle, Clock } from 'lucide-react'
 import Link from 'next/link'
+import { revokeCredentialFromRegistry } from '@/lib/aleo-sdk-integration'
 import {
   getRevocationList,
   revokeAllCredentials,
@@ -46,6 +47,30 @@ export default function PrivacyDashboard() {
   const [auditData, setAuditData] = useState<any>(null)
   const [sessionData, setSessionData] = useState<any>(null)
   const [rateLimitStats, setRateLimitStats] = useState<any>(null)
+  const [isRevoking, setIsRevoking] = useState(false)
+
+  const handleRevokeCredential = async (commitment: string) => {
+    if (!address) return
+    
+    if (!window.confirm('Are you sure you want to revoke this credential? This action cannot be undone.')) {
+      return
+    }
+
+    setIsRevoking(true)
+    try {
+      const result = await revokeCredentialFromRegistry(commitment, address)
+      if (result.success) {
+        alert(`Credential revoked successfully on Aleo blockchain`)
+        // Refresh revocation list
+        const updated = getRevocationList()
+        setRevocationList(updated)
+      }
+    } catch (error) {
+      alert(`Failed to revoke: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setIsRevoking(false)
+    }
+  }
 
   useEffect(() => {
     if (!isConnected) return

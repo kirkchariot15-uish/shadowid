@@ -8,7 +8,7 @@ import { Lock, Sparkles, CheckCircle2, ArrowLeft, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { addActivityLog } from '@/lib/activity-logger'
 import { STANDARD_ATTRIBUTES } from '@/lib/attribute-schema'
-import { registerCommitmentOnChain } from '@/lib/aleo-sdk-integration'
+import { registerCommitmentOnChain, registerCredentialInRegistry } from '@/lib/aleo-sdk-integration'
 import { storeEncryptedCredential } from '@/lib/encrypted-storage'
 
 export function CreateIdentityPage() {
@@ -98,9 +98,16 @@ export function CreateIdentityPage() {
       await storeEncryptedCredential(commitmentHash, credential, address)
 
       try {
-        const result = await registerCommitmentOnChain(commitmentHash, address)
-        if (result.success) {
-          addActivityLog('Register on-chain', 'blockchain', `Commitment on-chain: ${result.transactionId}`, 'success')
+        // Register on main shadowid contract
+        const mainResult = await registerCommitmentOnChain(commitmentHash, address)
+        if (mainResult.success) {
+          addActivityLog('Register on-chain', 'blockchain', `Commitment on shadowid_v2: ${mainResult.transactionId}`, 'success')
+        }
+
+        // Register in credential registry
+        const registryResult = await registerCredentialInRegistry(commitmentHash, selectedAttrIds.length, address)
+        if (registryResult.success) {
+          addActivityLog('Register registry', 'blockchain', `Credential registered: ${registryResult.transactionId}`, 'success')
         }
       } catch (error) {
         console.error('[v0] Blockchain registration error:', error)

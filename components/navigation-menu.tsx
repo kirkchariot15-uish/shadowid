@@ -98,6 +98,13 @@ export function NavigationMenu() {
               </Button>
             </Link>
 
+            <Link href="/verify-qr" onClick={() => setIsOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start">
+                <CheckCircle className="h-4 w-4 mr-3" />
+                Verify QR Code
+              </Button>
+            </Link>
+
             <Link href="/logs" onClick={() => setIsOpen(false)}>
               <Button variant="ghost" className="w-full justify-start">
                 <FileText className="h-4 w-4 mr-3" />
