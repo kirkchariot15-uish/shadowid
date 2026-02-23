@@ -9,6 +9,7 @@ const ALEO_API = 'https://api.explorer.provable.com/v1/testnet';
 const PROGRAM_ID = 'shadowid_v2.aleo';
 const REGISTRY_PROGRAM_ID = process.env.NEXT_PUBLIC_CREDENTIAL_REGISTRY_PROGRAM_ID || 'credential_registry.aleo';
 const VERIFIER_PROGRAM_ID = process.env.NEXT_PUBLIC_QR_VERIFIER_PROGRAM_ID || 'qr_verifier.aleo';
+const DAO_ATTESTATION_PROGRAM_ID = process.env.NEXT_PUBLIC_DAO_ATTESTATION_PROGRAM_ID || 'dao_attestation.aleo';
 
 interface ProofExecutionRequest {
   programId: string;
@@ -238,6 +239,133 @@ export async function incrementVerificationCount(
       programId: VERIFIER_PROGRAM_ID,
       functionName: 'increment_verification_count',
       inputs: [commitmentHash],
+    },
+    walletAddress
+  );
+}
+
+/**
+ * DAO ATTESTATION FUNCTIONS
+ */
+
+/**
+ * Register a DAO on-chain
+ */
+export async function registerDAO(
+  daoId: string,
+  leaderAddress: string,
+  walletAddress: string
+): Promise<OnChainExecutionResult> {
+  return executeProofOnChain(
+    {
+      programId: DAO_ATTESTATION_PROGRAM_ID,
+      functionName: 'register_dao',
+      inputs: [daoId, leaderAddress],
+    },
+    walletAddress
+  );
+}
+
+/**
+ * Request attestation from DAO
+ */
+export async function requestDAOAttestation(
+  daoId: string,
+  userAddress: string,
+  walletAddress: string
+): Promise<OnChainExecutionResult> {
+  return executeProofOnChain(
+    {
+      programId: DAO_ATTESTATION_PROGRAM_ID,
+      functionName: 'request_attestation',
+      inputs: [userAddress, daoId],
+    },
+    walletAddress
+  );
+}
+
+/**
+ * Approve attestation request and sign (DAO leader action)
+ */
+export async function approveDAOAttestation(
+  requestId: string,
+  signature: string,
+  expirationBlock: string,
+  walletAddress: string
+): Promise<OnChainExecutionResult> {
+  return executeProofOnChain(
+    {
+      programId: DAO_ATTESTATION_PROGRAM_ID,
+      functionName: 'approve_attestation',
+      inputs: [requestId, signature, expirationBlock],
+    },
+    walletAddress
+  );
+}
+
+/**
+ * Reject attestation request (DAO leader action)
+ */
+export async function rejectDAOAttestation(
+  requestId: string,
+  walletAddress: string
+): Promise<OnChainExecutionResult> {
+  return executeProofOnChain(
+    {
+      programId: DAO_ATTESTATION_PROGRAM_ID,
+      functionName: 'reject_attestation_request',
+      inputs: [requestId],
+    },
+    walletAddress
+  );
+}
+
+/**
+ * Verify DAO attestation exists and is valid
+ */
+export async function verifyDAOAttestation(
+  attestationId: string,
+  walletAddress: string
+): Promise<OnChainExecutionResult> {
+  return executeProofOnChain(
+    {
+      programId: DAO_ATTESTATION_PROGRAM_ID,
+      functionName: 'verify_attestation',
+      inputs: [attestationId],
+    },
+    walletAddress
+  );
+}
+
+/**
+ * Revoke a DAO attestation
+ */
+export async function revokeDAOAttestation(
+  attestationId: string,
+  walletAddress: string
+): Promise<OnChainExecutionResult> {
+  return executeProofOnChain(
+    {
+      programId: DAO_ATTESTATION_PROGRAM_ID,
+      functionName: 'revoke_attestation',
+      inputs: [attestationId],
+    },
+    walletAddress
+  );
+}
+
+/**
+ * Check if address is a DAO leader
+ */
+export async function checkDAOLeader(
+  address: string,
+  walletAddress: string
+): Promise<OnChainExecutionResult> {
+  return executeProofOnChain(
+    {
+      programId: DAO_ATTESTATION_PROGRAM_ID,
+      functionName: 'is_dao_leader',
+      inputs: [address],
     },
     walletAddress
   );

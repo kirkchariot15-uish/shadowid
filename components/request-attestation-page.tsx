@@ -1,49 +1,128 @@
 'use client'
 
 import { useState } from 'react'
+import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, CheckCircle, Clock, Shield } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Clock, Send, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
-import { 
-  STANDARD_ATTRIBUTES, 
-  getAttributesByCategory, 
-  type AttributeCategory 
-} from '@/lib/attribute-schema'
-import { 
-  getRecommendedIssuers, 
-  requestAttestation,
-  type CredentialIssuer 
-} from '@/lib/credential-issuers'
+import { requestDAOAttestation, approveDAOAttestation, rejectDAOAttestation, verifyDAOAttestation } from '@/lib/aleo-sdk-integration'
+import { addActivityLog } from '@/lib/activity-logger'
+import { encryptOffChainData } from '@/lib/encrypted-storage'
+
+interface DAOInfo {
+  id: string
+  name: string
+  description: string
+}
+
+interface AttestationRequest {
+  id: string
+  daoId: string
+  status: 'pending' | 'approved' | 'rejected'
+  requestedAt: number
+  approvedAt?: number
+}
 
 export default function RequestAttestationPage() {
-  const [selectedCategory, setSelectedCategory] = useState<AttributeCategory>('personal')
-  const [selectedAttribute, setSelectedAttribute] = useState<string | null>(null)
-  const [selectedIssuer, setSelectedIssuer] = useState<string | null>(null)
+  const { address } = useAleoWallet()
+  const isConnected = !!address
+
+  const [step, setStep] = useState<'daos' | 'request' | 'result'>('daos')
+  const [selectedDAO, setSelectedDAO] = useState<DAOInfo | null>(null)
   const [isRequesting, setIsRequesting] = useState(false)
   const [requestResult, setRequestResult] = useState<any>(null)
+  const [pendingRequests, setPendingRequests] = useState<AttestationRequest[]>([])
 
-  const categories: AttributeCategory[] = ['personal', 'professional', 'government', 'membership', 'financial', 'education']
-  const attributes = getAttributesByCategory(selectedCategory)
-  
-  const selectedAttrSchema = selectedAttribute ? STANDARD_ATTRIBUTES[selectedAttribute] : null
-  const recommendedIssuers = selectedAttrSchema 
-    ? getRecommendedIssuers(selectedAttribute, selectedAttrSchema.issuerRequired) 
-    : []
+  // Mock DAOs (in real implementation, fetch from contract)
+  const daos: DAOInfo[] = [
+    {
+      id: '0x1',
+      name: 'Developer DAO',
+      description: 'Community of builders and developers'
+    },
+    {
+      id: '0x2',
+      name: 'Creator DAO',
+      description: 'Community for creators and artists'
+    },
+    {
+      id: '0x3',
+      name: 'Investor DAO',
+      description: 'Community of investors and founders'
+    }
+  ]
 
-  const handleRequestAttestation = async () => {
-    if (!selectedAttribute || !selectedIssuer) return
+  const handleRequestDAO = async () => {
+    if (!selectedDAO || !address) return
 
     setIsRequesting(true)
     try {
-      const result = await requestAttestation(selectedIssuer, selectedAttribute, {})
-      setRequestResult(result)
+      // Create request ID
+      const encoder = new TextEncoder()
+      const data = `${selectedDAO.id}-${address}-${Date.now()}`
+      const hash = await window.crypto.subtle.digest('SHA-256', encoder.encode(data))
+      const requestId = Array.from(new Uint8Array(hash))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('')
+        .slice(0, 64)
+
+      // Request on-chain
+      const result = await requestDAOAttestation(selectedDAO.id, address, address)
+
+      if (result.success) {
+        const request: AttestationRequest = {
+          id: requestId,
+          daoId: selectedDAO.id,
+          status: 'pending',
+          requestedAt: Date.now()
+        }
+
+        // Store locally encrypted
+        try {
+          await encryptOffChainData(request, address)
+        } catch (e) {
+          console.error('[v0] Failed to encrypt locally:', e)
+        }
+
+        setPendingRequests([...pendingRequests, request])
+        addActivityLog('Request DAO Attestation', 'attestation', `Requested ${selectedDAO.name} attestation`, 'success')
+
+        setRequestResult({
+          success: true,
+          daoName: selectedDAO.name,
+          requestId: requestId.slice(0, 16),
+          txId: result.transactionId
+        })
+        setStep('result')
+      }
     } catch (err) {
       console.error('[v0] Attestation request error:', err)
-      setRequestResult({ success: false, error: 'Request failed' })
+      setRequestResult({
+        success: false,
+        error: err instanceof Error ? err.message : 'Request failed'
+      })
+      setStep('result')
     } finally {
       setIsRequesting(false)
     }
+  }
+
+  if (!isConnected || !address) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <Navigation />
+        <main className="pt-24 md:pt-20 pb-32 px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl">
+            <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-8 text-center">
+              <AlertCircle className="h-12 w-12 text-accent mx-auto mb-4 opacity-50" />
+              <h2 className="text-xl font-semibold mb-2">Wallet Not Connected</h2>
+              <p className="text-muted-foreground">Connect your wallet to request DAO attestations</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    )
   }
 
   return (
@@ -54,8 +133,8 @@ export default function RequestAttestationPage() {
         <div className="mx-auto max-w-4xl">
           <div className="flex items-center justify-between mb-12">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Request Attestation</h1>
-              <p className="text-muted-foreground mt-2">Get verified credentials from trusted issuers</p>
+              <h1 className="text-3xl font-bold tracking-tight">Request DAO Attestation</h1>
+              <p className="text-muted-foreground mt-2">Get verified membership from DAOs</p>
             </div>
             <Link href="/dashboard">
               <Button variant="outline" className="border-accent/40 text-accent hover:bg-accent/10 gap-2">
@@ -65,156 +144,126 @@ export default function RequestAttestationPage() {
             </Link>
           </div>
 
-          {!requestResult ? (
-            <div className="space-y-8">
-              {/* Step 1: Select Category */}
+          {step === 'daos' && !requestResult && (
+            <div className="space-y-6">
               <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-6">
-                <h2 className="text-lg font-semibold mb-4">Step 1: Choose Attribute Category</h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {categories.map(cat => (
-                    <button
-                      key={cat}
-                      onClick={() => {
-                        setSelectedCategory(cat)
-                        setSelectedAttribute(null)
-                        setSelectedIssuer(null)
-                      }}
-                      className={`p-4 rounded-lg border-2 transition-all ${
-                        selectedCategory === cat
-                          ? 'border-accent bg-accent/10'
-                          : 'border-border hover:border-accent/50'
-                      }`}
-                    >
-                      <p className="text-sm font-semibold capitalize">{cat}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Step 2: Select Attribute */}
-              <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-6">
-                <h2 className="text-lg font-semibold mb-4">Step 2: Choose Attribute</h2>
+                <h2 className="text-lg font-semibold mb-4">Available DAOs</h2>
                 <div className="space-y-3">
-                  {attributes.map(attr => (
+                  {daos.map(dao => (
                     <button
-                      key={attr.id}
+                      key={dao.id}
                       onClick={() => {
-                        setSelectedAttribute(attr.id)
-                        setSelectedIssuer(null)
+                        setSelectedDAO(dao)
+                        setStep('request')
                       }}
                       className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
-                        selectedAttribute === attr.id
+                        selectedDAO?.id === dao.id
                           ? 'border-accent bg-accent/10'
                           : 'border-border hover:border-accent/50'
                       }`}
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold">{attr.name}</p>
-                          <p className="text-xs text-muted-foreground mt-1">{attr.description}</p>
-                          <div className="flex items-center gap-2 mt-2">
-                            {attr.issuerRequired && (
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent">
-                                Requires Issuer
-                              </span>
-                            )}
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${
-                              attr.privacyLevel === 'critical' ? 'bg-red-500/20 text-red-400' :
-                              attr.privacyLevel === 'high' ? 'bg-orange-500/20 text-orange-400' :
-                              attr.privacyLevel === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
-                              'bg-green-500/20 text-green-400'
-                            }`}>
-                              {attr.privacyLevel} privacy
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+                      <p className="font-semibold">{dao.name}</p>
+                      <p className="text-sm text-muted-foreground mt-1">{dao.description}</p>
                     </button>
                   ))}
                 </div>
               </div>
+            </div>
+          )}
 
-              {/* Step 3: Select Issuer */}
-              {selectedAttribute && (
-                <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-6">
-                  <h2 className="text-lg font-semibold mb-4">Step 3: Choose Issuer</h2>
-                  <div className="space-y-3">
-                    {recommendedIssuers.map(issuer => (
-                      <button
-                        key={issuer.id}
-                        onClick={() => setSelectedIssuer(issuer.id)}
-                        className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
-                          selectedIssuer === issuer.id
-                            ? 'border-accent bg-accent/10'
-                            : 'border-border hover:border-accent/50'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm font-semibold">{issuer.name}</p>
-                              <Shield className="h-4 w-4 text-accent" />
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-1">{issuer.description}</p>
-                            <div className="flex items-center gap-3 mt-2">
-                              <span className="text-xs text-muted-foreground">
-                                Trust Score: <span className="text-accent font-semibold">{issuer.trustScore}/100</span>
-                              </span>
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-muted">
-                                {issuer.verificationMethod}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </button>
-                    ))}
+          {step === 'request' && selectedDAO && !requestResult && (
+            <div className="space-y-6">
+              <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-6">
+                <h2 className="text-lg font-semibold mb-4">Confirm Request</h2>
+                <div className="space-y-4">
+                  <div className="p-4 rounded-lg bg-accent/5 border border-accent/20">
+                    <p className="text-sm text-muted-foreground">DAO</p>
+                    <p className="text-lg font-semibold mt-1">{selectedDAO.name}</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-accent/5 border border-accent/20">
+                    <p className="text-sm text-muted-foreground">Your Wallet</p>
+                    <p className="text-lg font-semibold mt-1 font-mono text-xs">
+                      {address.slice(0, 8)}...{address.slice(-6)}
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-muted/30 border border-border">
+                    <p className="text-sm text-muted-foreground flex items-center gap-2 mb-2">
+                      <Clock className="h-4 w-4" />
+                      Processing
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Your request will be submitted to the {selectedDAO.name} leader for review. You'll receive a notification once it's approved or rejected.
+                    </p>
                   </div>
                 </div>
-              )}
+              </div>
 
-              {/* Request Button */}
-              {selectedIssuer && (
+              <div className="flex gap-3">
                 <Button
-                  onClick={handleRequestAttestation}
-                  disabled={isRequesting}
-                  className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-6"
+                  onClick={() => {
+                    setStep('daos')
+                    setSelectedDAO(null)
+                  }}
+                  variant="outline"
+                  className="flex-1 border-accent/40"
                 >
-                  {isRequesting ? 'Requesting...' : 'Request Attestation'}
+                  Cancel
                 </Button>
-              )}
+                <Button
+                  onClick={handleRequestDAO}
+                  disabled={isRequesting}
+                  className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground gap-2"
+                >
+                  <Send className="h-4 w-4" />
+                  {isRequesting ? 'Requesting...' : 'Submit Request'}
+                </Button>
+              </div>
             </div>
-          ) : (
-            // Result Screen
+          )}
+
+          {step === 'result' && requestResult && (
             <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-8 text-center">
               {requestResult.success ? (
                 <>
                   <CheckCircle className="h-16 w-16 text-accent mx-auto mb-4" />
-                  <h2 className="text-2xl font-bold mb-2">Attestation Requested</h2>
+                  <h2 className="text-2xl font-bold mb-2">Request Submitted</h2>
                   <p className="text-muted-foreground mb-6">
-                    Your attestation request has been submitted successfully
+                    Your attestation request for {requestResult.daoName} has been submitted
                   </p>
-                  <div className="bg-muted/30 rounded-lg p-4 mb-6">
-                    <p className="text-sm text-muted-foreground">Request ID</p>
-                    <p className="text-sm font-mono font-semibold mt-1">{requestResult.attestationId}</p>
-                    <p className="text-xs text-muted-foreground mt-3 flex items-center justify-center gap-2">
-                      <Clock className="h-3 w-3" />
-                      Estimated completion: {requestResult.estimatedCompletion}
-                    </p>
+                  <div className="bg-muted/30 rounded-lg p-4 mb-6 space-y-3">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Request ID</p>
+                      <p className="text-sm font-mono font-semibold mt-1">{requestResult.requestId}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Transaction</p>
+                      <p className="text-xs font-mono text-accent mt-1">{requestResult.txId}</p>
+                    </div>
                   </div>
                   <Button
-                    onClick={() => setRequestResult(null)}
-                    variant="outline"
-                    className="border-accent/40 text-accent hover:bg-accent/10"
+                    onClick={() => {
+                      setRequestResult(null)
+                      setStep('daos')
+                      setSelectedDAO(null)
+                    }}
+                    className="bg-accent hover:bg-accent/90"
                   >
-                    Request Another
+                    Make Another Request
                   </Button>
                 </>
               ) : (
                 <>
-                  <p className="text-red-400 mb-4">Request failed: {requestResult.error}</p>
+                  <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
+                  <h2 className="text-2xl font-bold mb-2">Request Failed</h2>
+                  <p className="text-muted-foreground mb-6">{requestResult.error}</p>
                   <Button
-                    onClick={() => setRequestResult(null)}
+                    onClick={() => {
+                      setRequestResult(null)
+                      setStep('daos')
+                      setSelectedDAO(null)
+                    }}
                     variant="outline"
+                    className="border-accent/40"
                   >
                     Try Again
                   </Button>

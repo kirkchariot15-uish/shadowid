@@ -105,7 +105,12 @@ export function NavigationMenu() {
               </Button>
             </Link>
 
-            <Link href="/logs" onClick={() => setIsOpen(false)}>
+            <Link href="/dao-leader" onClick={() => setIsOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start">
+                <Shield className="h-4 w-4 mr-3" />
+                DAO Leader Dashboard
+              </Button>
+            </Link>
               <Button variant="ghost" className="w-full justify-start">
                 <FileText className="h-4 w-4 mr-3" />
                 Activity Logs
