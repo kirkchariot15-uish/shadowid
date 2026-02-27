@@ -1,3 +1,5 @@
+'use client'
+
 import dynamic from 'next/dynamic'
 
 const DAOLeaderDashboardComponent = dynamic(() => import('@/components/dao-leader-dashboard'), {
