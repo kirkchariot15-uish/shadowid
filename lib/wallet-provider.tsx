@@ -28,12 +28,7 @@ export function WalletProviderComponent({ children }: { children: ReactNode }) {
       decryptPermission={DecryptPermission.UponRequest}
       autoConnect={true}
     >
-      <WalletModalProvider
-        dark={true}
-        defaultWallets={['Shield Wallet']}
-      >
-        {children}
-      </WalletModalProvider>
+      <WalletModalProvider>{children}</WalletModalProvider>
     </AleoWalletProvider>
   )
 }

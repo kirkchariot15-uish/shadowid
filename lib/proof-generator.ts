@@ -7,7 +7,7 @@
 
 import { VerifiableCredential } from './credential-store'
 import { ProofType } from './attribute-schema'
-import { registerCommitmentOnChain, submitNullifierOnChain, executeProofOnChain } from './aleo-sdk-integration'
+import { executeProofOnChain } from './aleo-sdk-integration'
 import { storeEncryptedProof } from './encrypted-storage'
 
 export interface ProofRequest {
@@ -206,7 +206,7 @@ export async function generateProof(
   credential: VerifiableCredential,
   request: ProofRequest,
   walletPrivateKey: string,
-  programId: string = 'shadowid_v2.aleo',
+  programId: string = 'shadowid_v3.aleo',
   expirationHours: number = 72
 ): Promise<GeneratedProof> {
   const { claim, proofType } = request
@@ -254,7 +254,7 @@ export async function generateProof(
 
   console.log('[v0] Proof generated:', generatedProof.proofId)
 
-  // Submit proof to shadowid_v2.aleo contract
+  // Submit proof to shadowid_v3.aleo contract
   try {
     console.log('[v0] Submitting proof to', programId, 'function:', functionName)
     const onChainResult = await executeProofOnChain(
@@ -262,7 +262,6 @@ export async function generateProof(
         programId,
         functionName,
         inputs: [proofString, nullifier],
-        fee: 100000,
       },
       walletPrivateKey
     )
@@ -270,10 +269,6 @@ export async function generateProof(
     if (onChainResult.success) {
       generatedProof.proofId = onChainResult.transactionId || generatedProof.proofId
       console.log('[v0] Proof submitted on-chain:', onChainResult.transactionId)
-      
-      // Submit nullifier via check_nullifier function
-      await submitNullifierOnChain(programId, nullifier, walletPrivateKey)
-      console.log('[v0] Nullifier recorded on-chain')
     }
   } catch (error) {
     console.error('[v0] On-chain submission failed:', error)

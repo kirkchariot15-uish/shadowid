@@ -225,34 +225,6 @@ export function useAleoWallet() {
     [transactionStatus]
   );
 
-  /**
-   * Check if Shield Wallet is installed
-   */
-  const isShieldWalletAvailable = useCallback((): boolean => {
-    if (typeof window === 'undefined') return false;
-    // Shield Wallet extends window with specific properties
-    return !!(window as any).shieldWallet || wallets.some(w => w.constructor.name === 'ShieldWalletAdapter');
-  }, [wallets]);
-
-  /**
-   * Get user-friendly error message
-   */
-  const getErrorMessage = useCallback((err: any): string => {
-    const message = err?.message || String(err) || 'Unknown error';
-    
-    if (message.includes('Could not establish connection') || message.includes('Receiving end does not exist')) {
-      return 'Shield Wallet not installed. Please install Shield Wallet extension from Chrome Web Store.';
-    }
-    if (message.includes('user rejected')) {
-      return 'Connection rejected. Please approve in your wallet.';
-    }
-    if (message.includes('network')) {
-      return 'Network error. Please check your connection and ensure you\'re on Aleo testnet.';
-    }
-    
-    return message;
-  }, []);
-
   return {
     isConnected: connected,
     connecting,
@@ -274,7 +246,5 @@ export function useAleoWallet() {
     decrypt,
     getTransactionStatus,
     getActualTxHash,
-    isShieldWalletAvailable,
-    getErrorMessage,
   };
 }
