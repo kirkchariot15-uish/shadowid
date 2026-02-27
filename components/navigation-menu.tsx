@@ -12,13 +12,25 @@ export function NavigationMenu() {
   const { address } = useAleoWallet()
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
-  
-  // Hide hamburger on landing page (when pathname is '/')
+
   const isLandingPage = pathname === '/'
+
+  const navigationItems = [
+    { href: '/dashboard', label: 'Dashboard', icon: Home },
+    { href: '/create-identity', label: 'Create Identity', icon: FileText },
+    { href: '/selective-disclosure', label: 'Disclosure', icon: FileText },
+    { href: '/profile', label: 'Profile', icon: User },
+    { href: '/credentials', label: 'My Credentials', icon: Award },
+    { href: '/request-attestation', label: 'Request Attestation', icon: CheckCircle },
+    { href: '/privacy', label: 'Privacy Center', icon: Shield },
+    { href: '/verify-qr', label: 'Verify QR Code', icon: CheckCircle },
+    { href: '/dao-leader', label: 'DAO Leader Dashboard', icon: Shield },
+    { href: '/logs', label: 'Activity Logs', icon: FileText },
+    { href: '/settings', label: 'Settings', icon: Settings },
+  ]
 
   return (
     <>
-      {/* Hamburger Menu Button - Bottom Right (hidden on landing page) */}
       {!isLandingPage && (
         <button
           onClick={() => setIsOpen(!isOpen)}
@@ -29,12 +41,10 @@ export function NavigationMenu() {
         </button>
       )}
 
-      {/* Wallet Button - Top Right */}
       <div className="fixed top-6 right-6 z-40">
         <WalletMultiButton />
       </div>
 
-      {/* Navigation Menu - Visible on all devices */}
       {isOpen && (
         <div className="fixed inset-0 z-30">
           <div className="fixed inset-0 bg-black/20" onClick={() => setIsOpen(false)} />
@@ -48,83 +58,18 @@ export function NavigationMenu() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            
-            <Link href="/dashboard" onClick={() => setIsOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start">
-                <Home className="h-4 w-4 mr-3" />
-                Dashboard
-              </Button>
-            </Link>
 
-            <Link href="/create-identity" onClick={() => setIsOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start">
-                <FileText className="h-4 w-4 mr-3" />
-                Create Identity
-              </Button>
-            </Link>
-
-            <Link href="/selective-disclosure" onClick={() => setIsOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start">
-                <FileText className="h-4 w-4 mr-3" />
-                Disclosure
-              </Button>
-            </Link>
-
-            <Link href="/profile" onClick={() => setIsOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start">
-                <User className="h-4 w-4 mr-3" />
-                Profile
-              </Button>
-            </Link>
-
-            <Link href="/credentials" onClick={() => setIsOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start">
-                <Award className="h-4 w-4 mr-3" />
-                My Credentials
-              </Button>
-            </Link>
-
-            <Link href="/request-attestation" onClick={() => setIsOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start">
-                <CheckCircle className="h-4 w-4 mr-3" />
-                Request Attestation
-              </Button>
-            </Link>
-
-            <Link href="/privacy" onClick={() => setIsOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start">
-                <Shield className="h-4 w-4 mr-3" />
-                Privacy Center
-              </Button>
-            </Link>
-
-            <Link href="/verify-qr" onClick={() => setIsOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start">
-                <CheckCircle className="h-4 w-4 mr-3" />
-                Verify QR Code
-              </Button>
-            </Link>
-
-            <Link href="/dao-leader" onClick={() => setIsOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start">
-                <Shield className="h-4 w-4 mr-3" />
-                DAO Leader Dashboard
-              </Button>
-            </Link>
-
-            <Link href="/logs" onClick={() => setIsOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start">
-                <FileText className="h-4 w-4 mr-3" />
-                Activity Logs
-              </Button>
-            </Link>
-
-            <Link href="/settings" onClick={() => setIsOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start">
-                <Settings className="h-4 w-4 mr-3" />
-                Settings
-              </Button>
-            </Link>
+            {navigationItems.map((item) => {
+              const IconComponent = item.icon
+              return (
+                <Link key={item.href} href={item.href} onClick={() => setIsOpen(false)}>
+                  <Button variant="ghost" className="w-full justify-start">
+                    <IconComponent className="h-4 w-4 mr-3" />
+                    {item.label}
+                  </Button>
+                </Link>
+              )
+            })}
 
             {address && (
               <div className="border-t border-border pt-4 mt-4">
