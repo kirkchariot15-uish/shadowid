@@ -22,9 +22,20 @@ export default function SelectiveDisclosurePage() {
   const [isGenerating, setIsGenerating] = useState(false)
 
   useEffect(() => {
-    const attrs = localStorage.getItem('shadowid-attributes')
-    if (attrs) {
-      setAttributes(JSON.parse(attrs))
+    // Check if shadowid-commitment exists (ID was created)
+    const commitment = localStorage.getItem('shadowid-commitment')
+    if (!commitment) {
+      // ID not created yet
+      setAttributes([])
+      return
+    }
+
+    // Get attributes from the credential
+    const credentialStr = localStorage.getItem('shadowid-credential')
+    if (credentialStr) {
+      const credential = JSON.parse(credentialStr)
+      const attributeIds = Object.keys(credential.credentialSubject.claims || {})
+      setAttributes(attributeIds)
     }
   }, [])
 
