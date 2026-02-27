@@ -6,6 +6,7 @@ import { WalletMultiButton } from '@/components/wallet-button'
 import { Navigation } from '@/components/navigation'
 import { IDCard } from '@/components/id-card'
 import { BlockchainStatus } from '@/components/blockchain-status'
+import { OnboardingModal } from '@/components/onboarding-modal'
 import { Button } from '@/components/ui/button'
 import { Lock, Wallet, Award, Plus, FileText, Activity, Sparkles } from 'lucide-react'
 import Link from 'next/link'
@@ -16,8 +17,15 @@ export default function DashboardPage() {
   const isConnected = !!address
   const [credentials, setCredentials] = useState<number>(0)
   const [proofs, setProofs] = useState<number>(0)
+  const [showOnboarding, setShowOnboarding] = useState(false)
 
   useEffect(() => {
+    // Check if first time user
+    const onboardingDone = localStorage.getItem('shadowid-onboarding-done')
+    if (!onboardingDone) {
+      setShowOnboarding(true)
+    }
+
     // Load credentials count
     const attrs = localStorage.getItem('shadowid-attributes')
     if (attrs) {
@@ -68,6 +76,8 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navigation />
+      
+      {showOnboarding && <OnboardingModal onComplete={() => setShowOnboarding(false)} />}
       
       {/* Main Content - with top padding for navigation */}
       <div className="pt-24 md:pt-20 pb-32 px-4 sm:px-6 lg:px-8">

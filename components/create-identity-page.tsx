@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { Navigation } from '@/components/navigation'
+import { ProgressIndicator } from '@/components/progress-indicator'
 import { Button } from '@/components/ui/button'
-import { Lock, Sparkles, CheckCircle2, ArrowLeft, Plus } from 'lucide-react'
+import { Lock, Sparkles, CheckCircle2, ArrowLeft, Plus, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { addActivityLog } from '@/lib/activity-logger'
 import { STANDARD_ATTRIBUTES } from '@/lib/attribute-schema'
@@ -19,6 +20,8 @@ export function CreateIdentityPage() {
   const [isCreating, setIsCreating] = useState(false)
   const [creationComplete, setCreationComplete] = useState(false)
   const [commitment, setCommitment] = useState<string>('')
+  const [error, setError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
 
   // Ensure component only renders on client with crypto available
   useEffect(() => {
@@ -119,11 +122,17 @@ export function CreateIdentityPage() {
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to create identity'
       console.error('[v0] Identity creation error:', err)
-      alert(`Identity creation failed: ${errorMsg}`)
+      setError(errorMsg)
       addActivityLog('Create ShadowID', 'identity', `Failed to create identity: ${errorMsg}`, 'error')
     } finally {
       setIsCreating(false)
     }
+  }
+
+  const handleRetry = async () => {
+    setError(null)
+    setRetryCount(retryCount + 1)
+    await handleCreateIdentity()
   }
 
   if (!isConnected || !address) {
@@ -197,6 +206,15 @@ export function CreateIdentityPage() {
             <h1 className="text-3xl font-bold mb-2">Create Your ShadowID</h1>
             <p className="text-muted-foreground">Select attributes you want to claim. Request attestations from trusted issuers to verify each claim.</p>
           </div>
+
+          {/* Progress Indicator */}
+          <div className="mb-12">
+            <ProgressIndicator steps={[
+              { id: 'select', label: 'Select Attributes', status: Object.keys(selectedAttributes).length > 0 ? 'completed' : 'in-progress' },
+              { id: 'fill', label: 'Fill Attribute Values', status: Object.keys(selectedAttributes).filter(k => selectedAttributes[k].trim()).length > 0 ? 'completed' : 'pending' },
+              { id: 'create', label: 'Create Identity', status: creationComplete ? 'completed' : 'pending' }
+            ]} />
+          </div>
           <div className="space-y-6">
             <div className="rounded-lg border border-accent/20 bg-accent/5 p-4 flex items-start gap-3">
               <Sparkles className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
@@ -244,6 +262,17 @@ export function CreateIdentityPage() {
                 ))}
               </div>
             </div>
+            {error && (
+              <div className="p-4 rounded-lg border border-red-400/30 bg-red-400/5">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-red-400">Error Creating Identity</p>
+                    <p className="text-xs text-red-400/80 mt-1">{error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="flex gap-3 pt-8 border-t border-border">
               <Button
                 onClick={handleCreateIdentity}
@@ -252,6 +281,16 @@ export function CreateIdentityPage() {
               >
                 {isCreating ? 'Creating...' : 'Create ShadowID'}
               </Button>
+              {error && (
+                <Button
+                  onClick={handleRetry}
+                  disabled={isCreating}
+                  variant="outline"
+                  className="px-6 border-accent/40 text-accent hover:bg-accent/10"
+                >
+                  Retry
+                </Button>
+              )}
               <Link href="/dashboard" className="flex-1">
                 <Button variant="outline" className="w-full">Cancel</Button>
               </Link>
