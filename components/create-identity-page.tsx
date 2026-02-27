@@ -399,7 +399,8 @@ export function CreateIdentityPage() {
                 </Link>
               </>
             )}
-            
+          </div>
+        </div>
       </div>
     </div>
   )
