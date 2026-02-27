@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { Button } from '@/components/ui/button'
-import { Menu, X, Home, FileText, Settings, User, Shield, Award, CheckCircle } from 'lucide-react'
+import { Menu, X, Home, FileText, Settings, User, Shield, Award, CheckCircle  } from 'lucide-react'
 
 export function NavigationMenu() {
   const { address } = useAleoWallet()

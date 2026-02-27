@@ -375,27 +375,29 @@ export function CreateIdentityPage() {
               </div>
             )}
             {!isCreating && (
-              <Button
-                onClick={handleCreateIdentity}
-                disabled={isCreating || Object.keys(selectedAttributes).length === 0 || (credits && credits.balance < 2)}
-                className="flex-1 gap-2"
-                title={credits && credits.balance < 2 ? 'Not enough credits. Request from faucet.' : ''}
-              >
-                {isCreating ? 'Creating...' : 'Create ShadowID'}
-              </Button>
-              {error && (
+              <>
                 <Button
-                  onClick={handleRetry}
-                  disabled={isCreating}
-                  variant="outline"
-                  className="px-6 border-accent/40 text-accent hover:bg-accent/10"
+                  onClick={handleCreateIdentity}
+                  disabled={isCreating || Object.keys(selectedAttributes).length === 0 || (credits !== null && credits.balance < 2)}
+                  className="flex-1 gap-2"
+                  title={credits !== null && credits.balance < 2 ? 'Not enough credits. Request from faucet.' : ''}
                 >
-                  Retry
+                  Create ShadowID
                 </Button>
-              )}
-              <Link href="/dashboard" className="flex-1">
-                <Button variant="outline" className="w-full">Cancel</Button>
-              </Link>
+                {error && (
+                  <Button
+                    onClick={handleRetry}
+                    disabled={isCreating}
+                    variant="outline"
+                    className="px-6 border-accent/40 text-accent hover:bg-accent/10"
+                  >
+                    Retry
+                  </Button>
+                )}
+                <Link href="/dashboard" className="flex-1">
+                  <Button variant="outline" className="w-full">Cancel</Button>
+                </Link>
+              </>
             )}
             
       </div>
