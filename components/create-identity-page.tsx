@@ -115,8 +115,6 @@ export function CreateIdentityPage() {
       setError('Not enough Aleo Credits. Please request credits from the faucet.')
       return
     }
-      return
-    }
 
     setIsCreating(true)
     try {
