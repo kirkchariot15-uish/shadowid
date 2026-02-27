@@ -101,24 +101,7 @@ export async function executeProofOnChain(
 }
 
 /**
- * Register commitment on-chain via shadowid_v2.aleo
- */
-export async function registerCommitmentOnChain(
-  commitment: string,
-  walletAddress: string
-): Promise<OnChainExecutionResult> {
-  return executeProofOnChain(
-    {
-      programId: PROGRAM_ID,
-      functionName: 'issue_attestation',
-      inputs: [commitment, walletAddress, Math.floor(Date.now() / 1000).toString()],
-    },
-    walletAddress
-  );
-}
-
-/**
- * Submit nullifier to prevent replay attacks via shadowid_v2.aleo
+ * Submit nullifier to prevent replay attacks
  */
 export async function submitNullifierOnChain(
   programId: string,
@@ -258,6 +241,11 @@ export async function registerCommitmentOnChain(
     walletAddress
   );
 }
+
+/**
+ * Alias for registerCommitmentOnChain for backward compatibility
+ */
+export const registerCredentialInRegistry = registerCommitmentOnChain;
 
 /**
  * Revoke a credential (only holder can revoke their own)
