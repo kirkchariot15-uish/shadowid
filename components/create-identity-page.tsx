@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { Navigation } from '@/components/navigation'
 import { ProgressIndicator } from '@/components/progress-indicator'
+import { LoadingSpinner } from '@/components/loading-spinner'
 import { Button } from '@/components/ui/button'
 import { Lock, Sparkles, CheckCircle2, ArrowLeft, Plus, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
@@ -273,7 +274,12 @@ export function CreateIdentityPage() {
                 </div>
               </div>
             )}
-            <div className="flex gap-3 pt-8 border-t border-border">
+            {isCreating && (
+              <div className="p-8 rounded-lg border border-accent/20 bg-card/50 flex flex-col items-center justify-center">
+                <LoadingSpinner size="md" text="Creating your ShadowID..." />
+              </div>
+            )}
+            {!isCreating && (
               <Button
                 onClick={handleCreateIdentity}
                 disabled={isCreating || Object.keys(selectedAttributes).length === 0}
@@ -294,9 +300,8 @@ export function CreateIdentityPage() {
               <Link href="/dashboard" className="flex-1">
                 <Button variant="outline" className="w-full">Cancel</Button>
               </Link>
-            </div>
-          </div>
-        </div>
+            )}
+            
       </div>
     </div>
   )
