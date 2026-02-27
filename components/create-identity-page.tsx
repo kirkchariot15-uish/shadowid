@@ -170,7 +170,7 @@ export function CreateIdentityPage() {
         // Register on main shadowid contract
         const mainResult = await registerCommitmentOnChain(commitmentHash, address)
         if (mainResult.success) {
-          addActivityLog('Register on-chain', 'blockchain', `Commitment on shadowid_v3: ${mainResult.transactionId}`, 'success')
+          addActivityLog('Register on-chain', 'blockchain', `Commitment registered: ${mainResult.transactionId}`, 'success')
         }
 
         // Register in credential registry

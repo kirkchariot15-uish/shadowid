@@ -1,14 +1,14 @@
 /**
- * Aleo SDK Integration for ShadowID v3
+ * Aleo SDK Integration for ShadowID
  * Handles on-chain proof execution, commitment registration, and verification
- * Programs: shadowid_v3.aleo, credential_registry.aleo, qr_verifier.aleo, dao_attestation_v1.aleo
+ * Programs: shadowid.aleo, credential_registry.aleo, qr_verifier.aleo, dao_attestation.aleo
  */
 
 const ALEO_API = 'https://api.explorer.provable.com/v1/testnet';
 
-// Correct Contract Deployment Details
+// Contract Deployment Details
 const CONTRACTS = {
-  SHADOWID_V3: {
+  SHADOWID: {
     name: 'shadowid_v3.aleo',
     transactionId: 'at1f5smjrgw9nzluhxzpt23pq47ne4nlnjngfal38mkn0x5e5n0wyzq5dycfl',
     adminAddress: 'aleo1cmay45pre5evtl72vj8zma9ayj0u2xrdkdv86w2zyz7pnmg7svxq0dzr9c',
@@ -31,7 +31,7 @@ const CONTRACTS = {
 };
 
 // Environment variable fallback
-const PROGRAM_ID = process.env.NEXT_PUBLIC_SHADOWID_PROGRAM_ID || CONTRACTS.SHADOWID_V3.name;
+const PROGRAM_ID = process.env.NEXT_PUBLIC_SHADOWID_PROGRAM_ID || CONTRACTS.SHADOWID.name;
 const REGISTRY_PROGRAM_ID = process.env.NEXT_PUBLIC_CREDENTIAL_REGISTRY_PROGRAM_ID || CONTRACTS.CREDENTIAL_REGISTRY.name;
 const VERIFIER_PROGRAM_ID = process.env.NEXT_PUBLIC_QR_VERIFIER_PROGRAM_ID || CONTRACTS.QR_VERIFIER.name;
 const DAO_ATTESTATION_PROGRAM_ID = process.env.NEXT_PUBLIC_DAO_ATTESTATION_PROGRAM_ID || CONTRACTS.DAO_ATTESTATION.name;
