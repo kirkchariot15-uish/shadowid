@@ -1,15 +1,40 @@
 /**
- * Aleo SDK Integration for ShadowID v2
- * Handles on-chain proof execution, commitment registration, and nullifier tracking
- * Program: shadowid_v2.aleo
- * Transaction: at1kqn24hdqxqq0u5nmu4xgq7usjy2lcv8e2ksdl5ufnfay5mde258q8rwa90
+ * Aleo SDK Integration for ShadowID v3
+ * Handles on-chain proof execution, commitment registration, and verification
+ * Programs: shadowid_v3.aleo, credential_registry.aleo, qr_verifier.aleo, dao_attestation_v1.aleo
  */
 
 const ALEO_API = 'https://api.explorer.provable.com/v1/testnet';
-const PROGRAM_ID = 'shadowid_v2.aleo';
-const REGISTRY_PROGRAM_ID = process.env.NEXT_PUBLIC_CREDENTIAL_REGISTRY_PROGRAM_ID || 'credential_registry.aleo';
-const VERIFIER_PROGRAM_ID = process.env.NEXT_PUBLIC_QR_VERIFIER_PROGRAM_ID || 'qr_verifier.aleo';
-const DAO_ATTESTATION_PROGRAM_ID = process.env.NEXT_PUBLIC_DAO_ATTESTATION_PROGRAM_ID || 'dao_attestation.aleo';
+
+// Correct Contract Deployment Details
+const CONTRACTS = {
+  SHADOWID_V3: {
+    name: 'shadowid_v3.aleo',
+    transactionId: 'at1f5smjrgw9nzluhxzpt23pq47ne4nlnjngfal38mkn0x5e5n0wyzq5dycfl',
+    adminAddress: 'aleo1cmay45pre5evtl72vj8zma9ayj0u2xrdkdv86w2zyz7pnmg7svxq0dzr9c',
+  },
+  CREDENTIAL_REGISTRY: {
+    name: 'credential_registry.aleo',
+    transactionId: 'at13hpjnt63fkp6d87ta4mlhzvmhlfjy9p3acltys08r6kl2n5zpgfqvsdycz',
+    adminAddress: 'aleo1cmay45pre5evtl72vj8zma9ayj0u2xrdkdv86w2zyz7pnmg7svxq0dzr9c',
+  },
+  QR_VERIFIER: {
+    name: 'qr_verifier.aleo',
+    transactionId: 'at1lvgmm5dwwx6kucvdq4v0zycyp2rv8njuss2z97xazqr9yfsa3ugsw0jyvm',
+    adminAddress: 'aleo1cmay45pre5evtl72vj8zma9ayj0u2xrdkdv86w2zyz7pnmg7svxq0dzr9c',
+  },
+  DAO_ATTESTATION: {
+    name: 'dao_attestation_v1.aleo',
+    transactionId: 'at182tlymw08vz9zgzt448vqxmh2l8s9sg0wnpvm5cyhl7pe42kagzsczgjrn',
+    adminAddress: 'aleo1cmay45pre5evtl72vj8zma9ayj0u2xrdkdv86w2zyz7pnmg7svxq0dzr9c',
+  },
+};
+
+// Environment variable fallback
+const PROGRAM_ID = process.env.NEXT_PUBLIC_SHADOWID_PROGRAM_ID || CONTRACTS.SHADOWID_V3.name;
+const REGISTRY_PROGRAM_ID = process.env.NEXT_PUBLIC_CREDENTIAL_REGISTRY_PROGRAM_ID || CONTRACTS.CREDENTIAL_REGISTRY.name;
+const VERIFIER_PROGRAM_ID = process.env.NEXT_PUBLIC_QR_VERIFIER_PROGRAM_ID || CONTRACTS.QR_VERIFIER.name;
+const DAO_ATTESTATION_PROGRAM_ID = process.env.NEXT_PUBLIC_DAO_ATTESTATION_PROGRAM_ID || CONTRACTS.DAO_ATTESTATION.name;
 
 interface ProofExecutionRequest {
   programId: string;
@@ -111,26 +136,74 @@ export async function submitNullifierOnChain(
 }
 
 /**
- * Verify a proof on-chain
+ * SHADOWID V3 FUNCTIONS
+ * Secure Identity Protocol with zero-knowledge proofs
  */
-export async function verifyProofOnChain(
-  proofId: string,
-  proofData: string,
+
+/**
+ * Prove a range without revealing actual value
+ * Proves: min <= attribute <= max
+ */
+export async function proveRange(
+  commitment: string,
+  attributeName: string,
+  min: number,
+  max: number,
   walletAddress: string
-): Promise<boolean> {
-  try {
-    const result = await executeProofOnChain(
-      {
-        programId: PROGRAM_ID,
-        functionName: 'prove_existence',
-        inputs: [proofData],
-      },
-      walletAddress
-    );
-    return result.success;
-  } catch {
-    return false;
-  }
+): Promise<OnChainExecutionResult> {
+  return executeProofOnChain(
+    {
+      programId: PROGRAM_ID,
+      functionName: 'prove_range',
+      inputs: [commitment, attributeName, min.toString(), max.toString()],
+    },
+    walletAddress
+  );
+}
+
+/**
+ * Prove membership without revealing actual value
+ * Proves: attribute == targetValue
+ */
+export async function proveMembership(
+  commitment: string,
+  attributeName: string,
+  targetValue: string,
+  walletAddress: string
+): Promise<OnChainExecutionResult> {
+  return executeProofOnChain(
+    {
+      programId: PROGRAM_ID,
+      functionName: 'prove_membership',
+      inputs: [commitment, attributeName, targetValue],
+    },
+    walletAddress
+  );
+}
+
+/**
+ * Prove existence of valid credential
+ * Proves: user holds a valid credential from trusted issuer
+ */
+export async function proveExistence(
+  commitment: string,
+  walletAddress: string
+): Promise<OnChainExecutionResult> {
+  return executeProofOnChain(
+    {
+      programId: PROGRAM_ID,
+      functionName: 'prove_existence',
+      inputs: [commitment],
+    },
+    walletAddress
+  );
+}
+
+/**
+ * Get all deployed contract information
+ */
+export function getContractDeployments() {
+  return CONTRACTS;
 }
 
 /**
@@ -138,29 +211,40 @@ export async function verifyProofOnChain(
  */
 export async function getProgramInfo(): Promise<{
   exists: boolean;
-  programId: string;
-  transactionId: string;
+  programs: typeof CONTRACTS;
 }> {
   try {
-    const response = await fetch(`${ALEO_API}/program/${PROGRAM_ID}`);
+    const responses = await Promise.all([
+      fetch(`${ALEO_API}/program/${CONTRACTS.SHADOWID_V3.name}`),
+      fetch(`${ALEO_API}/program/${CONTRACTS.CREDENTIAL_REGISTRY.name}`),
+      fetch(`${ALEO_API}/program/${CONTRACTS.QR_VERIFIER.name}`),
+      fetch(`${ALEO_API}/program/${CONTRACTS.DAO_ATTESTATION.name}`),
+    ]);
+
+    const allExist = responses.every(r => r.ok);
     return {
-      exists: response.ok,
-      programId: PROGRAM_ID,
-      transactionId: 'at1kqn24hdqxqq0u5nmu4xgq7usjy2lcv8e2ksdl5ufnfay5mde258q8rwa90',
+      exists: allExist,
+      programs: CONTRACTS,
     };
-  } catch {
+  } catch (error) {
+    console.error('[v0] Error checking program info:', error);
     return {
       exists: false,
-      programId: PROGRAM_ID,
-      transactionId: '',
+      programs: CONTRACTS,
     };
   }
 }
 
 /**
- * Register credential on registry program
+ * CREDENTIAL REGISTRY FUNCTIONS
+ * Manages on-chain credential commitments and revocation
  */
-export async function registerCredentialInRegistry(
+
+/**
+ * Register a new credential commitment on-chain
+ * Inputs: commitment (field), count (u8 - number of attributes)
+ */
+export async function registerCommitmentOnChain(
   commitment: string,
   attributeCount: number,
   walletAddress: string
@@ -176,7 +260,8 @@ export async function registerCredentialInRegistry(
 }
 
 /**
- * Revoke a credential from registry
+ * Revoke a credential (only holder can revoke their own)
+ * Inputs: commitment (field)
  */
 export async function revokeCredentialFromRegistry(
   commitment: string,
@@ -193,7 +278,8 @@ export async function revokeCredentialFromRegistry(
 }
 
 /**
- * Verify credential exists in registry
+ * Verify a credential commitment is active and valid
+ * Inputs: commitment (field)
  */
 export async function verifyCredentialInRegistry(
   commitment: string,
@@ -210,7 +296,13 @@ export async function verifyCredentialInRegistry(
 }
 
 /**
- * Record QR code verification on verifier program
+ * QR VERIFIER FUNCTIONS
+ * Records and tracks QR code verification events
+ */
+
+/**
+ * Record a QR code verification on-chain
+ * Inputs: commitment_hash (field), proof_id (field)
  */
 export async function recordQRVerification(
   commitmentHash: string,
@@ -220,15 +312,17 @@ export async function recordQRVerification(
   return executeProofOnChain(
     {
       programId: VERIFIER_PROGRAM_ID,
-      functionName: 'verify_qr_credential',
-      inputs: [commitmentHash, proofId, walletAddress],
+      functionName: 'verify_qr',
+      inputs: [commitmentHash, proofId],
     },
     walletAddress
   );
 }
 
 /**
- * Increment verification count for credential
+ * Increment verification count for a credential
+ * Tracks total verifications per commitment
+ * Inputs: commitment_hash (field)
  */
 export async function incrementVerificationCount(
   commitmentHash: string,
@@ -237,7 +331,7 @@ export async function incrementVerificationCount(
   return executeProofOnChain(
     {
       programId: VERIFIER_PROGRAM_ID,
-      functionName: 'increment_verification_count',
+      functionName: 'increment_count',
       inputs: [commitmentHash],
     },
     walletAddress
@@ -246,10 +340,13 @@ export async function incrementVerificationCount(
 
 /**
  * DAO ATTESTATION FUNCTIONS
+ * Manages DAO registration, attestation requests, approvals, and revocations
  */
 
 /**
- * Register a DAO on-chain
+ * Register a new DAO on-chain
+ * Inputs: dao_id (field), leader_address (address)
+ * Only callable by authorized admin
  */
 export async function registerDAO(
   daoId: string,
@@ -267,61 +364,64 @@ export async function registerDAO(
 }
 
 /**
- * Request attestation from DAO
+ * Request an attestation from a specific DAO
+ * Inputs: dao_id (field) - the DAO to request from
  */
 export async function requestDAOAttestation(
   daoId: string,
-  userAddress: string,
   walletAddress: string
 ): Promise<OnChainExecutionResult> {
   return executeProofOnChain(
     {
       programId: DAO_ATTESTATION_PROGRAM_ID,
       functionName: 'request_attestation',
-      inputs: [userAddress, daoId],
+      inputs: [daoId],
     },
     walletAddress
   );
 }
 
 /**
- * Approve attestation request and sign (DAO leader action)
+ * Approve an attestation request (DAO leader only)
+ * Inputs: record_id (field), signature (field), expiration_block (u32)
  */
 export async function approveDAOAttestation(
-  requestId: string,
+  recordId: string,
   signature: string,
-  expirationBlock: string,
+  expirationBlock: number,
   walletAddress: string
 ): Promise<OnChainExecutionResult> {
   return executeProofOnChain(
     {
       programId: DAO_ATTESTATION_PROGRAM_ID,
       functionName: 'approve_attestation',
-      inputs: [requestId, signature, expirationBlock],
+      inputs: [recordId, signature, expirationBlock.toString()],
     },
     walletAddress
   );
 }
 
 /**
- * Reject attestation request (DAO leader action)
+ * Reject an attestation request (DAO leader only)
+ * Inputs: record_id (field)
  */
 export async function rejectDAOAttestation(
-  requestId: string,
+  recordId: string,
   walletAddress: string
 ): Promise<OnChainExecutionResult> {
   return executeProofOnChain(
     {
       programId: DAO_ATTESTATION_PROGRAM_ID,
-      functionName: 'reject_attestation_request',
-      inputs: [requestId],
+      functionName: 'reject_request',
+      inputs: [recordId],
     },
     walletAddress
   );
 }
 
 /**
- * Verify DAO attestation exists and is valid
+ * Verify a DAO attestation is valid and not expired
+ * Inputs: attestation_id (field)
  */
 export async function verifyDAOAttestation(
   attestationId: string,
@@ -338,7 +438,8 @@ export async function verifyDAOAttestation(
 }
 
 /**
- * Revoke a DAO attestation
+ * Revoke a DAO attestation (user can revoke their own)
+ * Inputs: attestation_id (field)
  */
 export async function revokeDAOAttestation(
   attestationId: string,
@@ -349,23 +450,6 @@ export async function revokeDAOAttestation(
       programId: DAO_ATTESTATION_PROGRAM_ID,
       functionName: 'revoke_attestation',
       inputs: [attestationId],
-    },
-    walletAddress
-  );
-}
-
-/**
- * Check if address is a DAO leader
- */
-export async function checkDAOLeader(
-  address: string,
-  walletAddress: string
-): Promise<OnChainExecutionResult> {
-  return executeProofOnChain(
-    {
-      programId: DAO_ATTESTATION_PROGRAM_ID,
-      functionName: 'is_dao_leader',
-      inputs: [address],
     },
     walletAddress
   );
