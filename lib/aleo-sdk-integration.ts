@@ -53,38 +53,32 @@ export interface OnChainExecutionResult {
 /**
  * Execute a ZK proof on-chain via Aleo REST API
  */
-export async function executeProofOnChain(
+/**
+ * Execute a transaction on-chain using the wallet
+ * This function must be called with the wallet's executeTransaction method
+ * Use executeProofOnChain for high-level proof execution
+ */
+export async function executeTransactionWithWallet(
   request: ProofExecutionRequest,
-  walletAddress: string
+  executeTransactionFn: (params: any) => Promise<string>
 ): Promise<OnChainExecutionResult> {
   try {
     const programId = request.programId || PROGRAM_ID;
 
-    // Query program to verify it exists
-    const programResponse = await fetch(`${ALEO_API}/program/${programId}`);
+    console.log('[v0] Executing transaction on:', programId, 'function:', request.functionName);
 
-    if (!programResponse.ok) {
-      return {
-        success: false,
-        error: `Program ${programId} not found on testnet`,
-      };
-    }
+    // Call wallet's executeTransaction method
+    const transactionId = await executeTransactionFn({
+      programName: programId,
+      functionName: request.functionName,
+      inputs: request.inputs,
+    });
 
-    // Generate a deterministic transaction ID from inputs
-    const txData = `${programId}-${request.functionName}-${request.inputs.join(',')}-${Date.now()}`;
-    const encoder = new TextEncoder();
-    
-    if (typeof window === 'undefined' || !window.crypto || !window.crypto.subtle) {
-      throw new Error('Crypto API not available in this environment');
-    }
-    
-    const hashBuffer = await window.crypto.subtle.digest('SHA-256', encoder.encode(txData));
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const txId = 'at1' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 59);
+    console.log('[v0] Transaction submitted:', transactionId);
 
     return {
       success: true,
-      transactionId: txId,
+      transactionId,
       proofData: {
         programId,
         functionName: request.functionName,
@@ -93,6 +87,55 @@ export async function executeProofOnChain(
       },
     };
   } catch (error) {
+    console.error('[v0] Transaction execution failed:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+/**
+ * Execute a proof on-chain via the Aleo network
+ * Requires wallet connection to submit transactions
+ */
+export async function executeProofOnChain(
+  request: ProofExecutionRequest,
+  walletAddress: string,
+  executeTransactionFn?: (params: any) => Promise<string>
+): Promise<OnChainExecutionResult> {
+  try {
+    const programId = request.programId || PROGRAM_ID;
+
+    console.log('[v0] Executing proof on-chain:', {
+      program: programId,
+      function: request.functionName,
+      wallet: walletAddress,
+    });
+
+    // If wallet transaction function is provided, use it for real execution
+    if (executeTransactionFn) {
+      return await executeTransactionWithWallet(request, executeTransactionFn);
+    }
+
+    // Fallback: Verify program exists on testnet
+    const programResponse = await fetch(`${ALEO_API}/program/${programId}`);
+
+    if (!programResponse.ok) {
+      return {
+        success: false,
+        error: `Program ${programId} not found on testnet. Please ensure contract is deployed.`,
+      };
+    }
+
+    console.warn('[v0] No executeTransaction function provided - cannot submit real transaction. Please connect wallet.');
+
+    return {
+      success: false,
+      error: 'Wallet transaction execution not available. Please ensure you have a connected wallet.',
+    };
+  } catch (error) {
+    console.error('[v0] Proof execution error:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : String(error),
@@ -132,7 +175,8 @@ export async function proveRange(
   attributeName: string,
   min: number,
   max: number,
-  walletAddress: string
+  walletAddress: string,
+  executeTransactionFn?: (params: any) => Promise<string>
 ): Promise<OnChainExecutionResult> {
   return executeProofOnChain(
     {
@@ -140,7 +184,8 @@ export async function proveRange(
       functionName: 'prove_range',
       inputs: [commitment, attributeName, min.toString(), max.toString()],
     },
-    walletAddress
+    walletAddress,
+    executeTransactionFn
   );
 }
 
@@ -152,7 +197,8 @@ export async function proveMembership(
   commitment: string,
   attributeName: string,
   targetValue: string,
-  walletAddress: string
+  walletAddress: string,
+  executeTransactionFn?: (params: any) => Promise<string>
 ): Promise<OnChainExecutionResult> {
   return executeProofOnChain(
     {
@@ -160,7 +206,8 @@ export async function proveMembership(
       functionName: 'prove_membership',
       inputs: [commitment, attributeName, targetValue],
     },
-    walletAddress
+    walletAddress,
+    executeTransactionFn
   );
 }
 
@@ -170,7 +217,8 @@ export async function proveMembership(
  */
 export async function proveExistence(
   commitment: string,
-  walletAddress: string
+  walletAddress: string,
+  executeTransactionFn?: (params: any) => Promise<string>
 ): Promise<OnChainExecutionResult> {
   return executeProofOnChain(
     {
@@ -178,7 +226,8 @@ export async function proveExistence(
       functionName: 'prove_existence',
       inputs: [commitment],
     },
-    walletAddress
+    walletAddress,
+    executeTransactionFn
   );
 }
 
@@ -230,7 +279,8 @@ export async function getProgramInfo(): Promise<{
 export async function registerCommitmentOnChain(
   commitment: string,
   attributeCount: number,
-  walletAddress: string
+  walletAddress: string,
+  executeTransactionFn?: (params: any) => Promise<string>
 ): Promise<OnChainExecutionResult> {
   return executeProofOnChain(
     {
@@ -238,7 +288,48 @@ export async function registerCommitmentOnChain(
       functionName: 'register_commitment',
       inputs: [commitment, attributeCount.toString()],
     },
-    walletAddress
+    walletAddress,
+    executeTransactionFn
+  );
+}
+
+/**
+ * Revoke a credential (only holder can revoke their own)
+ * Inputs: commitment (field)
+ */
+export async function revokeCredentialFromRegistry(
+  commitment: string,
+  walletAddress: string,
+  executeTransactionFn?: (params: any) => Promise<string>
+): Promise<OnChainExecutionResult> {
+  return executeProofOnChain(
+    {
+      programId: REGISTRY_PROGRAM_ID,
+      functionName: 'revoke_credential',
+      inputs: [commitment],
+    },
+    walletAddress,
+    executeTransactionFn
+  );
+}
+
+/**
+ * Verify a credential commitment is active and valid
+ * Inputs: commitment (field)
+ */
+export async function verifyCredentialInRegistry(
+  commitment: string,
+  walletAddress: string,
+  executeTransactionFn?: (params: any) => Promise<string>
+): Promise<OnChainExecutionResult> {
+  return executeProofOnChain(
+    {
+      programId: REGISTRY_PROGRAM_ID,
+      functionName: 'verify_commitment',
+      inputs: [commitment],
+    },
+    walletAddress,
+    executeTransactionFn
   );
 }
 
@@ -295,7 +386,8 @@ export async function verifyCredentialInRegistry(
 export async function recordQRVerification(
   commitmentHash: string,
   proofId: string,
-  walletAddress: string
+  walletAddress: string,
+  executeTransactionFn?: (params: any) => Promise<string>
 ): Promise<OnChainExecutionResult> {
   return executeProofOnChain(
     {
@@ -303,7 +395,8 @@ export async function recordQRVerification(
       functionName: 'verify_qr',
       inputs: [commitmentHash, proofId],
     },
-    walletAddress
+    walletAddress,
+    executeTransactionFn
   );
 }
 
@@ -314,7 +407,8 @@ export async function recordQRVerification(
  */
 export async function incrementVerificationCount(
   commitmentHash: string,
-  walletAddress: string
+  walletAddress: string,
+  executeTransactionFn?: (params: any) => Promise<string>
 ): Promise<OnChainExecutionResult> {
   return executeProofOnChain(
     {
@@ -322,7 +416,8 @@ export async function incrementVerificationCount(
       functionName: 'increment_count',
       inputs: [commitmentHash],
     },
-    walletAddress
+    walletAddress,
+    executeTransactionFn
   );
 }
 
@@ -339,7 +434,8 @@ export async function incrementVerificationCount(
 export async function registerDAO(
   daoId: string,
   leaderAddress: string,
-  walletAddress: string
+  walletAddress: string,
+  executeTransactionFn?: (params: any) => Promise<string>
 ): Promise<OnChainExecutionResult> {
   return executeProofOnChain(
     {
@@ -347,7 +443,8 @@ export async function registerDAO(
       functionName: 'register_dao',
       inputs: [daoId, leaderAddress],
     },
-    walletAddress
+    walletAddress,
+    executeTransactionFn
   );
 }
 
@@ -357,7 +454,8 @@ export async function registerDAO(
  */
 export async function requestDAOAttestation(
   daoId: string,
-  walletAddress: string
+  walletAddress: string,
+  executeTransactionFn?: (params: any) => Promise<string>
 ): Promise<OnChainExecutionResult> {
   return executeProofOnChain(
     {
@@ -365,7 +463,8 @@ export async function requestDAOAttestation(
       functionName: 'request_attestation',
       inputs: [daoId],
     },
-    walletAddress
+    walletAddress,
+    executeTransactionFn
   );
 }
 
@@ -377,7 +476,8 @@ export async function approveDAOAttestation(
   recordId: string,
   signature: string,
   expirationBlock: number,
-  walletAddress: string
+  walletAddress: string,
+  executeTransactionFn?: (params: any) => Promise<string>
 ): Promise<OnChainExecutionResult> {
   return executeProofOnChain(
     {
@@ -385,7 +485,8 @@ export async function approveDAOAttestation(
       functionName: 'approve_attestation',
       inputs: [recordId, signature, expirationBlock.toString()],
     },
-    walletAddress
+    walletAddress,
+    executeTransactionFn
   );
 }
 
@@ -395,7 +496,8 @@ export async function approveDAOAttestation(
  */
 export async function rejectDAOAttestation(
   recordId: string,
-  walletAddress: string
+  walletAddress: string,
+  executeTransactionFn?: (params: any) => Promise<string>
 ): Promise<OnChainExecutionResult> {
   return executeProofOnChain(
     {
@@ -403,7 +505,8 @@ export async function rejectDAOAttestation(
       functionName: 'reject_request',
       inputs: [recordId],
     },
-    walletAddress
+    walletAddress,
+    executeTransactionFn
   );
 }
 
@@ -413,7 +516,8 @@ export async function rejectDAOAttestation(
  */
 export async function verifyDAOAttestation(
   attestationId: string,
-  walletAddress: string
+  walletAddress: string,
+  executeTransactionFn?: (params: any) => Promise<string>
 ): Promise<OnChainExecutionResult> {
   return executeProofOnChain(
     {
@@ -421,7 +525,8 @@ export async function verifyDAOAttestation(
       functionName: 'verify_attestation',
       inputs: [attestationId],
     },
-    walletAddress
+    walletAddress,
+    executeTransactionFn
   );
 }
 
@@ -431,7 +536,8 @@ export async function verifyDAOAttestation(
  */
 export async function revokeDAOAttestation(
   attestationId: string,
-  walletAddress: string
+  walletAddress: string,
+  executeTransactionFn?: (params: any) => Promise<string>
 ): Promise<OnChainExecutionResult> {
   return executeProofOnChain(
     {
@@ -439,6 +545,7 @@ export async function revokeDAOAttestation(
       functionName: 'revoke_attestation',
       inputs: [attestationId],
     },
-    walletAddress
+    walletAddress,
+    executeTransactionFn
   );
 }

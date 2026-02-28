@@ -106,10 +106,20 @@ export function CreateIdentityPage() {
       await storeEncryptedCredential(commitmentHash, credential, address)
 
       try {
-        // Register on main shadowid contract
-        const mainResult = await registerCommitmentOnChain(commitmentHash, address)
+        // Register on main shadowid contract with real blockchain transaction
+        console.log('[v0] Registering commitment on-chain:', commitmentHash);
+        const mainResult = await registerCommitmentOnChain(
+          commitmentHash, 
+          selectedAttrIds.length,
+          address,
+          executeTransaction
+        )
         if (mainResult.success) {
+          console.log('[v0] Commitment registered successfully:', mainResult.transactionId);
           addActivityLog('Register on-chain', 'blockchain', `Commitment registered: ${mainResult.transactionId}`, 'success')
+        } else {
+          console.error('[v0] Blockchain registration failed:', mainResult.error);
+          addActivityLog('Register on-chain', 'blockchain', `Failed: ${mainResult.error}`, 'error')
         }
 
         // Register in credential registry
