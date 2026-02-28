@@ -20,27 +20,66 @@ export interface FaucetRequest {
 }
 
 /**
- * Get Aleo credit balance for an address
+ * Get Aleo credit balance by querying wallet records
+ * Must be called with wallet context (from use-aleo-wallet hook)
  */
-export async function getCreditsBalance(address: string): Promise<CreditBalance | null> {
+export async function getCreditsBalance(
+  address: string,
+  requestRecordsFn?: (filter?: string) => Promise<any>
+): Promise<CreditBalance | null> {
   try {
-    const response = await fetch(`${TESTNET_API}/account/${address}`)
-    
-    if (!response.ok) {
-      console.log('[v0] Address not found on testnet - no credits yet')
+    // If wallet requestRecords function is available, use it to query actual credits
+    if (requestRecordsFn) {
+      try {
+        const records = await requestRecordsFn('credits')
+        
+        if (records && Array.isArray(records)) {
+          // Sum up all credit records
+          const totalCredits = records.reduce((sum: number, record: any) => {
+            const amount = record.gates || record.amount || 0
+            return sum + (typeof amount === 'number' ? amount : 0)
+          }, 0)
+          
+          // Convert gates to credits (1 credit = 1,000,000 gates)
+          const creditsAmount = totalCredits / 1_000_000
+          
+          return {
+            address,
+            balance: creditsAmount,
+            unit: 'Aleo Credits'
+          }
+        }
+      } catch (err) {
+        console.log('[v0] Wallet requestRecords not available, falling back to testnet API')
+      }
+    }
+
+    // Fallback: Try testnet API for public balance info
+    try {
+      const response = await fetch(`${TESTNET_API}/account/${address}`)
+      
+      if (!response.ok) {
+        console.log('[v0] Address not found on testnet API')
+        return {
+          address,
+          balance: 0,
+          unit: 'Aleo Credits'
+        }
+      }
+
+      const data = await response.json()
+      return {
+        address,
+        balance: data.balance || 0,
+        unit: 'Aleo Credits'
+      }
+    } catch (apiErr) {
+      console.log('[v0] Testnet API unavailable:', apiErr)
       return {
         address,
         balance: 0,
         unit: 'Aleo Credits'
       }
-    }
-
-    const data = await response.json()
-    
-    return {
-      address,
-      balance: data.balance || 0,
-      unit: 'Aleo Credits'
     }
   } catch (err) {
     console.error('[v0] Failed to fetch credit balance:', err)
@@ -98,9 +137,10 @@ export async function requestFaucetCredits(
  */
 export async function hasEnoughCredits(
   address: string,
-  requiredCredits: number = 2
+  requiredCredits: number = 2,
+  requestRecordsFn?: (filter?: string) => Promise<any>
 ): Promise<boolean> {
-  const balance = await getCreditsBalance(address)
+  const balance = await getCreditsBalance(address, requestRecordsFn)
   if (!balance) return false
   return balance.balance >= requiredCredits
 }

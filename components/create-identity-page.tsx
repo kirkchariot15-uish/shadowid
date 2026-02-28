@@ -50,7 +50,7 @@ export function CreateIdentityPage() {
   const loadCreditBalance = async () => {
     setLoadingCredits(true)
     try {
-      const balance = await getCreditsBalance(address!)
+      const balance = await getCreditsBalance(address!, requestRecords)
       setCredits(balance)
     } catch (err) {
       console.error('[v0] Failed to load credits:', err)
@@ -110,7 +110,7 @@ export function CreateIdentityPage() {
       return
     }
 
-    const enoughCredits = await hasEnoughCredits(address, 2)
+    const enoughCredits = await hasEnoughCredits(address, 2, requestRecords)
     if (!enoughCredits) {
       setError('Not enough Aleo Credits. Please request credits from the faucet.')
       return
