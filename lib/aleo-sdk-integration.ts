@@ -339,42 +339,6 @@ export async function verifyCredentialInRegistry(
 export const registerCredentialInRegistry = registerCommitmentOnChain;
 
 /**
- * Revoke a credential (only holder can revoke their own)
- * Inputs: commitment (field)
- */
-export async function revokeCredentialFromRegistry(
-  commitment: string,
-  walletAddress: string
-): Promise<OnChainExecutionResult> {
-  return executeProofOnChain(
-    {
-      programId: REGISTRY_PROGRAM_ID,
-      functionName: 'revoke_credential',
-      inputs: [commitment],
-    },
-    walletAddress
-  );
-}
-
-/**
- * Verify a credential commitment is active and valid
- * Inputs: commitment (field)
- */
-export async function verifyCredentialInRegistry(
-  commitment: string,
-  walletAddress: string
-): Promise<OnChainExecutionResult> {
-  return executeProofOnChain(
-    {
-      programId: REGISTRY_PROGRAM_ID,
-      functionName: 'verify_commitment',
-      inputs: [commitment],
-    },
-    walletAddress
-  );
-}
-
-/**
  * QR VERIFIER FUNCTIONS
  * Records and tracks QR code verification events
  */
