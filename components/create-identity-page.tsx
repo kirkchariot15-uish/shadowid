@@ -6,13 +6,10 @@ import { Navigation } from '@/components/navigation'
 import { ProgressIndicator } from '@/components/progress-indicator'
 import { LoadingSpinner } from '@/components/loading-spinner'
 import { Button } from '@/components/ui/button'
-import { Lock, Sparkles, CheckCircle2, ArrowLeft, Plus, AlertCircle } from 'lucide-react'
-import Link from 'next/link'
 import { addActivityLog } from '@/lib/activity-logger'
 import { STANDARD_ATTRIBUTES } from '@/lib/attribute-schema'
-import { registerCommitmentOnChain, registerCredentialInRegistry } from '@/lib/aleo-sdk-integration'
+import { registerCommitmentOnChain } from '@/lib/aleo-sdk-integration'
 import { storeEncryptedCredential } from '@/lib/encrypted-storage'
-import { getCreditsBalance, requestFaucetCredits, hasEnoughCredits, formatCredits, type CreditBalance } from '@/lib/faucet-integration'
 
 export function CreateIdentityPage() {
   const { address } = useAleoWallet()
@@ -24,10 +21,6 @@ export function CreateIdentityPage() {
   const [commitment, setCommitment] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const [retryCount, setRetryCount] = useState(0)
-  const [credits, setCredits] = useState<CreditBalance | null>(null)
-  const [loadingCredits, setLoadingCredits] = useState(false)
-  const [requestingFaucet, setRequestingFaucet] = useState(false)
-  const [faucetMessage, setFaucetMessage] = useState<string | null>(null)
 
   // Ensure component only renders on client with crypto available
   useEffect(() => {
@@ -39,54 +32,6 @@ export function CreateIdentityPage() {
       setMounted(true)
     }
   }, [])
-
-  // Load credit balance when wallet is connected
-  useEffect(() => {
-    if (isConnected && address) {
-      loadCreditBalance()
-    }
-  }, [isConnected, address])
-
-  const loadCreditBalance = async () => {
-    setLoadingCredits(true)
-    try {
-      const balance = await getCreditsBalance(address!, requestRecords)
-      setCredits(balance)
-    } catch (err) {
-      console.error('[v0] Failed to load credits:', err)
-    } finally {
-      setLoadingCredits(false)
-    }
-  }
-
-  const handleRequestFaucet = async () => {
-    if (!address) return
-
-    setRequestingFaucet(true)
-    setFaucetMessage(null)
-
-    try {
-      const result = await requestFaucetCredits(address, 10)
-      
-      if (result.success) {
-        setFaucetMessage(result.message || 'Faucet request successful!')
-        addActivityLog('Request Faucet', 'wallet', 'Requested 10 Aleo Credits from faucet', 'success')
-        
-        // Refresh balance after 2 seconds
-        setTimeout(() => {
-          loadCreditBalance()
-        }, 2000)
-      } else {
-        setFaucetMessage(result.message || 'Faucet request failed')
-        addActivityLog('Request Faucet', 'wallet', `Faucet request failed: ${result.message}`, 'error')
-      }
-    } catch (err) {
-      const errMsg = err instanceof Error ? err.message : 'Unknown error'
-      setFaucetMessage(`Error: ${errMsg}`)
-    } finally {
-      setRequestingFaucet(false)
-    }
-  }
 
   if (!mounted) {
     return (
@@ -104,15 +49,9 @@ export function CreateIdentityPage() {
       return
     }
 
-    // Check if user has enough credits
+    // Check wallet is connected
     if (!address) {
       setError('Wallet not connected')
-      return
-    }
-
-    const enoughCredits = await hasEnoughCredits(address, 2, requestRecords)
-    if (!enoughCredits) {
-      setError('Not enough Aleo Credits. Please request credits from the faucet.')
       return
     }
 
@@ -281,36 +220,6 @@ export function CreateIdentityPage() {
               { id: 'create', label: 'Create Identity', status: creationComplete ? 'completed' : 'pending' }
             ]} />
           </div>
-
-          {/* Credit Balance Card */}
-          {isConnected && (
-            <div className="mb-8 p-4 rounded-lg border border-accent/20 bg-card/50">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Aleo Testnet Credits</p>
-                  <p className="text-lg font-bold">
-                    {loadingCredits ? 'Loading...' : credits ? `${formatCredits(credits.balance)} Credits` : 'Unknown'}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">Required: ~2 Credits for identity creation</p>
-                </div>
-                {credits && credits.balance < 2 && (
-                  <Button 
-                    onClick={handleRequestFaucet}
-                    disabled={requestingFaucet}
-                    className="bg-accent hover:bg-accent/90 gap-2"
-                    size="sm"
-                  >
-                    {requestingFaucet ? 'Requesting...' : 'Get Free Credits'}
-                  </Button>
-                )}
-              </div>
-              {faucetMessage && (
-                <p className={`text-xs mt-3 ${faucetMessage.includes('Error') || faucetMessage.includes('failed') ? 'text-red-400' : 'text-green-400'}`}>
-                  {faucetMessage}
-                </p>
-              )}
-            </div>
-          )}
           <div className="space-y-6">
             <div className="rounded-lg border border-accent/20 bg-accent/5 p-4 flex items-start gap-3">
               <Sparkles className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
@@ -378,9 +287,8 @@ export function CreateIdentityPage() {
               <>
                 <Button
                   onClick={handleCreateIdentity}
-                  disabled={isCreating || Object.keys(selectedAttributes).length === 0 || (credits !== null && credits.balance < 2)}
+                  disabled={isCreating || Object.keys(selectedAttributes).length === 0}
                   className="flex-1 gap-2"
-                  title={credits !== null && credits.balance < 2 ? 'Not enough credits. Request from faucet.' : ''}
                 >
                   Create ShadowID
                 </Button>
