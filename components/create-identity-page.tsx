@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { ArrowLeft, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { Navigation } from '@/components/navigation'
 import { ProgressIndicator } from '@/components/progress-indicator'
