@@ -25,7 +25,7 @@ interface AttestationRequest {
 }
 
 export default function RequestAttestationPage() {
-  const { address } = useAleoWallet()
+  const { address, executeTransaction } = useAleoWallet()
   const isConnected = !!address
 
   const [step, setStep] = useState<'daos' | 'request' | 'result'>('daos')
@@ -62,17 +62,21 @@ export default function RequestAttestationPage() {
       const encoder = new TextEncoder()
       const data = `${selectedDAO.id}-${address}-${Date.now()}`
       const hash = await window.crypto.subtle.digest('SHA-256', encoder.encode(data))
-      const requestId = Array.from(new Uint8Array(hash))
+      const requestIdHex = Array.from(new Uint8Array(hash))
         .map(b => b.toString(16).padStart(2, '0'))
         .join('')
         .slice(0, 64)
+      
+      // Convert to Aleo field format
+      const requestIdDecimal = BigInt('0x' + requestIdHex).toString()
+      const requestIdField = requestIdDecimal + 'field'
 
-      // Request on-chain
-      const result = await requestDAOAttestation(selectedDAO.id, address, address)
+      // Request on-chain with wallet
+      const result = await requestDAOAttestation(selectedDAO.id, address, address, executeTransaction)
 
       if (result.success) {
         const request: AttestationRequest = {
-          id: requestId,
+          id: requestIdHex,
           daoId: selectedDAO.id,
           status: 'pending',
           requestedAt: Date.now()

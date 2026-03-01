@@ -49,6 +49,14 @@ export async function executeWalletTransaction(
     console.log('[v0] Program:', params.program);
     console.log('[v0] Function:', params.functionName);
     console.log('[v0] Inputs count:', params.inputs.length);
+    console.log('[v0] Inputs detail:', JSON.stringify(params.inputs));
+    
+    // CRITICAL: Log each input with its format
+    params.inputs.forEach((input, idx) => {
+      console.log(`[v0] Input ${idx}:`, input);
+      console.log(`[v0]   - Length: ${input.length}`);
+      console.log(`[v0]   - Type suffix: ${input.match(/field|u\d+|i\d+|bool|address/) ? 'FOUND' : 'MISSING'}`);
+    });
 
     // Prepare transaction object matching wallet API
     const txObj = {

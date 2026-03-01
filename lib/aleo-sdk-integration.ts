@@ -68,6 +68,17 @@ export async function executeTransactionWithWallet(
   try {
     const programId = request.programId || PROGRAM_ID;
 
+    // CRITICAL DEBUG: Log inputs before validation
+    console.log('[v0] === INPUT TRACE ===');
+    console.log('[v0] Inputs received by executeTransactionWithWallet:');
+    console.log('[v0] Raw inputs array:', JSON.stringify(request.inputs));
+    request.inputs.forEach((input, idx) => {
+      console.log(`[v0] Input[${idx}]:`, input);
+      console.log(`[v0]   Type: ${typeof input}`);
+      console.log(`[v0]   Has field suffix: ${String(input).includes('field')}`);
+      console.log(`[v0]   Length: ${String(input).length}`);
+    });
+
     // Debug and validate wallet function
     console.log('[v0] Preparing transaction with:', {
       programId,

@@ -98,6 +98,13 @@ export function CreateIdentityPage() {
       
       // Step 5: Also keep a short hex for UI display
       const commitmentDisplayHex = truncatedHex.toUpperCase()
+      
+      console.log('[v0] === COMMITMENT GENERATION ===');
+      console.log('[v0] Hex string (full):', hexString);
+      console.log('[v0] Hex truncated (16 chars):', truncatedHex);
+      console.log('[v0] Decimal:', commitmentDecimal);
+      console.log('[v0] Final commitment for blockchain:', commitmentHash);
+      console.log('[v0] Display hex:', commitmentDisplayHex);
 
       const credential = {
         '@context': ['https://www.w3.org/2018/credentials/v1'],
@@ -137,8 +144,15 @@ export function CreateIdentityPage() {
       await storeEncryptedCredential(commitmentHash, credential, address)
 
       // Register on main shadowid contract with real blockchain transaction
-      console.log('[v0] Registering commitment on-chain:', commitmentHash);
-      console.log('[v0] executeTransaction available:', !!executeTransaction);
+      console.log('[v0] === BLOCKCHAIN SUBMISSION ===');
+      console.log('[v0] Commitment value:', commitmentHash);
+      console.log('[v0] Commitment type:', typeof commitmentHash);
+      console.log('[v0] Commitment includes "field":', commitmentHash.includes('field'));
+      console.log('[v0] Commitment length:', commitmentHash.length);
+      console.log('[v0] Attribute count:', selectedAttrIds.length);
+      console.log('[v0] Wallet address:', address);
+      console.log('[v0] executeTransaction available:', typeof executeTransaction);
+      
       const mainResult = await registerCommitmentOnChain(
         commitmentHash, 
         selectedAttrIds.length,
