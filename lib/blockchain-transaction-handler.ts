@@ -51,24 +51,38 @@ export async function executeWalletTransaction(
       inputsCount: params.inputs.length,
     });
 
+    // Log each input to verify format
+    params.inputs.forEach((input, idx) => {
+      console.log(`[v0] Input[${idx}]:`, input);
+    });
+
     // Prepare transaction object matching wallet API
+    // The wallet expects { transitions, fee, feePrivate }
+    // NOT { program, function, inputs, fee }
     const txObj = {
-      program: params.program,
-      function: params.functionName,
-      inputs: params.inputs,
+      transitions: [
+        {
+          program: params.program,
+          functionName: params.functionName,
+          inputs: params.inputs,
+        }
+      ],
       fee: params.fee || 100000,
-      privateFee: params.privateFee ?? false,
+      feePrivate: params.privateFee ?? false,
     };
 
+    console.log('[v0] Transaction object:', JSON.stringify(txObj));
     console.log('[v0] Executing wallet transaction...');
 
     // Execute transaction with error boundary
     let transactionId: string;
     try {
+      console.log('[v0] Calling wallet executeTransaction with:', txObj);
       const result = await transactionFn(txObj);
       transactionId = result;
     } catch (execError) {
       console.error('[v0] Wallet execution error:', execError);
+      console.error('[v0] Error message:', execError instanceof Error ? execError.message : String(execError));
       throw execError;
     }
 
