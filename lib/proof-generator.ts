@@ -9,6 +9,7 @@ import { VerifiableCredential } from './credential-store'
 import { ProofType } from './attribute-schema'
 import { executeProofOnChain } from './aleo-sdk-integration'
 import { storeEncryptedProof } from './encrypted-storage'
+import { hexToField } from './aleo-field-formatter'
 
 export interface ProofRequest {
   credentialId: string
@@ -261,7 +262,7 @@ export async function generateProof(
       {
         programId,
         functionName,
-        inputs: [proofString, nullifier],
+        inputs: [hexToField(proofString), hexToField(nullifier)],
       },
       walletPrivateKey
     )
