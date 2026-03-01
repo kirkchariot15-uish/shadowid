@@ -188,7 +188,7 @@ export async function submitNullifierOnChain(
     {
       programId: programId || PROGRAM_ID,
       functionName: 'check_nullifier',
-      inputs: [hexToField(nullifier)],
+      inputs: [nullifier],
     },
     walletAddress,
     executeTransactionFn
@@ -216,7 +216,7 @@ export async function proveRange(
     {
       programId: PROGRAM_ID,
       functionName: 'prove_range',
-      inputs: [hexToField(commitment), attributeName, `${min}u32`, `${max}u32`],
+      inputs: [commitment, attributeName, `${min}u32`, `${max}u32`],
     },
     walletAddress,
     executeTransactionFn
@@ -238,7 +238,7 @@ export async function proveMembership(
     {
       programId: PROGRAM_ID,
       functionName: 'prove_membership',
-      inputs: [hexToField(commitment), attributeName, hexToField(targetValue)],
+      inputs: [commitment, attributeName, targetValue],
     },
     walletAddress,
     executeTransactionFn
@@ -258,7 +258,7 @@ export async function proveExistence(
     {
       programId: PROGRAM_ID,
       functionName: 'prove_existence',
-      inputs: [hexToField(commitment)],
+      inputs: [commitment],
     },
     walletAddress,
     executeTransactionFn
@@ -320,7 +320,7 @@ export async function registerCommitmentOnChain(
     {
       programId: REGISTRY_PROGRAM_ID,
       functionName: 'register_commitment',
-      inputs: [hexToField(commitment), `${attributeCount}u32`],
+      inputs: [commitment, `${attributeCount}u32`],
     },
     walletAddress,
     executeTransactionFn
@@ -340,7 +340,7 @@ export async function revokeCredentialFromRegistry(
     {
       programId: REGISTRY_PROGRAM_ID,
       functionName: 'revoke_credential',
-      inputs: [hexToField(commitment)],
+      inputs: [commitment],
     },
     walletAddress,
     executeTransactionFn
@@ -360,7 +360,7 @@ export async function verifyCredentialInRegistry(
     {
       programId: REGISTRY_PROGRAM_ID,
       functionName: 'verify_commitment',
-      inputs: [hexToField(commitment)],
+      inputs: [commitment],
     },
     walletAddress,
     executeTransactionFn
@@ -391,7 +391,7 @@ export async function recordQRVerification(
     {
       programId: VERIFIER_PROGRAM_ID,
       functionName: 'verify_qr',
-      inputs: [hexToField(commitmentHash), hexToField(proofId)],
+      inputs: [commitmentHash, proofId],
     },
     walletAddress,
     executeTransactionFn
@@ -412,7 +412,7 @@ export async function incrementVerificationCount(
     {
       programId: VERIFIER_PROGRAM_ID,
       functionName: 'increment_count',
-      inputs: [hexToField(commitmentHash)],
+      inputs: [commitmentHash],
     },
     walletAddress,
     executeTransactionFn
@@ -439,7 +439,7 @@ export async function registerDAO(
     {
       programId: DAO_ATTESTATION_PROGRAM_ID,
       functionName: 'register_dao',
-      inputs: [hexToField(daoId), leaderAddress],
+      inputs: [daoId, leaderAddress],
     },
     walletAddress,
     executeTransactionFn
@@ -459,7 +459,7 @@ export async function requestDAOAttestation(
     {
       programId: DAO_ATTESTATION_PROGRAM_ID,
       functionName: 'request_attestation',
-      inputs: [hexToField(daoId)],
+      inputs: [daoId],
     },
     walletAddress,
     executeTransactionFn
@@ -481,7 +481,7 @@ export async function approveDAOAttestation(
     {
       programId: DAO_ATTESTATION_PROGRAM_ID,
       functionName: 'approve_attestation',
-      inputs: [hexToField(recordId), hexToField(signature), `${expirationBlock}u32`],
+      inputs: [recordId, signature, `${expirationBlock}u32`],
     },
     walletAddress,
     executeTransactionFn
@@ -501,7 +501,7 @@ export async function rejectDAOAttestation(
     {
       programId: DAO_ATTESTATION_PROGRAM_ID,
       functionName: 'reject_request',
-      inputs: [hexToField(recordId)],
+      inputs: [recordId],
     },
     walletAddress,
     executeTransactionFn
@@ -521,7 +521,7 @@ export async function verifyDAOAttestation(
     {
       programId: DAO_ATTESTATION_PROGRAM_ID,
       functionName: 'verify_attestation',
-      inputs: [hexToField(attestationId)],
+      inputs: [attestationId],
     },
     walletAddress,
     executeTransactionFn
@@ -541,7 +541,7 @@ export async function revokeDAOAttestation(
     {
       programId: DAO_ATTESTATION_PROGRAM_ID,
       functionName: 'revoke_attestation',
-      inputs: [hexToField(attestationId)],
+      inputs: [attestationId],
     },
     walletAddress,
     executeTransactionFn
