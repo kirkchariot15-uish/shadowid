@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
+import { hexToField } from '@/lib/aleo-field-formatter'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, CheckCircle, Clock, Send, AlertCircle } from 'lucide-react'
@@ -68,11 +69,16 @@ export default function RequestAttestationPage() {
         .slice(0, 64)
       
       // Convert to Aleo field format
-      const requestIdDecimal = BigInt('0x' + requestIdHex).toString()
-      const requestIdField = requestIdDecimal + 'field'
+      const requestIdField = hexToField(requestIdHex)
+      
+      // Convert DAO ID to field format if it's hex
+      let daoIdField = selectedDAO.id
+      if (/^[0-9A-Fa-f]{16}$/.test(selectedDAO.id)) {
+        daoIdField = hexToField(selectedDAO.id)
+      }
 
       // Request on-chain with wallet
-      const result = await requestDAOAttestation(selectedDAO.id, address, address, executeTransaction)
+      const result = await requestDAOAttestation(daoIdField, address, executeTransaction)
 
       if (result.success) {
         const request: AttestationRequest = {

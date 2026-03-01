@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { debugWalletState } from '@/lib/blockchain-transaction-handler'
+import { hexToField } from '@/lib/aleo-field-formatter'
 import { Navigation } from '@/components/navigation'
 import { ProgressIndicator } from '@/components/progress-indicator'
 import { LoadingSpinner } from '@/components/loading-spinner'
@@ -86,9 +87,7 @@ export function CreateIdentityPage() {
       // Convert SHA-256 hash to Aleo field type (contract expects field, NOT u64)
       const hexString = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
       const truncatedHex = hexString.slice(0, 16)
-      const commitmentDecimal = BigInt('0x' + truncatedHex).toString()
-      // Use field type suffix - this is what the contract expects
-      const commitmentHash = commitmentDecimal + 'field'
+      const commitmentHash = hexToField(truncatedHex)
       const commitmentDisplayHex = truncatedHex.toUpperCase()
 
       const credential = {

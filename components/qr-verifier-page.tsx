@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
+import { hexToField } from '@/lib/aleo-field-formatter'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, CheckCircle2, AlertCircle, Zap, Download } from 'lucide-react'
@@ -55,7 +56,8 @@ export default function QRVerifierPage() {
 
       // OPTION B: Full verification with wallet (if connected)
       if (isConnected && address) {
-        const proofId = `0x${commitmentHash}field`
+        // Convert hex commitment to decimal field format
+        const proofId = hexToField(commitmentHash)
         
         try {
           const recordResult = await recordQRVerification(
