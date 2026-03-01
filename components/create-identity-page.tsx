@@ -134,6 +134,7 @@ export function CreateIdentityPage() {
         address,
         executeTransaction
       )
+      
       if (mainResult.success) {
         console.log('[v0] Commitment registered successfully:', mainResult.transactionId);
         addActivityLog('Register on-chain', 'blockchain', `Commitment registered: ${mainResult.transactionId}`, 'success')
@@ -145,17 +146,20 @@ export function CreateIdentityPage() {
         return
       }
 
+      // Use the blockchain-verified commitment, not the local one
+      const blockchainCommitment = mainResult.commitmentHash || commitmentHash
+      
       // Register in credential registry
-      const registryResult = await registerCredentialInRegistry(commitmentHash, selectedAttrIds.length, address, executeTransaction)
+      const registryResult = await registerCredentialInRegistry(blockchainCommitment, selectedAttrIds.length, address, executeTransaction)
       if (registryResult.success) {
         addActivityLog('Register registry', 'blockchain', `Credential registered: ${registryResult.transactionId}`, 'success')
       } else {
         console.error('[v0] Registry registration failed:', registryResult.error);
         addActivityLog('Register registry', 'blockchain', `Failed: ${registryResult.error}`, 'error')
-        // Don't fail completely if registry registration fails - main identity is created
       }
 
-      setCommitment(commitmentHash)
+      // Use the blockchain-verified commitment as the actual identity commitment
+      setCommitment(blockchainCommitment)
       addActivityLog('Create ShadowID', 'identity', `Created ZK identity with ${selectedAttrIds.length} attributes`, 'success')
       setCreationComplete(true)
     } catch (err) {

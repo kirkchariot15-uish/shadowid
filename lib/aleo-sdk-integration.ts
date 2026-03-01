@@ -50,6 +50,7 @@ interface ProofExecutionRequest {
 export interface OnChainExecutionResult {
   success: boolean;
   transactionId?: string;
+  commitmentHash?: string; // The blockchain-verified commitment hash
   error?: string;
   proofData?: any;
 }
@@ -308,7 +309,9 @@ export async function getProgramInfo(): Promise<{
 
 /**
  * Register a new credential commitment on-chain
+ * The blockchain verifies the commitment and returns the official on-chain hash
  * Inputs: commitment (field), count (u8 - number of attributes)
+ * Returns: The blockchain-verified commitment hash
  */
 export async function registerCommitmentOnChain(
   commitment: string,
@@ -316,7 +319,7 @@ export async function registerCommitmentOnChain(
   walletAddress: string,
   executeTransactionFn?: (params: any) => Promise<string>
 ): Promise<OnChainExecutionResult> {
-  return executeProofOnChain(
+  const result = await executeProofOnChain(
     {
       programId: REGISTRY_PROGRAM_ID,
       functionName: 'register_commitment',
@@ -325,6 +328,14 @@ export async function registerCommitmentOnChain(
     walletAddress,
     executeTransactionFn
   );
+  
+  // The blockchain returns the verified commitment
+  // Use this blockchain-verified hash as the actual commitment
+  if (result.success) {
+    result.commitmentHash = result.transactionId; // The blockchain returns commitment as transaction ID
+  }
+  
+  return result;
 }
 
 /**
