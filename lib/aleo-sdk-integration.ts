@@ -320,7 +320,7 @@ export async function registerCommitmentOnChain(
     {
       programId: REGISTRY_PROGRAM_ID,
       functionName: 'register_commitment',
-      inputs: [commitment, `${attributeCount}u32`],
+      inputs: [commitment, `${attributeCount}u8`],
     },
     walletAddress,
     executeTransactionFn
