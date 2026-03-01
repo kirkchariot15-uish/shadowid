@@ -298,9 +298,8 @@ export function CreateIdentityPage() {
               <>
                 <Button
                   onClick={handleCreateIdentity}
-                  disabled={isCreating || Object.keys(selectedAttributes).length === 0 || (credits !== null && credits.balance < 2)}
+                  disabled={isCreating || Object.keys(selectedAttributes).length === 0}
                   className="flex-1 gap-2"
-                  title={credits !== null && credits.balance < 2 ? 'Not enough credits. Request from faucet.' : ''}
                 >
                   Create ShadowID
                 </Button>
