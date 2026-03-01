@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
+import { debugWalletState } from '@/lib/blockchain-transaction-handler'
 import { Navigation } from '@/components/navigation'
 import { ProgressIndicator } from '@/components/progress-indicator'
 import { LoadingSpinner } from '@/components/loading-spinner'
@@ -34,6 +35,14 @@ export function CreateIdentityPage() {
     }
   }, [])
 
+  // Debug wallet state when address or executeTransaction changes
+  useEffect(() => {
+    if (mounted && isConnected) {
+      console.log('[v0] Wallet state updated');
+      debugWalletState(address, executeTransaction);
+    }
+  }, [address, executeTransaction, mounted, isConnected])
+
   if (!mounted) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -52,6 +61,12 @@ export function CreateIdentityPage() {
 
     if (!address) {
       setError('Wallet not connected')
+      return
+    }
+
+    // Validate wallet connection and executeTransaction availability BEFORE async operations
+    if (!isConnected || !executeTransaction) {
+      setError('Wallet not connected. Please connect your wallet first.');
       return
     }
 
@@ -105,41 +120,34 @@ export function CreateIdentityPage() {
 
       await storeEncryptedCredential(commitmentHash, credential, address)
 
-      try {
-        // Validate wallet connection and executeTransaction availability
-        if (!isConnected || !executeTransaction) {
-          setError('Wallet not connected. Please connect your wallet first.');
-          setIsCreating(false)
-          return
-        }
+      // Register on main shadowid contract with real blockchain transaction
+      console.log('[v0] Registering commitment on-chain:', commitmentHash);
+      console.log('[v0] executeTransaction available:', !!executeTransaction);
+      const mainResult = await registerCommitmentOnChain(
+        commitmentHash, 
+        selectedAttrIds.length,
+        address,
+        executeTransaction
+      )
+      if (mainResult.success) {
+        console.log('[v0] Commitment registered successfully:', mainResult.transactionId);
+        addActivityLog('Register on-chain', 'blockchain', `Commitment registered: ${mainResult.transactionId}`, 'success')
+      } else {
+        console.error('[v0] Blockchain registration failed:', mainResult.error);
+        addActivityLog('Register on-chain', 'blockchain', `Failed: ${mainResult.error}`, 'error')
+        setError(`Blockchain error: ${mainResult.error}`)
+        setIsCreating(false)
+        return
+      }
 
-        // Register on main shadowid contract with real blockchain transaction
-        console.log('[v0] Registering commitment on-chain:', commitmentHash);
-        const mainResult = await registerCommitmentOnChain(
-          commitmentHash, 
-          selectedAttrIds.length,
-          address,
-          executeTransaction
-        )
-        if (mainResult.success) {
-          console.log('[v0] Commitment registered successfully:', mainResult.transactionId);
-          addActivityLog('Register on-chain', 'blockchain', `Commitment registered: ${mainResult.transactionId}`, 'success')
-        } else {
-          console.error('[v0] Blockchain registration failed:', mainResult.error);
-          addActivityLog('Register on-chain', 'blockchain', `Failed: ${mainResult.error}`, 'error')
-          setError(`Blockchain error: ${mainResult.error}`)
-        }
-
-        // Register in credential registry
-        const registryResult = await registerCredentialInRegistry(commitmentHash, selectedAttrIds.length, address, executeTransaction)
-        if (registryResult.success) {
-          addActivityLog('Register registry', 'blockchain', `Credential registered: ${registryResult.transactionId}`, 'success')
-        } else {
-          console.error('[v0] Registry registration failed:', registryResult.error);
-          addActivityLog('Register registry', 'blockchain', `Failed: ${registryResult.error}`, 'error')
-        }
-      } catch (error) {
-        console.error('[v0] Blockchain registration error:', error)
+      // Register in credential registry
+      const registryResult = await registerCredentialInRegistry(commitmentHash, selectedAttrIds.length, address, executeTransaction)
+      if (registryResult.success) {
+        addActivityLog('Register registry', 'blockchain', `Credential registered: ${registryResult.transactionId}`, 'success')
+      } else {
+        console.error('[v0] Registry registration failed:', registryResult.error);
+        addActivityLog('Register registry', 'blockchain', `Failed: ${registryResult.error}`, 'error')
+        // Don't fail completely if registry registration fails - main identity is created
       }
 
       setCommitment(commitmentHash)

@@ -4,6 +4,8 @@
  * Programs: shadowid.aleo, credential_registry.aleo, qr_verifier.aleo, dao_attestation.aleo
  */
 
+import { executeWalletTransaction, validateWalletFunction, debugWalletState } from './blockchain-transaction-handler';
+
 const ALEO_API = 'https://api.explorer.provable.com/v1/testnet';
 
 // Contract Deployment Details
@@ -65,48 +67,42 @@ export async function executeTransactionWithWallet(
   try {
     const programId = request.programId || PROGRAM_ID;
 
-    // Validate executeTransaction function exists
-    if (!executeTransactionFn || typeof executeTransactionFn !== 'function') {
-      console.error('[v0] executeTransaction function not available - wallet may not be connected');
+    // Debug and validate wallet function
+    console.log('[v0] Preparing transaction with:', {
+      programId,
+      functionName: request.functionName,
+      inputsCount: request.inputs.length,
+    });
+
+    // Use the robust transaction handler
+    const result = await executeWalletTransaction(executeTransactionFn, {
+      program: programId,
+      functionName: request.functionName,
+      inputs: request.inputs,
+      fee: request.fee || 100000,
+    });
+
+    if (!result.success) {
+      console.error('[v0] Transaction execution failed:', result.error);
       return {
         success: false,
-        error: 'Wallet not connected or executeTransaction not available. Please ensure wallet is connected.',
+        error: result.error || 'Transaction failed',
       };
     }
 
-    console.log('[v0] Executing transaction on:', programId, 'function:', request.functionName);
-    console.log('[v0] Inputs:', request.inputs);
-
-    // Build transaction in format wallet expects: { transitions, fee }
-    const transactionParams = {
-      transitions: [
-        {
-          program: programId,
-          functionName: request.functionName,
-          inputs: request.inputs,
-        }
-      ],
-      fee: request.fee || 100000, // 0.0001 ALEO in microcredits
-    };
-
-    console.log('[v0] Transaction params:', JSON.stringify(transactionParams));
-
-    // Call wallet's executeTransaction method
-    const transactionId = await executeTransactionFn(transactionParams);
-
-    if (!transactionId) {
-      console.error('[v0] Wallet returned empty transaction ID');
+    if (!result.transactionId) {
+      console.error('[v0] No transaction ID in result');
       return {
         success: false,
-        error: 'Wallet returned empty transaction ID. Transaction may have been rejected.',
+        error: 'No transaction ID returned',
       };
     }
 
-    console.log('[v0] Transaction submitted:', transactionId);
+    console.log('[v0] Transaction submitted successfully:', result.transactionId);
 
     return {
       success: true,
-      transactionId,
+      transactionId: result.transactionId,
       proofData: {
         programId,
         functionName: request.functionName,
@@ -115,7 +111,7 @@ export async function executeTransactionWithWallet(
       },
     };
   } catch (error) {
-    console.error('[v0] Transaction execution failed:', error);
+    console.error('[v0] Transaction execution error:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : String(error),
