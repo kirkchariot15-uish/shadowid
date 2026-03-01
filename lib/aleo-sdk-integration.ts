@@ -75,36 +75,15 @@ export async function executeTransactionWithWallet(
     }
 
     console.log('[v0] Executing transaction on:', programId, 'function:', request.functionName);
-    console.log('[v0] Raw inputs:', request.inputs);
-
-    // Format inputs as Aleo-typed strings
-    // Inputs should be like: "123u64", "456field", "aleo1...address" 
-    const typedInputs = request.inputs.map((input) => {
-      // If already typed, keep it
-      if (input.match(/u\d+$|field$|address|group$|boolean$/)) {
-        return input;
-      }
-      // Guess type based on length and content
-      if (input.startsWith('aleo1')) {
-        return input; // Already an address
-      }
-      if (input.length > 50 || input.includes('a') || input.includes('b') || input.includes('c')) {
-        return input + 'field'; // Likely a field
-      }
-      // Default to u64 for numeric strings
-      return input + 'u64';
-    });
-
-    console.log('[v0] Typed inputs:', typedInputs);
+    console.log('[v0] Inputs:', request.inputs);
 
     // Build transaction in format wallet expects: { transitions, fee }
-    // The wallet's executeTransaction expects AleoTransactionRequest
     const transactionParams = {
       transitions: [
         {
           program: programId,
           functionName: request.functionName,
-          inputs: typedInputs,
+          inputs: request.inputs,
         }
       ],
       fee: request.fee || 100000, // 0.0001 ALEO in microcredits
@@ -113,12 +92,7 @@ export async function executeTransactionWithWallet(
     console.log('[v0] Transaction params:', JSON.stringify(transactionParams));
 
     // Call wallet's executeTransaction method
-    const result = await executeTransactionFn(transactionParams);
-
-    console.log('[v0] Wallet result:', result);
-
-    // Wallet returns transactionId string directly
-    const transactionId = typeof result === 'string' ? result : (result?.transactionId || result);
+    const transactionId = await executeTransactionFn(transactionParams);
 
     if (!transactionId) {
       console.error('[v0] Wallet returned empty transaction ID');
@@ -136,7 +110,7 @@ export async function executeTransactionWithWallet(
       proofData: {
         programId,
         functionName: request.functionName,
-        inputs: typedInputs,
+        inputs: request.inputs,
         timestamp: Date.now(),
       },
     };
@@ -236,12 +210,7 @@ export async function proveRange(
     {
       programId: PROGRAM_ID,
       functionName: 'prove_range',
-      inputs: [
-        toAleoString(commitment, 'field'),
-        toAleoString(attributeName, 'field'),
-        toAleoString(min, 'u32'),
-        toAleoString(max, 'u32')
-      ],
+      inputs: [commitment, attributeName, min.toString(), max.toString()],
     },
     walletAddress,
     executeTransactionFn
@@ -263,11 +232,7 @@ export async function proveMembership(
     {
       programId: PROGRAM_ID,
       functionName: 'prove_membership',
-      inputs: [
-        toAleoString(commitment, 'field'),
-        toAleoString(attributeName, 'field'),
-        toAleoString(targetValue, 'field')
-      ],
+      inputs: [commitment, attributeName, targetValue],
     },
     walletAddress,
     executeTransactionFn
@@ -287,7 +252,7 @@ export async function proveExistence(
     {
       programId: PROGRAM_ID,
       functionName: 'prove_existence',
-      inputs: [toAleoString(commitment, 'field')],
+      inputs: [commitment],
     },
     walletAddress,
     executeTransactionFn
@@ -349,10 +314,7 @@ export async function registerCommitmentOnChain(
     {
       programId: REGISTRY_PROGRAM_ID,
       functionName: 'register_commitment',
-      inputs: [
-        commitment.endsWith('field') ? commitment : `${commitment}field`, // Ensure field type
-        `${attributeCount}u8` // Explicitly typed as u8
-      ],
+      inputs: [commitment, attributeCount.toString()],
     },
     walletAddress,
     executeTransactionFn
@@ -372,39 +334,27 @@ export async function revokeCredentialFromRegistry(
     {
       programId: REGISTRY_PROGRAM_ID,
       functionName: 'revoke_credential',
-      inputs: [toAleoString(commitment, 'field')],
+      inputs: [commitment],
     },
     walletAddress,
     executeTransactionFn
   );
 }
 
-// Helper to ensure Aleo-typed inputs
-function toAleoString(value: string | number, type: 'field' | 'u8' | 'u32' | 'u64' | 'i64' | 'bool' | 'address' = 'field'): string {
-  const strValue = String(value);
-  if (strValue.match(/(u\d+|i\d+|field|bool|address|group)$/)) {
-    return strValue; // Already typed
-  }
-  if (type === 'address' && strValue.startsWith('aleo1')) {
-    return strValue; // Already an address
-  }
-  return `${strValue}${type}`;
-}
-
 /**
- * Submit nullifier to prevent replay attacks
+ * Verify a credential commitment is active and valid
+ * Inputs: commitment (field)
  */
-export async function submitNullifierOnChain(
-  programId: string,
-  nullifier: string,
+export async function verifyCredentialInRegistry(
+  commitment: string,
   walletAddress: string,
   executeTransactionFn?: (params: any) => Promise<string>
 ): Promise<OnChainExecutionResult> {
   return executeProofOnChain(
     {
-      programId: programId || PROGRAM_ID,
-      functionName: 'check_nullifier',
-      inputs: [toAleoString(nullifier, 'field')],
+      programId: REGISTRY_PROGRAM_ID,
+      functionName: 'verify_commitment',
+      inputs: [commitment],
     },
     walletAddress,
     executeTransactionFn
@@ -435,7 +385,7 @@ export async function recordQRVerification(
     {
       programId: VERIFIER_PROGRAM_ID,
       functionName: 'verify_qr',
-      inputs: [toAleoString(commitmentHash, 'field'), toAleoString(proofId, 'field')],
+      inputs: [commitmentHash, proofId],
     },
     walletAddress,
     executeTransactionFn
@@ -456,7 +406,7 @@ export async function incrementVerificationCount(
     {
       programId: VERIFIER_PROGRAM_ID,
       functionName: 'increment_count',
-      inputs: [toAleoString(commitmentHash, 'field')],
+      inputs: [commitmentHash],
     },
     walletAddress,
     executeTransactionFn
@@ -483,7 +433,7 @@ export async function registerDAO(
     {
       programId: DAO_ATTESTATION_PROGRAM_ID,
       functionName: 'register_dao',
-      inputs: [toAleoString(daoId, 'field'), toAleoString(leaderAddress, 'address')],
+      inputs: [daoId, leaderAddress],
     },
     walletAddress,
     executeTransactionFn
@@ -503,7 +453,7 @@ export async function requestDAOAttestation(
     {
       programId: DAO_ATTESTATION_PROGRAM_ID,
       functionName: 'request_attestation',
-      inputs: [toAleoString(daoId, 'field')],
+      inputs: [daoId],
     },
     walletAddress,
     executeTransactionFn
@@ -525,7 +475,7 @@ export async function approveDAOAttestation(
     {
       programId: DAO_ATTESTATION_PROGRAM_ID,
       functionName: 'approve_attestation',
-      inputs: [toAleoString(recordId, 'field'), toAleoString(signature, 'field'), toAleoString(expirationBlock, 'u32')],
+      inputs: [recordId, signature, expirationBlock.toString()],
     },
     walletAddress,
     executeTransactionFn
@@ -545,7 +495,7 @@ export async function rejectDAOAttestation(
     {
       programId: DAO_ATTESTATION_PROGRAM_ID,
       functionName: 'reject_request',
-      inputs: [toAleoString(recordId, 'field')],
+      inputs: [recordId],
     },
     walletAddress,
     executeTransactionFn
@@ -565,7 +515,7 @@ export async function verifyDAOAttestation(
     {
       programId: DAO_ATTESTATION_PROGRAM_ID,
       functionName: 'verify_attestation',
-      inputs: [toAleoString(attestationId, 'field')],
+      inputs: [attestationId],
     },
     walletAddress,
     executeTransactionFn
@@ -585,7 +535,7 @@ export async function revokeDAOAttestation(
     {
       programId: DAO_ATTESTATION_PROGRAM_ID,
       functionName: 'revoke_attestation',
-      inputs: [toAleoString(attestationId, 'field')],
+      inputs: [attestationId],
     },
     walletAddress,
     executeTransactionFn
