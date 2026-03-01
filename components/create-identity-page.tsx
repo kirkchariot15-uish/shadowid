@@ -106,6 +106,13 @@ export function CreateIdentityPage() {
       await storeEncryptedCredential(commitmentHash, credential, address)
 
       try {
+        // Validate wallet connection and executeTransaction availability
+        if (!isConnected || !executeTransaction) {
+          setError('Wallet not connected. Please connect your wallet first.');
+          setIsCreating(false)
+          return
+        }
+
         // Register on main shadowid contract with real blockchain transaction
         console.log('[v0] Registering commitment on-chain:', commitmentHash);
         const mainResult = await registerCommitmentOnChain(
@@ -120,12 +127,16 @@ export function CreateIdentityPage() {
         } else {
           console.error('[v0] Blockchain registration failed:', mainResult.error);
           addActivityLog('Register on-chain', 'blockchain', `Failed: ${mainResult.error}`, 'error')
+          setError(`Blockchain error: ${mainResult.error}`)
         }
 
         // Register in credential registry
         const registryResult = await registerCredentialInRegistry(commitmentHash, selectedAttrIds.length, address, executeTransaction)
         if (registryResult.success) {
           addActivityLog('Register registry', 'blockchain', `Credential registered: ${registryResult.transactionId}`, 'success')
+        } else {
+          console.error('[v0] Registry registration failed:', registryResult.error);
+          addActivityLog('Register registry', 'blockchain', `Failed: ${registryResult.error}`, 'error')
         }
       } catch (error) {
         console.error('[v0] Blockchain registration error:', error)

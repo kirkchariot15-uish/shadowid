@@ -65,7 +65,17 @@ export async function executeTransactionWithWallet(
   try {
     const programId = request.programId || PROGRAM_ID;
 
+    // Validate executeTransaction function exists
+    if (!executeTransactionFn || typeof executeTransactionFn !== 'function') {
+      console.error('[v0] executeTransaction function not available - wallet may not be connected');
+      return {
+        success: false,
+        error: 'Wallet not connected or executeTransaction not available. Please ensure wallet is connected.',
+      };
+    }
+
     console.log('[v0] Executing transaction on:', programId, 'function:', request.functionName);
+    console.log('[v0] Inputs:', request.inputs);
 
     // Build transaction in format wallet expects: { transitions, fee }
     const transactionParams = {
@@ -83,6 +93,14 @@ export async function executeTransactionWithWallet(
 
     // Call wallet's executeTransaction method
     const transactionId = await executeTransactionFn(transactionParams);
+
+    if (!transactionId) {
+      console.error('[v0] Wallet returned empty transaction ID');
+      return {
+        success: false,
+        error: 'Wallet returned empty transaction ID. Transaction may have been rejected.',
+      };
+    }
 
     console.log('[v0] Transaction submitted:', transactionId);
 
