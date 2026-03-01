@@ -173,7 +173,8 @@ export async function executeProofOnChain(
 export async function submitNullifierOnChain(
   programId: string,
   nullifier: string,
-  walletAddress: string
+  walletAddress: string,
+  executeTransactionFn?: (params: any) => Promise<string>
 ): Promise<OnChainExecutionResult> {
   return executeProofOnChain(
     {
@@ -181,7 +182,8 @@ export async function submitNullifierOnChain(
       functionName: 'check_nullifier',
       inputs: [nullifier],
     },
-    walletAddress
+    walletAddress,
+    executeTransactionFn
   );
 }
 
