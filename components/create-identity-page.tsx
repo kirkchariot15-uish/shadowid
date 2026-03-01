@@ -14,7 +14,7 @@ import { registerCommitmentOnChain, registerCredentialInRegistry } from '@/lib/a
 import { storeEncryptedCredential } from '@/lib/encrypted-storage'
 
 export function CreateIdentityPage() {
-  const { address } = useAleoWallet()
+  const { address, executeTransaction } = useAleoWallet()
   const isConnected = !!address
   const [mounted, setMounted] = useState(false)
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({})
