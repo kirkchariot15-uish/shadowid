@@ -67,12 +67,22 @@ export async function executeTransactionWithWallet(
 
     console.log('[v0] Executing transaction on:', programId, 'function:', request.functionName);
 
+    // Build transaction in format wallet expects: { transitions, fee }
+    const transactionParams = {
+      transitions: [
+        {
+          program: programId,
+          functionName: request.functionName,
+          inputs: request.inputs,
+        }
+      ],
+      fee: request.fee || 100000, // 0.0001 ALEO in microcredits
+    };
+
+    console.log('[v0] Transaction params:', JSON.stringify(transactionParams));
+
     // Call wallet's executeTransaction method
-    const transactionId = await executeTransactionFn({
-      programName: programId,
-      functionName: request.functionName,
-      inputs: request.inputs,
-    });
+    const transactionId = await executeTransactionFn(transactionParams);
 
     console.log('[v0] Transaction submitted:', transactionId);
 

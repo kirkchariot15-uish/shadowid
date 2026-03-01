@@ -123,7 +123,7 @@ export function CreateIdentityPage() {
         }
 
         // Register in credential registry
-        const registryResult = await registerCredentialInRegistry(commitmentHash, selectedAttrIds.length, address)
+        const registryResult = await registerCredentialInRegistry(commitmentHash, selectedAttrIds.length, address, executeTransaction)
         if (registryResult.success) {
           addActivityLog('Register registry', 'blockchain', `Credential registered: ${registryResult.transactionId}`, 'success')
         }
