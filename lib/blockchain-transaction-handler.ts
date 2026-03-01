@@ -51,14 +51,8 @@ export async function executeWalletTransaction(
       inputsCount: params.inputs.length,
     });
 
-    // Log each input to verify format
-    params.inputs.forEach((input, idx) => {
-      console.log(`[v0] Input[${idx}]:`, input);
-    });
-
     // Prepare transaction object matching wallet API
     // The wallet expects { transitions, fee, feePrivate }
-    // NOT { program, function, inputs, fee }
     const txObj = {
       transitions: [
         {
@@ -71,23 +65,17 @@ export async function executeWalletTransaction(
       feePrivate: params.privateFee ?? false,
     };
 
-    console.log('[v0] Transaction object:', JSON.stringify(txObj));
-    console.log('[v0] Executing wallet transaction...');
-
     // Execute transaction with error boundary
     let transactionId: string;
     try {
-      console.log('[v0] Calling wallet executeTransaction with:', txObj);
       const result = await transactionFn(txObj);
       transactionId = result;
     } catch (execError) {
-      console.error('[v0] Wallet execution error:', execError);
-      console.error('[v0] Error message:', execError instanceof Error ? execError.message : String(execError));
+      console.error('[v0] Wallet execution error:', execError instanceof Error ? execError.message : String(execError));
       throw execError;
     }
 
     if (!transactionId || transactionId.trim() === '') {
-      console.error('[v0] Wallet returned empty transaction ID');
       return {
         success: false,
         error: 'Wallet returned empty transaction ID',
@@ -101,8 +89,7 @@ export async function executeWalletTransaction(
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('[v0] Transaction handler error:', errorMessage);
-    console.error('[v0] Error details:', error);
+    console.error('[v0] Transaction error:', errorMessage);
     return {
       success: false,
       error: errorMessage,

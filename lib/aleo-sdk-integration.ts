@@ -68,8 +68,6 @@ export async function executeTransactionWithWallet(
   try {
     const programId = request.programId || PROGRAM_ID;
 
-    console.log('[v0] executeTransactionWithWallet inputs:', request.inputs);
-
     // CRITICAL: Validate all Aleo inputs before sending to wallet
     debugAleoInputs(request.inputs);
     const validation = validateAleoInputs(request.inputs);
@@ -144,12 +142,6 @@ export async function executeProofOnChain(
       program: programId,
       function: request.functionName,
       wallet: walletAddress,
-      inputs: request.inputs,
-    });
-
-    // Log each input for debugging
-    request.inputs.forEach((input, idx) => {
-      console.log(`[v0] Input[${idx}]:`, input, '- Type check:', /u\d+|field|address|bool/.test(input) ? 'HAS TYPE' : 'NO TYPE');
     });
 
     // If wallet transaction function is provided, use it for real execution

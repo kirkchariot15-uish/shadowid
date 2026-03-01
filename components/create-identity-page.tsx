@@ -83,19 +83,13 @@ export function CreateIdentityPage() {
       const hashBuffer = await window.crypto.subtle.digest('SHA-256', dataBuffer)
       const hashArray = Array.from(new Uint8Array(hashBuffer))
       
-      // Convert SHA-256 hash to Aleo u64 type (64-bit value)
+      // Convert SHA-256 hash to Aleo field type (contract expects field, NOT u64)
       const hexString = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
       const truncatedHex = hexString.slice(0, 16)
       const commitmentDecimal = BigInt('0x' + truncatedHex).toString()
-      // Use u64 type suffix, NOT field
-      const commitmentHash = commitmentDecimal + 'u64'
+      // Use field type suffix - this is what the contract expects
+      const commitmentHash = commitmentDecimal + 'field'
       const commitmentDisplayHex = truncatedHex.toUpperCase()
-      
-      console.log('[v0] COMMITMENT DEBUG:', {
-        hex: truncatedHex,
-        decimal: commitmentDecimal,
-        formatted: commitmentHash
-      })
 
       const credential = {
         '@context': ['https://www.w3.org/2018/credentials/v1'],
@@ -135,12 +129,6 @@ export function CreateIdentityPage() {
       await storeEncryptedCredential(commitmentHash, credential, address)
 
       // Register on main shadowid contract with real blockchain transaction
-      console.log('[v0] CALLING registerCommitmentOnChain with:', {
-        commitment: commitmentHash,
-        attributeCount: selectedAttrIds.length,
-        address: address
-      });
-      
       const mainResult = await registerCommitmentOnChain(
         commitmentHash, 
         selectedAttrIds.length,
