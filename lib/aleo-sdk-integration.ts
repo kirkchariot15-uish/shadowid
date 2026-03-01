@@ -5,6 +5,7 @@
  */
 
 import { executeWalletTransaction, validateWalletFunction, debugWalletState } from './blockchain-transaction-handler';
+import { validateAleoInputs, debugAleoInputs } from './aleo-input-validator';
 
 const ALEO_API = 'https://api.explorer.provable.com/v1/testnet';
 
@@ -73,6 +74,20 @@ export async function executeTransactionWithWallet(
       functionName: request.functionName,
       inputsCount: request.inputs.length,
     });
+
+    // CRITICAL: Validate all Aleo inputs before sending to wallet
+    console.log('[v0] Validating Aleo input types...');
+    debugAleoInputs(request.inputs);
+    const validation = validateAleoInputs(request.inputs);
+    
+    if (!validation.valid) {
+      const errorMsg = `Invalid Aleo input types:\n${validation.errors.join('\n')}`;
+      console.error('[v0] Input validation failed:', errorMsg);
+      return {
+        success: false,
+        error: errorMsg,
+      };
+    }
 
     // Use the robust transaction handler
     const result = await executeWalletTransaction(executeTransactionFn, {

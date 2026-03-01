@@ -93,10 +93,21 @@ export async function decryptData(
 }
 
 /**
- * Generate a commitment hash from file data
- * Used for QR codes and identity commitments
+ * Generate a commitment hash from file data in Aleo field format
+ * Converts hex to decimal field type required by Aleo
  */
 export async function generateFileCommitment(fileData: Uint8Array): Promise<string> {
+  const hash = await generateHash(fileData)
+  const hexTruncated = hash.slice(0, 16)
+  // Convert hex to decimal and add 'field' type suffix for Aleo
+  const decimal = BigInt('0x' + hexTruncated).toString()
+  return decimal + 'field'
+}
+
+/**
+ * Generate a commitment hash display value (hex format for UI)
+ */
+export async function generateFileCommitmentHex(fileData: Uint8Array): Promise<string> {
   const hash = await generateHash(fileData)
   return hash.slice(0, 16).toUpperCase()
 }

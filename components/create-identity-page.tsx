@@ -82,11 +82,26 @@ export function CreateIdentityPage() {
       const dataBuffer = encoder.encode(data)
       const hashBuffer = await window.crypto.subtle.digest('SHA-256', dataBuffer)
       const hashArray = Array.from(new Uint8Array(hashBuffer))
-      const commitmentHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16).toUpperCase()
+      
+      // Convert SHA-256 hash to Aleo field type
+      // Step 1: Get hex representation
+      const hexString = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+      
+      // Step 2: Take first 16 hex chars (64 bits) for the commitment
+      const truncatedHex = hexString.slice(0, 16)
+      
+      // Step 3: Convert hex to decimal (this is the Aleo field input format)
+      const commitmentDecimal = BigInt('0x' + truncatedHex).toString()
+      
+      // Step 4: Add 'field' type suffix for Aleo
+      const commitmentHash = commitmentDecimal + 'field'
+      
+      // Step 5: Also keep a short hex for UI display
+      const commitmentDisplayHex = truncatedHex.toUpperCase()
 
       const credential = {
         '@context': ['https://www.w3.org/2018/credentials/v1'],
-        id: `shadowid:${commitmentHash}`,
+        id: `shadowid:${commitmentDisplayHex}`,
         type: ['VerifiableCredential', 'ShadowIDCredential'],
         issuer: { id: address, name: 'User' },
         issuanceDate: new Date().toISOString(),
@@ -102,12 +117,13 @@ export function CreateIdentityPage() {
           created: new Date().toISOString(),
           verificationMethod: `did:aleo:${address}`,
           proofPurpose: 'assertionMethod',
-          proofValue: commitmentHash
+          proofValue: commitmentDisplayHex
         }
       }
 
       // Save to localStorage for QR code page
       localStorage.setItem('shadowid-commitment', commitmentHash)
+      localStorage.setItem('shadowid-commitment-hex', commitmentDisplayHex)
       localStorage.setItem('shadowid-created-at', new Date().toISOString())
       localStorage.setItem('shadowid-user-info', JSON.stringify({
         hasPhoto: false,
