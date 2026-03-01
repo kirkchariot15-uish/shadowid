@@ -84,27 +84,11 @@ export function CreateIdentityPage() {
       const hashArray = Array.from(new Uint8Array(hashBuffer))
       
       // Convert SHA-256 hash to Aleo field type
-      // Step 1: Get hex representation
       const hexString = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
-      
-      // Step 2: Take first 16 hex chars (64 bits) for the commitment
       const truncatedHex = hexString.slice(0, 16)
-      
-      // Step 3: Convert hex to decimal (this is the Aleo field input format)
       const commitmentDecimal = BigInt('0x' + truncatedHex).toString()
-      
-      // Step 4: Add 'field' type suffix for Aleo
       const commitmentHash = commitmentDecimal + 'field'
-      
-      // Step 5: Also keep a short hex for UI display
       const commitmentDisplayHex = truncatedHex.toUpperCase()
-      
-      console.log('[v0] === COMMITMENT GENERATION ===');
-      console.log('[v0] Hex string (full):', hexString);
-      console.log('[v0] Hex truncated (16 chars):', truncatedHex);
-      console.log('[v0] Decimal:', commitmentDecimal);
-      console.log('[v0] Final commitment for blockchain:', commitmentHash);
-      console.log('[v0] Display hex:', commitmentDisplayHex);
 
       const credential = {
         '@context': ['https://www.w3.org/2018/credentials/v1'],
@@ -144,15 +128,6 @@ export function CreateIdentityPage() {
       await storeEncryptedCredential(commitmentHash, credential, address)
 
       // Register on main shadowid contract with real blockchain transaction
-      console.log('[v0] === BLOCKCHAIN SUBMISSION ===');
-      console.log('[v0] Commitment value:', commitmentHash);
-      console.log('[v0] Commitment type:', typeof commitmentHash);
-      console.log('[v0] Commitment includes "field":', commitmentHash.includes('field'));
-      console.log('[v0] Commitment length:', commitmentHash.length);
-      console.log('[v0] Attribute count:', selectedAttrIds.length);
-      console.log('[v0] Wallet address:', address);
-      console.log('[v0] executeTransaction available:', typeof executeTransaction);
-      
       const mainResult = await registerCommitmentOnChain(
         commitmentHash, 
         selectedAttrIds.length,

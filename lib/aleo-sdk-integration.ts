@@ -68,26 +68,13 @@ export async function executeTransactionWithWallet(
   try {
     const programId = request.programId || PROGRAM_ID;
 
-    // CRITICAL DEBUG: Log inputs before validation
-    console.log('[v0] === INPUT TRACE ===');
-    console.log('[v0] Inputs received by executeTransactionWithWallet:');
-    console.log('[v0] Raw inputs array:', JSON.stringify(request.inputs));
-    request.inputs.forEach((input, idx) => {
-      console.log(`[v0] Input[${idx}]:`, input);
-      console.log(`[v0]   Type: ${typeof input}`);
-      console.log(`[v0]   Has field suffix: ${String(input).includes('field')}`);
-      console.log(`[v0]   Length: ${String(input).length}`);
-    });
-
-    // Debug and validate wallet function
-    console.log('[v0] Preparing transaction with:', {
+    console.log('[v0] Executing transaction:', {
       programId,
       functionName: request.functionName,
       inputsCount: request.inputs.length,
     });
 
     // CRITICAL: Validate all Aleo inputs before sending to wallet
-    console.log('[v0] Validating Aleo input types...');
     debugAleoInputs(request.inputs);
     const validation = validateAleoInputs(request.inputs);
     
@@ -234,7 +221,7 @@ export async function proveRange(
     {
       programId: PROGRAM_ID,
       functionName: 'prove_range',
-      inputs: [commitment, attributeName, min.toString(), max.toString()],
+      inputs: [commitment, attributeName, `${min}u32`, `${max}u32`],
     },
     walletAddress,
     executeTransactionFn
@@ -338,7 +325,7 @@ export async function registerCommitmentOnChain(
     {
       programId: REGISTRY_PROGRAM_ID,
       functionName: 'register_commitment',
-      inputs: [commitment, attributeCount.toString()],
+      inputs: [commitment, `${attributeCount}u32`],
     },
     walletAddress,
     executeTransactionFn
