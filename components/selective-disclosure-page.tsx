@@ -8,6 +8,7 @@ import { ArrowLeft, Zap, CheckCircle, Download } from 'lucide-react'
 import Link from 'next/link'
 import QRCode from 'qrcode'
 import { generateProof, ProofRequest } from '@/lib/proof-generator'
+import { PROGRAM_ID } from '@/lib/aleo-sdk-integration'
 import { addActivityLog } from '@/lib/activity-logger'
 import { getDecryptedCredential } from '@/lib/encrypted-storage'
 
@@ -63,12 +64,12 @@ export default function SelectiveDisclosurePage() {
         proofType: 'existence'
       }
 
-      // Generate and submit proof on-chain via shadowid_v2.aleo prove_existence function
+      // Generate and submit proof on-chain via shadowid_v3 prove_existence function
       const proof = await generateProof(
         credential,
         proofRequest,
         address || '',
-        'shadowid_v2.aleo'
+        PROGRAM_ID
       )
 
       console.log('[v0] ZK proof generated and submitted:', proof.proofId)

@@ -207,9 +207,15 @@ export async function generateProof(
   credential: VerifiableCredential,
   request: ProofRequest,
   walletPrivateKey: string,
-  programId: string = 'shadowid_v3.aleo',
+  programId?: string,
   expirationHours: number = 72
 ): Promise<GeneratedProof> {
+  // programId parameter allows overriding, but should use PROGRAM_ID constant from aleo-sdk-integration
+  // If not provided, caller must pass the correct program ID
+  if (!programId) {
+    throw new Error('programId must be provided - use PROGRAM_ID constant from aleo-sdk-integration.ts')
+  }
+  
   const { claim, proofType } = request
   const timestamp = new Date().toISOString()
   const nullifier = await generateNullifier(credential.id, timestamp)

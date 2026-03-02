@@ -10,8 +10,8 @@ import { hexToField } from './aleo-field-formatter';
 
 const ALEO_API = 'https://api.explorer.provable.com/v1/testnet';
 
-// Contract Deployment Details
-const CONTRACTS = {
+// Contract Deployment Details - ALWAYS USE THESE CONSTANTS, NEVER HARDCODE CONTRACT NAMES
+export const CONTRACTS = {
   SHADOWID: {
     name: 'shadowid_v3.aleo',
     transactionId: 'at1f5smjrgw9nzluhxzpt23pq47ne4nlnjngfal38mkn0x5e5n0wyzq5dycfl',
@@ -35,10 +35,10 @@ const CONTRACTS = {
 };
 
 // Environment variable fallback
-const PROGRAM_ID = process.env.NEXT_PUBLIC_SHADOWID_PROGRAM_ID || CONTRACTS.SHADOWID.name;
-const REGISTRY_PROGRAM_ID = process.env.NEXT_PUBLIC_CREDENTIAL_REGISTRY_PROGRAM_ID || CONTRACTS.CREDENTIAL_REGISTRY.name;
-const VERIFIER_PROGRAM_ID = process.env.NEXT_PUBLIC_QR_VERIFIER_PROGRAM_ID || CONTRACTS.QR_VERIFIER.name;
-const DAO_ATTESTATION_PROGRAM_ID = process.env.NEXT_PUBLIC_DAO_ATTESTATION_PROGRAM_ID || CONTRACTS.DAO_ATTESTATION.name;
+export const PROGRAM_ID = process.env.NEXT_PUBLIC_SHADOWID_PROGRAM_ID || CONTRACTS.SHADOWID.name;
+export const REGISTRY_PROGRAM_ID = process.env.NEXT_PUBLIC_CREDENTIAL_REGISTRY_PROGRAM_ID || CONTRACTS.CREDENTIAL_REGISTRY.name;
+export const VERIFIER_PROGRAM_ID = process.env.NEXT_PUBLIC_QR_VERIFIER_PROGRAM_ID || CONTRACTS.QR_VERIFIER.name;
+export const DAO_ATTESTATION_PROGRAM_ID = process.env.NEXT_PUBLIC_DAO_ATTESTATION_PROGRAM_ID || CONTRACTS.DAO_ATTESTATION.name;
 
 interface ProofExecutionRequest {
   programId: string;
