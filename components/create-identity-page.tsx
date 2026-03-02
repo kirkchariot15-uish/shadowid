@@ -128,8 +128,7 @@ export function CreateIdentityPage() {
 
       // Register on main shadowid contract with real blockchain transaction
       const mainResult = await registerCommitmentOnChain(
-        commitmentHash, 
-        selectedAttrIds.length,
+        commitmentHash,
         address,
         executeTransaction
       )

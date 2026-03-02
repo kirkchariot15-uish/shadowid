@@ -309,30 +309,36 @@ export async function getProgramInfo(): Promise<{
 
 /**
  * Register a new credential commitment on-chain
- * The blockchain verifies the commitment and returns the official on-chain hash
- * Inputs: commitment (field), count (u8 - number of attributes)
- * Returns: The blockchain-verified commitment hash
+ * Contract: shadowid_v1.aleo
+ * Function signature: register_commitment(commitment_hash: field, timestamp: u64) -> IdentityCommitment
+ * 
+ * Inputs:
+ *   commitment_hash: field (the identity commitment to register)
+ *   timestamp: u64 (Unix timestamp when commitment was created)
+ * 
+ * Returns: IdentityCommitment record containing the registered commitment
  */
 export async function registerCommitmentOnChain(
-  commitment: string,
-  attributeCount: number,
+  commitmentHash: string, // field type with 'field' suffix
   walletAddress: string,
   executeTransactionFn?: (params: any) => Promise<string>
 ): Promise<OnChainExecutionResult> {
+  const timestamp = Math.floor(Date.now() / 1000); // Unix timestamp in seconds
+  
   const result = await executeProofOnChain(
     {
-      programId: REGISTRY_PROGRAM_ID,
+      programId: 'shadowid_v1.aleo',
       functionName: 'register_commitment',
-      inputs: [commitment, `${attributeCount}u8`],
+      inputs: [commitmentHash, `${timestamp}u64`],
     },
     walletAddress,
     executeTransactionFn
   );
   
-  // The blockchain returns the verified commitment
-  // Use this blockchain-verified hash as the actual commitment
+  // The blockchain returns an IdentityCommitment record
+  // Extract it from the transaction result
   if (result.success) {
-    result.commitmentHash = result.transactionId; // The blockchain returns commitment as transaction ID
+    result.commitmentHash = commitmentHash; // Store the registered commitment
   }
   
   return result;
