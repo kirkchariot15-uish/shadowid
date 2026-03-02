@@ -309,7 +309,7 @@ export async function getProgramInfo(): Promise<{
 
 /**
  * Register a new credential commitment on-chain
- * Contract: shadowid_v1.aleo
+ * Contract: shadowid_v3.aleo
  * Function signature: register_commitment(commitment_hash: field, timestamp: u64) -> IdentityCommitment
  * 
  * Inputs:
@@ -327,7 +327,7 @@ export async function registerCommitmentOnChain(
   
   const result = await executeProofOnChain(
     {
-      programId: 'shadowid_v1.aleo',
+      programId: PROGRAM_ID, // Uses shadowid_v3.aleo
       functionName: 'register_commitment',
       inputs: [commitmentHash, `${timestamp}u64`],
     },
