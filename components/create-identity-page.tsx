@@ -53,15 +53,36 @@ export function CreateIdentityPage() {
   }
 
   const handleCreateIdentity = async () => {
-    const selectedAttrIds = Object.keys(selectedAttributes).filter(key => selectedAttributes[key].trim())
+    // Validate: only attributes from STANDARD_ATTRIBUTES
+    const selectedAttrIds = Object.keys(selectedAttributes)
+      .filter(key => {
+        const isValid = key in STANDARD_ATTRIBUTES && selectedAttributes[key].trim()
+        if (!isValid && selectedAttributes[key].trim()) {
+          console.warn('[v0] Invalid attribute ID:', key)
+        }
+        return isValid
+      })
     
     if (selectedAttrIds.length === 0) {
-      alert('Select and fill at least one attribute to claim')
+      setError('Select and fill at least one valid attribute to claim')
+      return
+    }
+
+    // Enforce maximum 4 attributes per ID
+    if (selectedAttrIds.length > 4) {
+      setError('Maximum 4 attributes allowed per identity. Please remove some attributes.')
       return
     }
 
     if (!address) {
       setError('Wallet not connected')
+      return
+    }
+
+    // Check if user already has an identity
+    const existingCommitment = localStorage.getItem('shadowid-commitment')
+    if (existingCommitment) {
+      setError('You already have a ShadowID. Edit your existing identity instead of creating a new one.')
       return
     }
 
@@ -84,9 +105,9 @@ export function CreateIdentityPage() {
       const hashBuffer = await window.crypto.subtle.digest('SHA-256', dataBuffer)
       const hashArray = Array.from(new Uint8Array(hashBuffer))
       
-      // Convert full SHA-256 hash to Aleo field type (use entire 64-char hex)
+      // Convert full SHA-256 hash to Aleo field type
       const hexString = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
-      const commitmentHash = hexToField(hexString)
+      const commitmentHashForTx = hexToField(hexString)
       const commitmentDisplayHex = hexString.slice(0, 16).toUpperCase()
 
       const credential = {
@@ -111,24 +132,9 @@ export function CreateIdentityPage() {
         }
       }
 
-      // Save to localStorage for QR code page
-      localStorage.setItem('shadowid-commitment', commitmentHash)
-      localStorage.setItem('shadowid-commitment-hex', commitmentDisplayHex)
-      localStorage.setItem('shadowid-created-at', new Date().toISOString())
-      localStorage.setItem('shadowid-user-info', JSON.stringify({
-        hasPhoto: false,
-        documentCount: 0,
-        notesCount: 0,
-        documentsNames: [],
-        notes: []
-      }))
-      localStorage.setItem('shadowid-credential', JSON.stringify(credential))
-
-      await storeEncryptedCredential(commitmentHash, credential, address)
-
-      // Register on main shadowid contract with real blockchain transaction
+      // Register on blockchain and GET the blockchain-verified commitment
       const mainResult = await registerCommitmentOnChain(
-        commitmentHash,
+        commitmentHashForTx,
         address,
         executeTransaction
       )
@@ -144,8 +150,29 @@ export function CreateIdentityPage() {
         return
       }
 
-      // Use the blockchain-verified commitment as the actual identity commitment
-      const blockchainCommitment = mainResult.commitmentHash || commitmentHash
+      // CRITICAL: Use ONLY the blockchain-verified commitment, not the local one
+      // The blockchain returns the actual commitment that was registered on-chain
+      const blockchainCommitment = mainResult.commitmentHash
+      if (!blockchainCommitment) {
+        throw new Error('Blockchain did not return commitment hash. Transaction may have failed.')
+      }
+
+      // Save blockchain-verified commitment to storage
+      localStorage.setItem('shadowid-commitment', blockchainCommitment)
+      localStorage.setItem('shadowid-commitment-hex', commitmentDisplayHex)
+      localStorage.setItem('shadowid-created-at', new Date().toISOString())
+      localStorage.setItem('shadowid-user-id', address)
+      localStorage.setItem('shadowid-user-info', JSON.stringify({
+        hasPhoto: false,
+        documentCount: 0,
+        notesCount: 0,
+        documentsNames: [],
+        notes: []
+      }))
+      localStorage.setItem('shadowid-credential', JSON.stringify(credential))
+
+      await storeEncryptedCredential(blockchainCommitment, credential, address)
+
       setCommitment(blockchainCommitment)
       addActivityLog('Create ShadowID', 'identity', `Created ZK identity with ${selectedAttrIds.length} attributes`, 'success')
       setCreationComplete(true)
@@ -250,47 +277,64 @@ export function CreateIdentityPage() {
             <div className="rounded-lg border border-accent/20 bg-accent/5 p-4 flex items-start gap-3">
               <Sparkles className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
               <p className="text-sm text-muted-foreground">
-                Zero-knowledge credentials prove claims without revealing the underlying data. Your identity stays private on your device.
+                Select up to 4 attributes to claim. Zero-knowledge credentials prove claims without revealing the underlying data.
               </p>
             </div>
             <div>
-              <h2 className="text-lg font-semibold mb-4">Available Attributes</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold">Available Attributes</h2>
+                <span className="text-xs font-mono bg-accent/10 px-2 py-1 rounded">
+                  {Object.keys(selectedAttributes).length}/4 Selected
+                </span>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.values(STANDARD_ATTRIBUTES).map(attr => (
-                  <div key={attr.id} className="p-4 rounded-lg border border-border hover:border-accent/50 transition-colors">
-                    <div className="flex items-start gap-3 mb-3">
-                      <input
-                        type="checkbox"
-                        checked={!!selectedAttributes[attr.id]}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedAttributes({...selectedAttributes, [attr.id]: ''})
-                          } else {
-                            const {[attr.id]: _, ...rest} = selectedAttributes
-                            setSelectedAttributes(rest)
-                          }
-                        }}
-                        className="mt-1"
-                      />
-                      <div className="flex-1">
-                        <p className="font-semibold text-sm">{attr.name}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{attr.description}</p>
-                        <p className="text-xs text-accent mt-2">Privacy: {attr.privacyLevel}</p>
+                {Object.values(STANDARD_ATTRIBUTES).map(attr => {
+                  const isSelected = !!selectedAttributes[attr.id]
+                  const isAtMaxLimit = Object.keys(selectedAttributes).length >= 4
+                  const canSelect = isSelected || !isAtMaxLimit
+                  
+                  return (
+                    <div key={attr.id} className={`p-4 rounded-lg border transition-colors ${isAtMaxLimit && !isSelected ? 'border-border opacity-50 cursor-not-allowed' : 'border-border hover:border-accent/50'}`}>
+                      <div className="flex items-start gap-3 mb-3">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => {
+                            if (e.target.checked && !canSelect) {
+                              setError('Maximum 4 attributes allowed per identity.')
+                              return
+                            }
+                            if (e.target.checked) {
+                              setSelectedAttributes({...selectedAttributes, [attr.id]: ''})
+                              setError(null)
+                            } else {
+                              const {[attr.id]: _, ...rest} = selectedAttributes
+                              setSelectedAttributes(rest)
+                            }
+                          }}
+                          disabled={isAtMaxLimit && !isSelected}
+                          className="mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                        <div className="flex-1">
+                          <p className="font-semibold text-sm">{attr.name}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{attr.description}</p>
+                          <p className="text-xs text-accent mt-2">Privacy: {attr.privacyLevel}</p>
+                        </div>
                       </div>
+                      {isSelected && (
+                        <input
+                          type="text"
+                          placeholder={`Enter ${attr.name}...`}
+                          value={selectedAttributes[attr.id] || ''}
+                          onChange={(e) => {
+                            setSelectedAttributes({...selectedAttributes, [attr.id]: e.target.value})
+                          }}
+                          className="w-full px-3 py-2 rounded border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent"
+                        />
+                      )}
                     </div>
-                    {selectedAttributes[attr.id] !== undefined && (
-                      <input
-                        type="text"
-                        placeholder={`Enter ${attr.name}...`}
-                        value={selectedAttributes[attr.id] || ''}
-                        onChange={(e) => {
-                          setSelectedAttributes({...selectedAttributes, [attr.id]: e.target.value})
-                        }}
-                        className="w-full px-3 py-2 rounded border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent"
-                      />
-                    )}
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
             {error && (
