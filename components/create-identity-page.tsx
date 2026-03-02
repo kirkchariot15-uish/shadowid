@@ -238,7 +238,7 @@ export function CreateIdentityPage() {
                   </Button>
                 </Link>
                 <Link href="/dashboard">
-                  <Button variant="outline">Go to Dashboard</Button>
+                  <Button className="bg-blue hover:bg-blue/90 text-blue-foreground">Go to Dashboard</Button>
                 </Link>
               </div>
             </div>
@@ -358,7 +358,7 @@ export function CreateIdentityPage() {
                 <Button
                   onClick={handleCreateIdentity}
                   disabled={isCreating || Object.keys(selectedAttributes).length === 0}
-                  className="flex-1 gap-2"
+                  className="flex-1 gap-2 bg-blue hover:bg-blue/90 text-blue-foreground"
                 >
                   Create ShadowID
                 </Button>
