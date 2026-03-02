@@ -385,6 +385,27 @@ export async function verifyCredentialInRegistry(
 }
 
 /**
+ * Verify that a commitment hash actually exists on the blockchain
+ * This prevents fake commitments from being accepted in the verifier
+ * Inputs: commitment (field)
+ */
+export async function verifyCommitmentOnChain(
+  commitment: string,
+  walletAddress: string,
+  executeTransactionFn?: (params: any) => Promise<string>
+): Promise<OnChainExecutionResult> {
+  return executeProofOnChain(
+    {
+      programId: PROGRAM_ID,
+      functionName: 'verify_commitment',
+      inputs: [commitment],
+    },
+    walletAddress,
+    executeTransactionFn
+  );
+}
+
+/**
  * QR VERIFIER FUNCTIONS
  * Records and tracks QR code verification events
  */
