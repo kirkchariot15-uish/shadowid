@@ -51,18 +51,16 @@ export async function executeWalletTransaction(
       inputsCount: params.inputs.length,
     });
 
-    // Prepare transaction object matching wallet API
-    // The wallet expects { transitions, fee, feePrivate }
+    // Prepare transaction object matching wallet adapter API
+    // The @provablehq/aleo-wallet-adaptor-react expects:
+    // { program, function, inputs, fee, privateFee }
+    // NOT { transitions, ... }
     const txObj = {
-      transitions: [
-        {
-          program: params.program,
-          functionName: params.functionName,
-          inputs: params.inputs,
-        }
-      ],
+      program: params.program,
+      function: params.functionName,
+      inputs: params.inputs,
       fee: params.fee || 100000,
-      feePrivate: params.privateFee ?? false,
+      privateFee: params.privateFee ?? false,
     };
 
     // Execute transaction with error boundary

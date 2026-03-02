@@ -379,11 +379,6 @@ export async function verifyCredentialInRegistry(
 }
 
 /**
- * Alias for registerCommitmentOnChain for backward compatibility
- */
-export const registerCredentialInRegistry = registerCommitmentOnChain;
-
-/**
  * QR VERIFIER FUNCTIONS
  * Records and tracks QR code verification events
  */

@@ -12,7 +12,7 @@ import { Lock, Sparkles, CheckCircle2, ArrowLeft, Plus, AlertCircle } from 'luci
 import Link from 'next/link'
 import { addActivityLog } from '@/lib/activity-logger'
 import { STANDARD_ATTRIBUTES } from '@/lib/attribute-schema'
-import { registerCommitmentOnChain, registerCredentialInRegistry } from '@/lib/aleo-sdk-integration'
+import { registerCommitmentOnChain } from '@/lib/aleo-sdk-integration'
 import { storeEncryptedCredential } from '@/lib/encrypted-storage'
 
 export function CreateIdentityPage() {
