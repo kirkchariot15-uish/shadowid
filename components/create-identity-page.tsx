@@ -84,11 +84,10 @@ export function CreateIdentityPage() {
       const hashBuffer = await window.crypto.subtle.digest('SHA-256', dataBuffer)
       const hashArray = Array.from(new Uint8Array(hashBuffer))
       
-      // Convert SHA-256 hash to Aleo field type (contract expects field, NOT u64)
+      // Convert full SHA-256 hash to Aleo field type (use entire 64-char hex)
       const hexString = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
-      const truncatedHex = hexString.slice(0, 16)
-      const commitmentHash = hexToField(truncatedHex)
-      const commitmentDisplayHex = truncatedHex.toUpperCase()
+      const commitmentHash = hexToField(hexString)
+      const commitmentDisplayHex = hexString.slice(0, 16).toUpperCase()
 
       const credential = {
         '@context': ['https://www.w3.org/2018/credentials/v1'],
