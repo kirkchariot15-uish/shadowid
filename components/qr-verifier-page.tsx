@@ -180,22 +180,6 @@ export default function QRVerifierPage() {
       setIsCheckingBlockchain(false)
     }
   }
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Verification failed'
-      setError(errorMsg)
-      if (isConnected) {
-        addActivityLog(
-          'Verify QR Code',
-          'verification',
-          `Verification failed: ${errorMsg}`,
-          'error'
-        )
-      }
-    } finally {
-      setIsVerifying(false)
-      setIsCheckingBlockchain(false)
-    }
-  }
 
   /**
    * Parse and decode QR code from image file using jsQR
