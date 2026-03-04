@@ -121,10 +121,10 @@ export default function QRVerifierPage() {
       setVerificationResult(result)
       setVerificationCode('')
 
-      // Auto-clear after 5 seconds
+      // Redirect to profile page after 2 seconds
       setTimeout(() => {
-        setVerificationResult(null)
-      }, 5000)
+        window.location.href = `/verify?commitment=${commitmentHash}`
+      }, 2000)
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Verification failed'
       setError(errorMsg)
@@ -356,7 +356,7 @@ export default function QRVerifierPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2 text-sm">
+                <div className="space-y-2 text-sm border-t border-accent/20 pt-4">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Commitment:</span>
                     <span className="font-mono text-foreground">{verificationResult.commitmentHash}</span>
@@ -366,6 +366,8 @@ export default function QRVerifierPage() {
                     <span className="text-accent font-medium">Blockchain Verified</span>
                   </div>
                 </div>
+
+                <p className="text-xs text-muted-foreground italic">Redirecting to profile page...</p>
               </div>
             )}
 
