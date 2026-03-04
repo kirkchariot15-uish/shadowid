@@ -6,10 +6,11 @@ import { hexToField } from '@/lib/aleo-field-formatter'
 import { Navigation } from '@/components/navigation'
 import { LoadingSpinner } from '@/components/loading-spinner'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, CheckCircle2, AlertCircle, Zap, Upload, Camera } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, AlertCircle, Zap, Upload, Camera, QrCode } from 'lucide-react'
 import Link from 'next/link'
 import { recordQRVerification, incrementVerificationCount, verifyCommitmentOnChain } from '@/lib/aleo-sdk-integration'
 import { addActivityLog } from '@/lib/activity-logger'
+import jsQR from 'jsqr'
 
 interface VerificationResult {
   isValid: boolean
@@ -142,35 +143,68 @@ export default function QRVerifierPage() {
   }
 
   /**
-   * Parse QR code image
+   * Parse and decode QR code from image file using jsQR
    */
   const parseQRImage = async (file: File) => {
     try {
       const reader = new FileReader()
       reader.onload = async (e) => {
-        const img = new Image()
-        img.onload = async () => {
-          try {
-            // Decode QR code using jsQR library (would need to import)
-            // For now, extract text from image metadata or use OCR
-            // This is a placeholder - in production use a QR library like jsQR
-            const canvas = document.createElement('canvas')
-            canvas.width = img.width
-            canvas.height = img.height
-            const ctx = canvas.getContext('2d')
-            if (!ctx) throw new Error('Canvas context not available')
-            ctx.drawImage(img, 0, 0)
-            
-            // For demo: extract any hex patterns from image
-            setError('QR image parsing requires jsQR library. Please scan using camera instead.')
-          } catch (err) {
-            setError('Failed to parse QR image')
+        try {
+          const img = new Image()
+          img.crossOrigin = 'anonymous'
+          img.onload = async () => {
+            try {
+              // Create canvas and draw image
+              const canvas = document.createElement('canvas')
+              canvas.width = img.width
+              canvas.height = img.height
+              const ctx = canvas.getContext('2d')
+              if (!ctx) throw new Error('Canvas context not available')
+              ctx.drawImage(img, 0, 0)
+              
+              // Extract image data
+              const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+              
+              // Decode QR code using jsQR
+              const qrCode = jsQR(imageData.data, imageData.width, imageData.height)
+              
+              if (!qrCode) {
+                setError('No QR code found in the image. Please try another image or scan with camera.')
+                return
+              }
+              
+              // Extract and set the commitment hash
+              const commitmentHash = qrCode.data.trim().toUpperCase()
+              
+              // Validate format
+              if (!/^[0-9A-F]{16}$/.test(commitmentHash)) {
+                setError(`Invalid commitment hash format in QR code. Expected 16 hex characters, got: ${commitmentHash}`)
+                return
+              }
+              
+              setVerificationCode(commitmentHash)
+              setError('')
+              console.log('[v0] QR code decoded:', commitmentHash)
+            } catch (canvasErr) {
+              console.error('[v0] Canvas error:', canvasErr)
+              setError('Failed to process QR image. Please try another image.')
+            }
           }
+          img.onerror = () => {
+            setError('Failed to load image. Please try another file.')
+          }
+          img.src = e.target?.result as string
+        } catch (err) {
+          console.error('[v0] Image loading error:', err)
+          setError('Failed to load image file')
         }
-        img.src = e.target?.result as string
+      }
+      reader.onerror = () => {
+        setError('Failed to read file')
       }
       reader.readAsDataURL(file)
     } catch (err) {
+      console.error('[v0] File read error:', err)
       setError('Failed to read QR image file')
     }
   }
