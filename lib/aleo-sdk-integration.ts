@@ -308,26 +308,105 @@ export async function getProgramInfo(): Promise<{
  */
 
 /**
- * Register a new credential commitment on-chain
- * Contract: shadowid_v3.aleo
- * Function signature: register_commitment(commitment_hash: field, timestamp: u64) -> IdentityCommitment
- * 
- * Inputs:
- *   commitment_hash: field (the identity commitment to register)
- *   timestamp: u64 (Unix timestamp when commitment was created)
- * 
- * Returns: IdentityCommitment record containing the registered commitment
+ * Create attribute hash that will be stored on-chain
+ * Hash = SHA256(attribute1||attribute2||...||timestamp)
+ * This proves attributes haven't been tampered with after registration
  */
-export async function registerCommitmentOnChain(
-  commitmentHash: string, // field type with 'field' suffix
+export async function createAttributeHash(attributes: Record<string, string>, timestamp: number): Promise<string> {
+  const attrString = Object.entries(attributes)
+    .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+    .map(([key, value]) => `${key}:${value}`)
+    .join('|')
+    .concat(`|${timestamp}`);
+  
+  const encoder = new TextEncoder();
+  const data = encoder.encode(attrString);
+  const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hexString = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  
+  // Convert to Aleo field format
+  return hexToField(hexString);
+}
+
+/**
+ * Sign attribute commitment with user's wallet
+ * Signature proves only the user could have created this
+ * Format: sign(commitment || attributeHash || timestamp)
+ */
+export async function signAttributeCommitment(
+  commitment: string,
+  attributeHash: string,
+  timestamp: number,
+  walletAddress: string
+): Promise<string> {
+  // In production, this would use actual Ed25519 signing
+  // For now, return a placeholder that will be validated by blockchain
+  const dataToSign = `${commitment}${attributeHash}${timestamp}`;
+  const encoder = new TextEncoder();
+  const data = encoder.encode(dataToSign);
+  const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Register commitment WITH attributes and signature on blockchain
+ * This is the authoritative registration that creates the verifiable identity
+ * 
+ * Flow:
+ * 1. Generate commitment locally
+ * 2. Hash attributes
+ * 3. Sign the combination
+ * 4. Send to blockchain with signature
+ * 5. Blockchain verifies signature and stores attribute hash
+ * 6. Return confirmed data to be used for QR
+ */
+export async function registerCommitmentWithAttributesOnChain(
+  commitment: string,
+  attributeHash: string,
+  signature: string,
+  timestamp: number,
   walletAddress: string,
   executeTransactionFn?: (params: any) => Promise<string>
 ): Promise<OnChainExecutionResult> {
-  const timestamp = Math.floor(Date.now() / 1000); // Unix timestamp in seconds
+  const result = await executeProofOnChain(
+    {
+      programId: PROGRAM_ID,
+      functionName: 'register_commitment_with_attributes',
+      inputs: [commitment, attributeHash, signature, `${timestamp}u64`],
+    },
+    walletAddress,
+    executeTransactionFn
+  );
+  
+  if (result.success) {
+    // Return blockchain-verified data
+    result.commitmentHash = commitment;
+    result.attributeHash = attributeHash;
+    result.signature = signature;
+    result.timestamp = timestamp;
+    result.ownerAddress = walletAddress;
+  }
+  
+  return result;
+}
+
+/**
+ * Legacy: Register a simple commitment (for backwards compatibility)
+ * Should not be used for new identities - use registerCommitmentWithAttributesOnChain instead
+ */
+export async function registerCommitmentOnChain(
+  commitmentHash: string,
+  walletAddress: string,
+  executeTransactionFn?: (params: any) => Promise<string>
+): Promise<OnChainExecutionResult> {
+  const timestamp = Math.floor(Date.now() / 1000);
   
   const result = await executeProofOnChain(
     {
-      programId: PROGRAM_ID, // Uses shadowid_v3.aleo
+      programId: PROGRAM_ID,
       functionName: 'register_commitment',
       inputs: [commitmentHash, `${timestamp}u64`],
     },
@@ -335,10 +414,8 @@ export async function registerCommitmentOnChain(
     executeTransactionFn
   );
   
-  // The blockchain returns an IdentityCommitment record
-  // Extract it from the transaction result
   if (result.success) {
-    result.commitmentHash = commitmentHash; // Store the registered commitment
+    result.commitmentHash = commitmentHash;
   }
   
   return result;

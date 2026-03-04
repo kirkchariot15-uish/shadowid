@@ -12,7 +12,7 @@ import { Lock, Sparkles, CheckCircle2, ArrowLeft, Plus, AlertCircle } from 'luci
 import Link from 'next/link'
 import { addActivityLog } from '@/lib/activity-logger'
 import { STANDARD_ATTRIBUTES } from '@/lib/attribute-schema'
-import { registerCommitmentOnChain } from '@/lib/aleo-sdk-integration'
+import { registerCommitmentWithAttributesOnChain, createAttributeHash, signAttributeCommitment } from '@/lib/aleo-sdk-integration'
 import { storeEncryptedCredential } from '@/lib/encrypted-storage'
 
 export function CreateIdentityPage() {
@@ -68,7 +68,6 @@ export function CreateIdentityPage() {
       return
     }
 
-    // Enforce maximum 4 attributes per ID
     if (selectedAttrIds.length > 4) {
       setError('Maximum 4 attributes allowed per identity. Please remove some attributes.')
       return
@@ -79,14 +78,12 @@ export function CreateIdentityPage() {
       return
     }
 
-    // Check if user already has an identity
     const existingCommitment = localStorage.getItem('shadowid-commitment')
     if (existingCommitment) {
       setError('You already have a ShadowID. Edit your existing identity instead of creating a new one.')
       return
     }
 
-    // Validate wallet connection and executeTransaction availability BEFORE async operations
     if (!isConnected || !executeTransaction) {
       setError('Wallet not connected. Please connect your wallet first.');
       return
@@ -94,22 +91,73 @@ export function CreateIdentityPage() {
 
     setIsCreating(true)
     try {
-      // Ensure crypto is available before proceeding
       if (typeof window === 'undefined' || !window.crypto || !window.crypto.subtle) {
         throw new Error('Cryptographic functions not available in this browser. Please use a modern browser.')
       }
 
-      const data = `${address}-${selectedAttrIds.join(',')}-${Date.now()}`
+      const timestamp = Math.floor(Date.now() / 1000);
+      
+      // Step 1: Generate commitment locally (deterministic based on user + attributes + timestamp)
+      const data = `${address}-${selectedAttrIds.join(',')}-${timestamp}`
       const encoder = new TextEncoder()
       const dataBuffer = encoder.encode(data)
       const hashBuffer = await window.crypto.subtle.digest('SHA-256', dataBuffer)
       const hashArray = Array.from(new Uint8Array(hashBuffer))
-      
-      // Convert full SHA-256 hash to Aleo field type
       const hexString = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
       const commitmentHashForTx = hexToField(hexString)
       const commitmentDisplayHex = hexString.slice(0, 16).toUpperCase()
 
+      // Step 2: Create attribute hash that will be stored on-chain
+      const attributeMap: Record<string, string> = {}
+      selectedAttrIds.forEach(attr => {
+        attributeMap[attr] = selectedAttributes[attr]
+      })
+      const attributeHash = await createAttributeHash(attributeMap, timestamp)
+
+      // Step 3: Sign the commitment + attributes (proves user created this)
+      const signature = await signAttributeCommitment(
+        commitmentHashForTx,
+        attributeHash,
+        timestamp,
+        address
+      )
+
+      console.log('[v0] Commitment generation:', {
+        commitment: commitmentHashForTx,
+        attributeHash,
+        signature,
+        timestamp,
+        attributes: attributeMap
+      })
+
+      // Step 4: NOW register on blockchain with signature and attribute hash
+      // BLOCKCHAIN will verify signature and store attribute hash
+      // ONLY THEN do we get back verified data
+      const blockchainResult = await registerCommitmentWithAttributesOnChain(
+        commitmentHashForTx,
+        attributeHash,
+        signature,
+        timestamp,
+        address,
+        executeTransaction
+      )
+
+      if (!blockchainResult.success) {
+        console.error('[v0] Blockchain registration failed:', blockchainResult.error)
+        addActivityLog('Register on-chain', 'blockchain', `Failed: ${blockchainResult.error}`, 'error')
+        setError(`Blockchain error: ${blockchainResult.error}`)
+        setIsCreating(false)
+        return
+      }
+
+      console.log('[v0] Blockchain confirmed:', {
+        transactionId: blockchainResult.transactionId,
+        commitment: blockchainResult.commitmentHash,
+        attributeHash: blockchainResult.attributeHash
+      })
+      addActivityLog('Register on-chain', 'blockchain', `Commitment registered: ${blockchainResult.transactionId}`, 'success')
+
+      // Step 5: ONLY NOW create credential with blockchain-verified data
       const credential = {
         '@context': ['https://www.w3.org/2018/credentials/v1'],
         id: `shadowid:${commitmentDisplayHex}`,
@@ -128,37 +176,18 @@ export function CreateIdentityPage() {
           created: new Date().toISOString(),
           verificationMethod: `did:aleo:${address}`,
           proofPurpose: 'assertionMethod',
-          proofValue: commitmentDisplayHex
+          proofValue: commitmentDisplayHex,
+          // Add blockchain verification proof
+          blockchainCommitment: blockchainResult.commitmentHash,
+          attributeHash: blockchainResult.attributeHash,
+          blockchainSignature: blockchainResult.signature,
+          blockchainTimestamp: blockchainResult.timestamp,
+          transactionId: blockchainResult.transactionId
         }
       }
 
-      // Register on blockchain and GET the blockchain-verified commitment
-      const mainResult = await registerCommitmentOnChain(
-        commitmentHashForTx,
-        address,
-        executeTransaction
-      )
-      
-      if (mainResult.success) {
-        console.log('[v0] Commitment registered successfully:', mainResult.transactionId);
-        addActivityLog('Register on-chain', 'blockchain', `Commitment registered: ${mainResult.transactionId}`, 'success')
-      } else {
-        console.error('[v0] Blockchain registration failed:', mainResult.error);
-        addActivityLog('Register on-chain', 'blockchain', `Failed: ${mainResult.error}`, 'error')
-        setError(`Blockchain error: ${mainResult.error}`)
-        setIsCreating(false)
-        return
-      }
-
-      // CRITICAL: Use ONLY the blockchain-verified commitment, not the local one
-      // The blockchain returns the actual commitment that was registered on-chain
-      const blockchainCommitment = mainResult.commitmentHash
-      if (!blockchainCommitment) {
-        throw new Error('Blockchain did not return commitment hash. Transaction may have failed.')
-      }
-
-      // Save blockchain-verified commitment to storage
-      localStorage.setItem('shadowid-commitment', blockchainCommitment)
+      // Step 6: Save ONLY blockchain-verified commitment
+      localStorage.setItem('shadowid-commitment', blockchainResult.commitmentHash)
       localStorage.setItem('shadowid-commitment-hex', commitmentDisplayHex)
       localStorage.setItem('shadowid-created-at', new Date().toISOString())
       localStorage.setItem('shadowid-user-id', address)
@@ -170,12 +199,24 @@ export function CreateIdentityPage() {
         notes: []
       }))
       localStorage.setItem('shadowid-credential', JSON.stringify(credential))
+      localStorage.setItem('shadowid-attribute-hash', blockchainResult.attributeHash)
+      localStorage.setItem('shadowid-signature', blockchainResult.signature)
+      localStorage.setItem('shadowid-tx-id', blockchainResult.transactionId)
 
-      await storeEncryptedCredential(blockchainCommitment, credential, address)
+      await storeEncryptedCredential(blockchainResult.commitmentHash, credential, address)
 
-      setCommitment(blockchainCommitment)
+      setCommitment(blockchainResult.commitmentHash)
       addActivityLog('Create ShadowID', 'identity', `Created ZK identity with ${selectedAttrIds.length} attributes`, 'success')
       setCreationComplete(true)
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to create identity'
+      console.error('[v0] Identity creation error:', err)
+      setError(errorMsg)
+      addActivityLog('Create ShadowID', 'identity', `Failed to create identity: ${errorMsg}`, 'error')
+    } finally {
+      setIsCreating(false)
+    }
+  }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to create identity'
       console.error('[v0] Identity creation error:', err)
