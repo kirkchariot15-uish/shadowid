@@ -131,14 +131,15 @@ export function CreateIdentityPage() {
       })
 
       // Step 4: NOW register on blockchain with signature and attribute hash
-      // BLOCKCHAIN will verify signature and store attribute hash
-      // ONLY THEN do we get back verified data
+      // BLOCKCHAIN will store the commitment and attribute count
+      // Client-side proofs (signature, hash) are stored separately for verifier validation
       const blockchainResult = await registerCommitmentWithAttributesOnChain(
         commitmentHashForTx,
         attributeHash,
         signature,
         timestamp,
         address,
+        selectedAttrIds.length,  // Pass attribute count for blockchain
         executeTransaction
       )
 
@@ -208,15 +209,6 @@ export function CreateIdentityPage() {
       setCommitment(blockchainResult.commitmentHash)
       addActivityLog('Create ShadowID', 'identity', `Created ZK identity with ${selectedAttrIds.length} attributes`, 'success')
       setCreationComplete(true)
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to create identity'
-      console.error('[v0] Identity creation error:', err)
-      setError(errorMsg)
-      addActivityLog('Create ShadowID', 'identity', `Failed to create identity: ${errorMsg}`, 'error')
-    } finally {
-      setIsCreating(false)
-    }
-  }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to create identity'
       console.error('[v0] Identity creation error:', err)

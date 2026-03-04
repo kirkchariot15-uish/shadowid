@@ -352,16 +352,18 @@ export async function signAttributeCommitment(
 }
 
 /**
- * Register commitment WITH attributes and signature on blockchain
- * This is the authoritative registration that creates the verifiable identity
+ * Register commitment with attributes on blockchain
+ * Uses existing contract: register_commitment(commitment, attributeCount)
  * 
  * Flow:
  * 1. Generate commitment locally
- * 2. Hash attributes
- * 3. Sign the combination
- * 4. Send to blockchain with signature
- * 5. Blockchain verifies signature and stores attribute hash
- * 6. Return confirmed data to be used for QR
+ * 2. Hash attributes (client-side for now)
+ * 3. Sign the combination (client-side proof)
+ * 4. Call blockchain with commitment + attribute count
+ * 5. Return confirmed data with cryptographic proofs for QR
+ * 
+ * NOTE: Full signature verification happens client-side in verifier
+ * Future: Migrate to on-chain signature verification when Leo contracts available
  */
 export async function registerCommitmentWithAttributesOnChain(
   commitment: string,
@@ -369,20 +371,23 @@ export async function registerCommitmentWithAttributesOnChain(
   signature: string,
   timestamp: number,
   walletAddress: string,
+  attributeCount: number,
   executeTransactionFn?: (params: any) => Promise<string>
 ): Promise<OnChainExecutionResult> {
+  // Use existing contract function that accepts commitment and attribute count
   const result = await executeProofOnChain(
     {
       programId: PROGRAM_ID,
-      functionName: 'register_commitment_with_attributes',
-      inputs: [commitment, attributeHash, signature, `${timestamp}u64`],
+      functionName: 'register_commitment',
+      inputs: [commitment, `${attributeCount}u32`],
     },
     walletAddress,
     executeTransactionFn
   );
   
   if (result.success) {
-    // Return blockchain-verified data
+    // Return cryptographic proofs that were generated client-side
+    // These are stored locally and included in QR for verifier to validate
     result.commitmentHash = commitment;
     result.attributeHash = attributeHash;
     result.signature = signature;
