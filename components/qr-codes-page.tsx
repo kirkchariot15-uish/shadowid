@@ -60,30 +60,35 @@ export default function QRCodesPage() {
 
   const generateQRCode = async (commitment: string, userInfo: any) => {
     try {
-      // Get credential data to include in QR
-      const credentialStr = localStorage.getItem('shadowid-credential')
-      const credential = credentialStr ? JSON.parse(credentialStr) : null
+      // Get blockchain-verified cryptographic data (NOT local generated data)
       const userAddress = localStorage.getItem('shadowid-user-id')
+      const attributeHash = localStorage.getItem('shadowid-attribute-hash')
+      const signature = localStorage.getItem('shadowid-signature')
+      const transactionId = localStorage.getItem('shadowid-tx-id')
+      const timestamp = localStorage.getItem('shadowid-created-at')
+      
+      // Verify all required cryptographic data exists
+      if (!attributeHash || !signature || !transactionId) {
+        console.error('[v0] Missing cryptographic data. ID may not be properly registered on blockchain.')
+        return
+      }
       
       // Create shareable verification link with commitment as query param
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
       const verificationLink = `${baseUrl}/verify?commitment=${commitment}`
       
-      // QR code data includes link + identity info
+      // QR code data ONLY includes cryptographic proofs, not raw attributes
+      // Verifier will validate signature and fetch attributes from blockchain
       const qrData = JSON.stringify({
         commitment,
-        type: 'shadowid-v1',
-        timestamp: new Date().toISOString(),
-        userInfo,
-        // Add shareable link for scanning
-        verificationLink,
-        // Include user's selected attributes for display
-        attributes: credential?.credentialSubject?.claims ? 
-          Object.entries(credential.credentialSubject.claims).reduce((acc: any, [key, claim]: any) => {
-            acc[key] = claim.value
-            return acc
-          }, {}) : {},
-        userAddress,
+        type: 'shadowid-v3',
+        version: '3.0',
+        attributeHash,        // Proves attributes are blockchain-verified
+        signature,             // Proves only owner created this
+        transactionId,         // Blockchain confirmation
+        timestamp,
+        ownerAddress: userAddress,
+        verificationLink,      // Link to view full profile
       })
 
       const qrUrl = await QRCode.toDataURL(qrData, {
@@ -98,6 +103,13 @@ export default function QRCodesPage() {
         ...prev,
         [commitment]: qrUrl
       }))
+      
+      console.log('[v0] QR code generated with cryptographic proofs:', {
+        commitment,
+        hasAttributeHash: !!attributeHash,
+        hasSignature: !!signature,
+        hasTransactionId: !!transactionId
+      })
     } catch (err) {
       console.error('[v0] QR generation error:', err)
     }

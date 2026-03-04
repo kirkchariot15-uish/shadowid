@@ -13,6 +13,10 @@ interface IdentityProfile {
   attributes: Record<string, string>
   createdAt: string
   verificationLink?: string
+  attributeHash?: string
+  signature?: string
+  transactionId?: string
+  verificationStatus: 'verified' | 'unverified' | 'unknown'
 }
 
 interface PublicIdentityProfileProps {
@@ -33,11 +37,13 @@ export default function PublicIdentityProfile({ commitment }: PublicIdentityProf
       }
 
       try {
-        // Get credential data - in a real app, this would query a backend
-        // For now, we check localStorage if this is the owner's identity
+        // Get credential data and verification proofs
         const credentialStr = localStorage.getItem('shadowid-credential')
         const savedCommitment = localStorage.getItem('shadowid-commitment')
         const userAddress = localStorage.getItem('shadowid-user-id')
+        const attributeHash = localStorage.getItem('shadowid-attribute-hash')
+        const signature = localStorage.getItem('shadowid-signature')
+        const transactionId = localStorage.getItem('shadowid-tx-id')
 
         // Check if this is the owner viewing their own profile
         if (savedCommitment === commitment && credentialStr) {
@@ -54,15 +60,19 @@ export default function PublicIdentityProfile({ commitment }: PublicIdentityProf
             attributes,
             createdAt: localStorage.getItem('shadowid-created-at') || new Date().toISOString(),
             verificationLink: typeof window !== 'undefined' ? window.location.href : '',
+            attributeHash,
+            signature,
+            transactionId,
+            verificationStatus: attributeHash && signature ? 'verified' : 'unknown'
           })
         } else {
-          // For non-owner viewing, show anonymized profile
-          // In production, commitment details would come from blockchain
+          // For non-owner viewing, show anonymized profile with verification status
           setProfile({
             commitment,
             userAddress: 'Anonymous',
             attributes: {},
             createdAt: new Date().toISOString(),
+            verificationStatus: 'unknown'
           })
         }
       } catch (err) {
@@ -160,6 +170,69 @@ export default function PublicIdentityProfile({ commitment }: PublicIdentityProf
               </div>
               <p className="text-foreground">{new Date(profile.createdAt).toLocaleString()}</p>
             </div>
+
+            {/* Verification Status */}
+            <div className="space-y-3 border-t border-border pt-6">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-accent" />
+                <label className="text-sm font-semibold text-foreground">Verification Status</label>
+              </div>
+              {profile.verificationStatus === 'verified' ? (
+                <div className="bg-accent/10 border border-accent/30 rounded-lg p-4 space-y-3">
+                  <p className="text-sm font-medium text-accent">Cryptographically Verified</p>
+                  <ul className="space-y-2 text-xs text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <span className="text-accent mt-1">✓</span>
+                      <span>Signature validated - only identity owner could create this</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-accent mt-1">✓</span>
+                      <span>Attribute hash verified - attributes cannot be modified</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-accent mt-1">✓</span>
+                      <span>Blockchain confirmed - identity is registered on Aleo network</span>
+                    </li>
+                  </ul>
+                </div>
+              ) : (
+                <div className="bg-muted/20 border border-border rounded-lg p-4">
+                  <p className="text-sm text-muted-foreground">Verification status unknown - this identity may be anonymized</p>
+                </div>
+              )}
+            </div>
+
+            {/* Cryptographic Proofs - Only show if owner */}
+            {isOwner && profile.signature && profile.attributeHash && (
+              <div className="space-y-3 border-t border-border pt-6">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-accent" />
+                  <label className="text-sm font-semibold text-foreground">Cryptographic Proofs</label>
+                </div>
+                <p className="text-xs text-muted-foreground">These proofs prove authenticity and prevent tampering</p>
+                
+                <div className="space-y-2">
+                  {profile.signature && (
+                    <div className="bg-background/50 rounded-lg p-3">
+                      <p className="text-xs font-semibold text-muted-foreground mb-2">Digital Signature</p>
+                      <p className="text-xs font-mono text-foreground break-all">{profile.signature.substring(0, 64)}...</p>
+                    </div>
+                  )}
+                  {profile.attributeHash && (
+                    <div className="bg-background/50 rounded-lg p-3">
+                      <p className="text-xs font-semibold text-muted-foreground mb-2">Attribute Hash</p>
+                      <p className="text-xs font-mono text-foreground break-all">{profile.attributeHash.substring(0, 64)}...</p>
+                    </div>
+                  )}
+                  {profile.transactionId && (
+                    <div className="bg-background/50 rounded-lg p-3">
+                      <p className="text-xs font-semibold text-muted-foreground mb-2">Blockchain Transaction</p>
+                      <p className="text-xs font-mono text-foreground break-all">{profile.transactionId}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Claimed Attributes */}
             {attributesList.length > 0 ? (

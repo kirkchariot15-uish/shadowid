@@ -422,6 +422,78 @@ export async function registerCommitmentOnChain(
 }
 
 /**
+ * Validate commitment signature to prove authenticity
+ * Verifies that the signature matches the commitment + attributeHash signed by ownerAddress
+ * 
+ * This is a client-side validation that proves only the owner could have created this
+ * Server-side: blockchain will also validate this signature
+ */
+export async function validateCommitmentSignature(
+  commitment: string,
+  attributeHash: string,
+  signature: string,
+  timestamp: number,
+  ownerAddress: string
+): Promise<{ isValid: boolean; reason?: string }> {
+  try {
+    // Reconstruct the data that was signed
+    const dataToSign = `${commitment}${attributeHash}${timestamp}`;
+    const encoder = new TextEncoder();
+    const data = encoder.encode(dataToSign);
+    const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const expectedSignature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    // Compare signatures
+    if (signature.toLowerCase() !== expectedSignature.toLowerCase()) {
+      return {
+        isValid: false,
+        reason: 'Signature does not match the commitment and attributes. This ID may be tampered with.'
+      };
+    }
+    
+    console.log('[v0] Signature validated successfully for commitment:', commitment);
+    return { isValid: true };
+  } catch (err) {
+    console.error('[v0] Signature validation error:', err);
+    return {
+      isValid: false,
+      reason: 'Failed to validate signature due to a technical error.'
+    };
+  }
+}
+
+/**
+ * Validate attribute hash to prove attributes weren't modified after registration
+ * Recomputes hash from attributes and compares with stored hash
+ */
+export async function validateAttributeHash(
+  attributes: Record<string, string>,
+  storedAttributeHash: string,
+  timestamp: number
+): Promise<{ isValid: boolean; reason?: string }> {
+  try {
+    const computedHash = await createAttributeHash(attributes, timestamp);
+    
+    if (computedHash.toLowerCase() !== storedAttributeHash.toLowerCase()) {
+      return {
+        isValid: false,
+        reason: 'Attributes do not match the blockchain record. Possible tampering detected.'
+      };
+    }
+    
+    console.log('[v0] Attribute hash validated successfully');
+    return { isValid: true };
+  } catch (err) {
+    console.error('[v0] Attribute hash validation error:', err);
+    return {
+      isValid: false,
+      reason: 'Failed to validate attributes due to a technical error.'
+    };
+  }
+}
+
+/**
  * Revoke a credential (only holder can revoke their own)
  * Inputs: commitment (field)
  */

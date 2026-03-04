@@ -8,7 +8,7 @@ import { LoadingSpinner } from '@/components/loading-spinner'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, CheckCircle2, AlertCircle, Zap, Upload, Camera, QrCode } from 'lucide-react'
 import Link from 'next/link'
-import { recordQRVerification, incrementVerificationCount, verifyCommitmentOnChain } from '@/lib/aleo-sdk-integration'
+import { recordQRVerification, incrementVerificationCount, verifyCommitmentOnChain, validateCommitmentSignature } from '@/lib/aleo-sdk-integration'
 import { addActivityLog } from '@/lib/activity-logger'
 import jsQR from 'jsqr'
 
@@ -62,28 +62,69 @@ export default function QRVerifierPage() {
     setVerificationResult(null)
 
     try {
-      // Parse QR code data (commitment hash)
-      const commitmentHash = verificationCode.trim().toUpperCase()
+      let qrData: any;
+      let commitmentHash: string;
+      let attributeHash: string | null = null;
+      let signature: string | null = null;
+      let transactionId: string | null = null;
+      let ownerAddress: string | null = null;
+      let timestamp: number | null = null;
 
-      // Validate it looks like a commitment hash (16 hex chars)
-      if (!/^[0-9A-F]{16}$/.test(commitmentHash)) {
-        throw new Error('Invalid QR code format. Expected 16-character hex commitment hash.')
+      // Try to parse as JSON (new cryptographic format)
+      try {
+        qrData = JSON.parse(verificationCode);
+        commitmentHash = qrData.commitment;
+        attributeHash = qrData.attributeHash;
+        signature = qrData.signature;
+        transactionId = qrData.transactionId;
+        ownerAddress = qrData.ownerAddress;
+        timestamp = qrData.timestamp ? new Date(qrData.timestamp).getTime() / 1000 : null;
+        
+        console.log('[v0] Parsed cryptographic QR data:', { commitmentHash, hasSignature: !!signature, hasAttributeHash: !!attributeHash });
+      } catch {
+        // Fall back to simple hex string format (legacy)
+        commitmentHash = verificationCode.trim().toUpperCase();
+        console.log('[v0] Parsed legacy hex format:', commitmentHash);
       }
 
-      // CRITICAL: Check if commitment actually exists on blockchain
+      // Validate commitment hash format
+      if (!/^[0-9A-F]{16}$/.test(commitmentHash)) {
+        throw new Error('Invalid commitment hash format. Expected 16 hex characters.')
+      }
+
+      // Check if commitment exists on blockchain
       setIsCheckingBlockchain(true)
       const existsOnBlockchain = await commitmentExistsOnBlockchain(commitmentHash)
       
       if (!existsOnBlockchain) {
-        throw new Error(`Commitment hash ${commitmentHash} is not registered on the blockchain. This ShadowID does not exist.`)
+        throw new Error(`Commitment ${commitmentHash} is not registered on the blockchain. This ShadowID does not exist.`)
       }
 
       setIsCheckingBlockchain(false)
 
-      // OPTION B: Full verification with wallet (if connected)
+      // Validate cryptographic proofs if present
+      if (signature && attributeHash && timestamp) {
+        console.log('[v0] Validating cryptographic signature and attribute hash...');
+        
+        const signatureValid = await validateCommitmentSignature(
+          commitmentHash,
+          attributeHash,
+          signature,
+          Math.floor(timestamp),
+          ownerAddress || 'unknown'
+        )
+
+        if (!signatureValid.isValid) {
+          throw new Error(`Signature validation failed: ${signatureValid.reason}`)
+        }
+
+        console.log('[v0] Cryptographic validation passed. Signature and attributes verified.');
+      }
+
+      // Record verification if connected
       if (isConnected && address) {
-        // Convert hex commitment to decimal field format
-        const proofId = hexToField(commitmentHash)
+        const hexToFieldValue = require('@/lib/aleo-field-formatter').hexToField;
+        const proofId = hexToFieldValue(commitmentHash)
         
         try {
           const recordResult = await recordQRVerification(
@@ -93,10 +134,7 @@ export default function QRVerifierPage() {
           )
 
           if (recordResult.success) {
-            // Increment verification count
             await incrementVerificationCount(commitmentHash, address)
-
-            // Record in activity log
             addActivityLog(
               'Verify QR Code',
               'verification',
@@ -109,13 +147,13 @@ export default function QRVerifierPage() {
         }
       }
 
-      // Set success result
+      // Set success result with verification info
       const result: VerificationResult = {
         isValid: true,
         commitmentHash,
         verifiedAt: new Date().toISOString(),
         verifierAddress: isConnected && address ? address : 'Guest',
-        message: isConnected ? 'Credential verified and recorded on Aleo testnet' : 'Credential verified (read-only mode)'
+        message: signature ? 'Credential verified with cryptographic proofs on Aleo blockchain' : 'Credential verified on Aleo blockchain'
       }
 
       setVerificationResult(result)
@@ -125,6 +163,23 @@ export default function QRVerifierPage() {
       setTimeout(() => {
         window.location.href = `/verify?commitment=${commitmentHash}`
       }, 2000)
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Verification failed'
+      console.error('[v0] Verification error:', err)
+      setError(errorMsg)
+      if (isConnected) {
+        addActivityLog(
+          'Verify QR Code',
+          'verification',
+          `Verification failed: ${errorMsg}`,
+          'error'
+        )
+      }
+    } finally {
+      setIsVerifying(false)
+      setIsCheckingBlockchain(false)
+    }
+  }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Verification failed'
       setError(errorMsg)
@@ -173,18 +228,27 @@ export default function QRVerifierPage() {
                 return
               }
               
-              // Extract and set the commitment hash
-              const commitmentHash = qrCode.data.trim().toUpperCase()
+              // QR data can be either JSON (new format) or hex string (legacy format)
+              const qrRawData = qrCode.data.trim()
               
-              // Validate format
-              if (!/^[0-9A-F]{16}$/.test(commitmentHash)) {
-                setError(`Invalid commitment hash format in QR code. Expected 16 hex characters, got: ${commitmentHash}`)
-                return
+              // Try to parse as JSON first
+              try {
+                const jsonData = JSON.parse(qrRawData);
+                // Valid JSON QR - set it directly for verification
+                setVerificationCode(qrRawData)
+                setError('')
+                console.log('[v0] QR code decoded (JSON format):', jsonData.commitment);
+              } catch {
+                // Not JSON, treat as hex string
+                const commitmentHash = qrRawData.toUpperCase()
+                if (!/^[0-9A-F]{16}$/.test(commitmentHash)) {
+                  setError(`Invalid QR code format. Expected either JSON with commitment or 16-char hex, got: ${qrRawData.substring(0, 50)}...`)
+                  return
+                }
+                setVerificationCode(commitmentHash)
+                setError('')
+                console.log('[v0] QR code decoded (hex format):', commitmentHash)
               }
-              
-              setVerificationCode(commitmentHash)
-              setError('')
-              console.log('[v0] QR code decoded:', commitmentHash)
             } catch (canvasErr) {
               console.error('[v0] Canvas error:', canvasErr)
               setError('Failed to process QR image. Please try another image.')
