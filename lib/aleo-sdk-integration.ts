@@ -359,11 +359,11 @@ export async function signAttributeCommitment(
  * 1. Generate commitment locally
  * 2. Hash attributes (client-side for now)
  * 3. Sign the combination (client-side proof)
- * 4. Call blockchain with commitment + attribute count
+ * 4. Call blockchain with commitment + attribute count using duplicate-prevention handler
  * 5. Return confirmed data with cryptographic proofs for QR
  * 
- * NOTE: Full signature verification happens client-side in verifier
- * Future: Migrate to on-chain signature verification when Leo contracts available
+ * NOTE: Duplicate transactions are prevented by the transaction handler
+ * NOTE: Rejected transactions are retried with exponential backoff
  */
 export async function registerCommitmentWithAttributesOnChain(
   commitment: string,
@@ -374,28 +374,48 @@ export async function registerCommitmentWithAttributesOnChain(
   attributeCount: number,
   executeTransactionFn?: (params: any) => Promise<string>
 ): Promise<OnChainExecutionResult> {
-  // Use existing contract function that accepts commitment and attribute count
-  const result = await executeProofOnChain(
-    {
-      programId: PROGRAM_ID,
+  try {
+    // Prepare transaction parameters
+    const txParams: TransactionParams = {
+      program: PROGRAM_ID,
       functionName: 'register_commitment',
       inputs: [commitment, `${attributeCount}u32`],
-    },
-    walletAddress,
-    executeTransactionFn
-  );
-  
-  if (result.success) {
-    // Return cryptographic proofs that were generated client-side
-    // These are stored locally and included in QR for verifier to validate
-    result.commitmentHash = commitment;
-    result.attributeHash = attributeHash;
-    result.signature = signature;
-    result.timestamp = timestamp;
-    result.ownerAddress = walletAddress;
+      fee: 100000,
+    };
+
+    // Execute with duplicate prevention and retry logic
+    const result = await executeWalletTransaction(
+      executeTransactionFn || (async (params) => {
+        throw new Error('executeTransaction not available');
+      }),
+      txParams,
+      2 // Max 2 retries
+    );
+
+    if (result.success) {
+      return {
+        success: true,
+        transactionId: result.transactionId,
+        commitmentHash: commitment,
+        attributeHash: attributeHash,
+        signature: signature,
+        timestamp: timestamp,
+        ownerAddress: walletAddress,
+      };
+    } else {
+      return {
+        success: false,
+        error: result.error || 'Transaction failed',
+      };
+    }
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : 'Failed to register commitment';
+    console.error('[v0] registerCommitmentWithAttributesOnChain error:', errorMsg);
+    return {
+      success: false,
+      error: errorMsg,
+    };
   }
-  
-  return result;
 }
 
 /**
