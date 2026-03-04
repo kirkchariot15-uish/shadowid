@@ -18,84 +18,141 @@ export interface TransactionResult {
   error?: string;
 }
 
+// Track pending transactions to prevent duplicates
+const pendingTransactions = new Map<string, Promise<TransactionResult>>();
+
 /**
- * Safely execute a wallet transaction with validation and error handling
- * This function validates and wraps the executeTransaction call to prevent
- * scope-related errors during async operations
+ * Generate a transaction key to identify duplicates
+ * Key = program + functionName + inputs (prevents same tx being submitted twice)
+ */
+function generateTransactionKey(params: TransactionParams): string {
+  const inputsHash = params.inputs.join('|');
+  return `${params.program}:${params.functionName}:${inputsHash}`;
+}
+
+/**
+ * Safely execute a wallet transaction with validation, error handling, and retry logic
+ * Prevents duplicate transactions and retries on failure
  */
 export async function executeWalletTransaction(
   transactionFn: (params: any) => Promise<string>,
-  params: TransactionParams
+  params: TransactionParams,
+  maxRetries: number = 2
 ): Promise<TransactionResult> {
-  try {
-    // Pre-flight checks
-    if (!transactionFn || typeof transactionFn !== 'function') {
-      console.error('[v0] executeTransaction function is not available');
-      console.error('[v0] Type:', typeof transactionFn, 'Exists:', !!transactionFn);
-      return {
-        success: false,
-        error: 'Wallet executeTransaction not available. Please ensure wallet is connected.',
-      };
-    }
+  const txKey = generateTransactionKey(params);
 
-    if (!params.program || !params.functionName || !params.inputs) {
-      return {
-        success: false,
-        error: 'Invalid transaction parameters: missing program, functionName, or inputs',
-      };
-    }
-
-    console.log('[v0] Transaction parameters:', {
-      program: params.program,
-      functionName: params.functionName,
-      inputsCount: params.inputs.length,
-    });
-
-    // Prepare transaction object matching the wallet hook API
-    // The useAleoWallet hook expects: { transitions: [{ program, functionName, inputs }], fee }
-    // NOT the flat format
-    const txObj = {
-      transitions: [
-        {
-          program: params.program,
-          functionName: params.functionName,
-          inputs: params.inputs,
-        }
-      ],
-      fee: params.fee || 100000,
-      feePrivate: params.privateFee ?? false,
-    };
-
-    // Execute transaction with error boundary
-    let transactionId: string;
-    try {
-      const result = await transactionFn(txObj);
-      transactionId = result;
-    } catch (execError) {
-      console.error('[v0] Wallet execution error:', execError instanceof Error ? execError.message : String(execError));
-      throw execError;
-    }
-
-    if (!transactionId || transactionId.trim() === '') {
-      return {
-        success: false,
-        error: 'Wallet returned empty transaction ID',
-      };
-    }
-
-    console.log('[v0] Transaction executed successfully:', transactionId);
-    return {
-      success: true,
-      transactionId,
-    };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('[v0] Transaction error:', errorMessage);
-    return {
-      success: false,
-      error: errorMessage,
-    };
+  // Check for duplicate in-flight transaction
+  if (pendingTransactions.has(txKey)) {
+    console.warn('[v0] Duplicate transaction detected, using existing request:', txKey);
+    return pendingTransactions.get(txKey)!;
   }
+
+  // Create the transaction promise
+  const txPromise = executeTransactionWithRetry(transactionFn, params, maxRetries);
+
+  // Store it to prevent duplicates
+  pendingTransactions.set(txKey, txPromise);
+
+  try {
+    const result = await txPromise;
+    return result;
+  } finally {
+    // Remove from pending after completion
+    pendingTransactions.delete(txKey);
+  }
+}
+
+/**
+ * Execute transaction with exponential backoff retry on failure
+ */
+async function executeTransactionWithRetry(
+  transactionFn: (params: any) => Promise<string>,
+  params: TransactionParams,
+  maxRetries: number
+): Promise<TransactionResult> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      // Pre-flight checks
+      if (!transactionFn || typeof transactionFn !== 'function') {
+        console.error('[v0] executeTransaction function is not available');
+        return {
+          success: false,
+          error: 'Wallet executeTransaction not available. Please ensure wallet is connected.',
+        };
+      }
+
+      if (!params.program || !params.functionName || !params.inputs) {
+        return {
+          success: false,
+          error: 'Invalid transaction parameters: missing program, functionName, or inputs',
+        };
+      }
+
+      console.log(`[v0] Transaction attempt ${attempt}/${maxRetries}:`, {
+        program: params.program,
+        functionName: params.functionName,
+        inputsCount: params.inputs.length,
+      });
+
+      // Prepare transaction object matching the wallet hook API
+      const txObj = {
+        transitions: [
+          {
+            program: params.program,
+            functionName: params.functionName,
+            inputs: params.inputs,
+          }
+        ],
+        fee: params.fee || 100000,
+        feePrivate: params.privateFee ?? false,
+      };
+
+      // Execute transaction
+      const transactionId = await transactionFn(txObj);
+
+      if (!transactionId || transactionId.trim() === '') {
+        throw new Error('Wallet returned empty transaction ID');
+      }
+
+      console.log('[v0] Transaction executed successfully:', transactionId);
+      return {
+        success: true,
+        transactionId,
+      };
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      const errorMsg = lastError.message;
+
+      // Check if error is retryable
+      const isRetryable = errorMsg.includes('timeout') || 
+                         errorMsg.includes('network') || 
+                         errorMsg.includes('ECONNREFUSED') ||
+                         errorMsg.includes('429'); // Rate limited
+
+      if (isRetryable && attempt < maxRetries) {
+        // Exponential backoff: 1s, 2s, 4s
+        const delayMs = Math.pow(2, attempt - 1) * 1000;
+        console.warn(`[v0] Transaction failed (attempt ${attempt}), retrying in ${delayMs}ms:`, errorMsg);
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        continue;
+      } else {
+        // Non-retryable error or max retries reached
+        console.error(`[v0] Transaction failed permanently:`, errorMsg);
+        return {
+          success: false,
+          error: errorMsg,
+        };
+      }
+    }
+  }
+
+  // Should never reach here, but handle it
+  return {
+    success: false,
+    error: lastError?.message || 'Transaction failed after retries',
+  };
 }
 
 /**

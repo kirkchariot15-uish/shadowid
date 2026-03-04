@@ -8,7 +8,7 @@ import { LoadingSpinner } from '@/components/loading-spinner'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, CheckCircle2, AlertCircle, Zap, Upload, Camera, QrCode } from 'lucide-react'
 import Link from 'next/link'
-import { recordQRVerification, incrementVerificationCount, verifyCommitmentOnChain, validateCommitmentSignature } from '@/lib/aleo-sdk-integration'
+import { recordQRVerification, incrementVerificationCount, verifyCommitmentOnChain, validateCommitmentSignature, commitmentExistsOnBlockchain } from '@/lib/aleo-sdk-integration'
 import { addActivityLog } from '@/lib/activity-logger'
 import jsQR from 'jsqr'
 

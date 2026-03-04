@@ -499,6 +499,31 @@ export async function validateAttributeHash(
 }
 
 /**
+ * Check if a commitment exists on the blockchain
+ * Returns true only if the commitment was previously registered
+ * Rejects fake/unregistered commitments
+ */
+export async function commitmentExistsOnBlockchain(commitmentHash: string): Promise<boolean> {
+  try {
+    // Query the blockchain to verify commitment is registered
+    // This is a read-only call that doesn't cost transactions
+    const result = await verifyCommitmentOnChain(commitmentHash);
+    
+    if (result.success && result.isValid) {
+      console.log('[v0] Commitment verified on blockchain:', commitmentHash);
+      return true;
+    } else {
+      console.warn('[v0] Commitment not found on blockchain (fake/unregistered):', commitmentHash);
+      return false;
+    }
+  } catch (error) {
+    console.error('[v0] Error checking commitment on blockchain:', error);
+    // If we can't verify, assume it's invalid/fake
+    return false;
+  }
+}
+
+/**
  * Revoke a credential (only holder can revoke their own)
  * Inputs: commitment (field)
  */
