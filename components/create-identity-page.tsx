@@ -14,6 +14,9 @@ import { addActivityLog } from '@/lib/activity-logger'
 import { STANDARD_ATTRIBUTES } from '@/lib/attribute-schema'
 import { registerCommitmentWithAttributesOnChain, createAttributeHash, signAttributeCommitment } from '@/lib/aleo-sdk-integration'
 import { storeEncryptedCredential } from '@/lib/encrypted-storage'
+import { validateAttributeValue, validateAllAttributes, hasValidationErrors } from '@/lib/attribute-validator'
+import { getMaxAttributesForUser, getSubscriptionInfo } from '@/lib/subscription-manager'
+import { SubscriptionModal } from '@/components/subscription-modal'
 
 export function CreateIdentityPage() {
   const { address, executeTransaction } = useAleoWallet()
@@ -25,6 +28,9 @@ export function CreateIdentityPage() {
   const [commitment, setCommitment] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const [retryCount, setRetryCount] = useState(0)
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
+  const [subscriptionInfo, setSubscriptionInfo] = useState(getSubscriptionInfo())
 
   // Ensure component only renders on client with crypto available
   useEffect(() => {
@@ -41,8 +47,43 @@ export function CreateIdentityPage() {
     if (mounted && isConnected) {
       console.log('[v0] Wallet state updated');
       debugWalletState(address, executeTransaction);
+      setSubscriptionInfo(getSubscriptionInfo());
     }
   }, [address, executeTransaction, mounted, isConnected])
+
+  const handleAttributeChange = (attrId: string, value: string) => {
+    const maxAttributes = getMaxAttributesForUser()
+    const currentCount = Object.keys(selectedAttributes).filter(key => selectedAttributes[key]).length
+    
+    if (value && currentCount >= maxAttributes && !selectedAttributes[attrId]) {
+      setError(`You can only claim ${maxAttributes} attributes. ${subscriptionInfo.isActive ? '' : 'Subscribe for unlimited.'}`)
+      setShowSubscriptionModal(true)
+      return
+    }
+
+    // Update value
+    setSelectedAttributes(prev => ({
+      ...prev,
+      [attrId]: value
+    }))
+
+    // Validate the input
+    if (value.trim()) {
+      const error = validateAttributeValue(attrId, value, STANDARD_ATTRIBUTES)
+      if (error) {
+        setValidationErrors(prev => ({
+          ...prev,
+          [attrId]: error.message
+        }))
+      } else {
+        setValidationErrors(prev => {
+          const newErrors = { ...prev }
+          delete newErrors[attrId]
+          return newErrors
+        })
+      }
+    }
+  }
 
   if (!mounted) {
     return (
@@ -68,8 +109,26 @@ export function CreateIdentityPage() {
       return
     }
 
-    if (selectedAttrIds.length > 4) {
-      setError('Maximum 4 attributes allowed per identity. Please remove some attributes.')
+    // Validate all attributes before creating identity
+    const validationErrors = validateAllAttributes(selectedAttrIds.reduce((acc, key) => {
+      acc[key] = selectedAttributes[key]
+      return acc
+    }, {} as Record<string, string>), STANDARD_ATTRIBUTES)
+
+    if (hasValidationErrors(validationErrors)) {
+      const errorMap = validationErrors.reduce((acc, err) => {
+        acc[err.field] = err.message
+        return acc
+      }, {} as Record<string, string>)
+      setValidationErrors(errorMap)
+      setError('Please fix validation errors before creating your identity')
+      return
+    }
+
+    const maxAttributes = getMaxAttributesForUser()
+    if (selectedAttrIds.length > maxAttributes) {
+      setError(`Maximum ${maxAttributes} attributes allowed. Subscribe for unlimited.`)
+      setShowSubscriptionModal(true)
       return
     }
 
@@ -307,23 +366,46 @@ export function CreateIdentityPage() {
           </div>
 
           <div className="space-y-6">
+            {/* Subscription Status */}
+            <div className={`rounded-lg p-4 flex items-start gap-3 border ${subscriptionInfo.isActive ? 'border-accent/30 bg-accent/10' : 'border-border bg-card/50'}`}>
+              <Sparkles className={`h-5 w-5 flex-shrink-0 mt-0.5 ${subscriptionInfo.isActive ? 'text-accent' : 'text-muted-foreground'}`} />
+              <div className="flex-1">
+                <p className="text-sm font-semibold">
+                  {subscriptionInfo.isActive ? `Subscribed - Unlimited attributes` : `Free Plan - ${subscriptionInfo.maxAttributes} attributes max`}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">{subscriptionInfo.message}</p>
+              </div>
+              {!subscriptionInfo.isActive && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowSubscriptionModal(true)}
+                  className="flex-shrink-0 border-accent/40 text-accent hover:bg-accent/10"
+                >
+                  Subscribe
+                </Button>
+              )}
+            </div>
+
             <div className="rounded-lg border border-accent/20 bg-accent/5 p-4 flex items-start gap-3">
-              <Sparkles className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
+              <Lock className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
               <p className="text-sm text-muted-foreground">
-                Select up to 4 attributes to claim. Zero-knowledge credentials prove claims without revealing the underlying data.
+                Select up to {getMaxAttributesForUser()} attributes to claim. Zero-knowledge credentials prove claims without revealing the underlying data.
               </p>
             </div>
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold">Available Attributes</h2>
                 <span className="text-xs font-mono bg-accent/10 px-2 py-1 rounded">
-                  {Object.keys(selectedAttributes).length}/4 Selected
+                  {Object.keys(selectedAttributes).filter(k => selectedAttributes[k]).length}/{getMaxAttributesForUser()} Selected
                 </span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Object.values(STANDARD_ATTRIBUTES).map(attr => {
                   const isSelected = !!selectedAttributes[attr.id]
-                  const isAtMaxLimit = Object.keys(selectedAttributes).length >= 4
+                  const maxAttributes = getMaxAttributesForUser()
+                  const currentCount = Object.keys(selectedAttributes).filter(k => selectedAttributes[k]).length
+                  const isAtMaxLimit = currentCount >= maxAttributes
                   const canSelect = isSelected || !isAtMaxLimit
                   
                   return (
@@ -355,15 +437,67 @@ export function CreateIdentityPage() {
                         </div>
                       </div>
                       {isSelected && (
-                        <input
-                          type="text"
-                          placeholder={`Enter ${attr.name}...`}
-                          value={selectedAttributes[attr.id] || ''}
-                          onChange={(e) => {
-                            setSelectedAttributes({...selectedAttributes, [attr.id]: e.target.value})
-                          }}
-                          className="w-full px-3 py-2 rounded border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent"
-                        />
+                        <div className="space-y-2">
+                          {attr.type === 'date' ? (
+                            <div className="flex gap-2">
+                              <input
+                                type="date"
+                                value={selectedAttributes[attr.id] ? new Date(selectedAttributes[attr.id]).toISOString().split('T')[0] : ''}
+                                onChange={(e) => handleAttributeChange(attr.id, e.target.value)}
+                                className="flex-1 px-3 py-2 rounded border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent"
+                              />
+                              <span className="text-xs text-muted-foreground py-2">or</span>
+                              <input
+                                type="text"
+                                placeholder="YYYY-MM-DD"
+                                value={selectedAttributes[attr.id] || ''}
+                                onChange={(e) => handleAttributeChange(attr.id, e.target.value)}
+                                className="flex-1 px-3 py-2 rounded border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent"
+                              />
+                            </div>
+                          ) : attr.type === 'enum' && attr.enum ? (
+                            <select
+                              value={selectedAttributes[attr.id] || ''}
+                              onChange={(e) => handleAttributeChange(attr.id, e.target.value)}
+                              className="w-full px-3 py-2 rounded border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent"
+                            >
+                              <option value="">Select {attr.name}...</option>
+                              {attr.enum.map((option: string) => (
+                                <option key={option} value={option}>
+                                  {option}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input
+                              type="text"
+                              placeholder={`Enter ${attr.name}...`}
+                              value={selectedAttributes[attr.id] || ''}
+                              onChange={(e) => handleAttributeChange(attr.id, e.target.value)}
+                              className="w-full px-3 py-2 rounded border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent"
+                            />
+                          )}
+                          
+                          {/* Validation Error Display */}
+                          {validationErrors[attr.id] && (
+                            <p className="text-xs text-red-400 flex items-start gap-1">
+                              <span className="mt-0.5">⚠</span>
+                              <span>{validationErrors[attr.id]}</span>
+                            </p>
+                          )}
+                          
+                          {/* Helper Text */}
+                          {!validationErrors[attr.id] && selectedAttributes[attr.id] && (
+                            <p className="text-xs text-accent flex items-start gap-1">
+                              <span className="mt-0.5">✓</span>
+                              <span>{attr.name} looks good!</span>
+                            </p>
+                          )}
+                          
+                          {attr.type === 'date' && (
+                            <p className="text-xs text-muted-foreground">Format: YYYY-MM-DD or use the date picker</p>
+                          )}
+                        </div>
                       )}
                     </div>
                   )
@@ -413,6 +547,17 @@ export function CreateIdentityPage() {
           </div>
         </div>
       </div>
+
+      {/* Subscription Modal */}
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+        onSuccess={() => {
+          setSubscriptionInfo(getSubscriptionInfo())
+          setError(null)
+        }}
+        reason="attribute_limit"
+      />
     </div>
   )
 }
