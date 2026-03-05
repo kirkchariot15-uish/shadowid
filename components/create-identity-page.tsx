@@ -168,7 +168,14 @@ export function CreateIdentityPage() {
 
       const timestamp = Math.floor(Date.now() / 1000);
       
-      // Step 1: Generate commitment locally (deterministic based on user + attributes + timestamp)
+      // Step 1: Create attribute hash (local)
+      const attributeMap: Record<string, string> = {}
+      enabledAttrIds.forEach(attr => {
+        attributeMap[attr] = selectedAttributes[attr].value
+      })
+      const attributeHash = await createAttributeHash(attributeMap, timestamp)
+
+      // Step 2: Generate commitment locally (deterministic based on user + attributes + timestamp)
       const data = `${address}-${enabledAttrIds.join(',')}-${timestamp}`
       const encoder = new TextEncoder()
       const dataBuffer = encoder.encode(data)
@@ -177,13 +184,6 @@ export function CreateIdentityPage() {
       const hexString = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
       const commitmentHashForTx = hexToField(hexString)
       const commitmentDisplayHex = hexString.slice(0, 16).toUpperCase()
-
-      // Step 2: Create attribute hash that will be stored on-chain
-      const attributeMap: Record<string, string> = {}
-      enabledAttrIds.forEach(attr => {
-        attributeMap[attr] = selectedAttributes[attr].value
-      })
-      const attributeHash = await createAttributeHash(attributeMap, timestamp)
 
       // Step 3: Sign the commitment + attributes (proves user created this)
       const signature = await signAttributeCommitment(
@@ -201,16 +201,15 @@ export function CreateIdentityPage() {
         attributes: attributeMap
       })
 
-      // Step 4: NOW register on blockchain with signature and attribute hash
-      // BLOCKCHAIN will store the commitment and attribute count
-      // Client-side proofs (signature, hash) are stored separately for verifier validation
+      // Step 4: Register on blockchain - blockchain will verify and store the commitment
+      // Blockchain returns the VERIFIED commitment (proving it was stored)
       const blockchainResult = await registerCommitmentWithAttributesOnChain(
         commitmentHashForTx,
         attributeHash,
         signature,
         timestamp,
         address,
-        selectedAttrIds.length,  // Pass attribute count for blockchain
+        enabledAttrIds.length,
         executeTransaction
       )
 
