@@ -498,33 +498,6 @@ export function CreateIdentityPage() {
                 })}
               </div>
             </div>
-                          
-                          {/* Validation Error Display */}
-                          {validationErrors[attr.id] && (
-                            <p className="text-xs text-red-400 flex items-start gap-1">
-                              <span className="mt-0.5">⚠</span>
-                              <span>{validationErrors[attr.id]}</span>
-                            </p>
-                          )}
-                          
-                          {/* Helper Text */}
-                          {!validationErrors[attr.id] && selectedAttributes[attr.id] && (
-                            <p className="text-xs text-accent flex items-start gap-1">
-                              <span className="mt-0.5">✓</span>
-                              <span>{attr.name} looks good!</span>
-                            </p>
-                          )}
-                          
-                          {attr.type === 'date' && (
-                            <p className="text-xs text-muted-foreground">Format: YYYY-MM-DD or use the date picker</p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
             {error && (
               <div className="p-4 rounded-lg border border-red-400/30 bg-red-400/5">
                 <div className="flex items-start gap-3">
