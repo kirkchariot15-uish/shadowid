@@ -39,56 +39,65 @@ export function SubscriptionModal({
     setError(null)
 
     try {
-      console.log('[v0] Starting subscription payment...')
+      console.log('[v0] Starting subscription payment of 5 testnet tokens...')
 
-      // In a real application, you would:
-      // 1. Call a smart contract function to transfer tokens
-      // 2. The contract would transfer SUBSCRIPTION_COST tokens to the service address
-      // 3. Return a transaction hash
+      // Execute real blockchain transaction to pay for subscription
+      // This calls a contract to transfer tokens to the service address
+      const serviceAddress = 'aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq5ll37m' // Placeholder service address
       
-      // For now, we simulate the payment by storing subscription data
-      // In production, this would be a real contract call like:
-      // const result = await executeTransaction({
-      //   transitions: [{
-      //     program: 'payment_v1.aleo',
-      //     functionName: 'transfer_for_subscription',
-      //     inputs: [SERVICE_ADDRESS, `${SUBSCRIPTION_COST}u64`]
-      //   }],
-      //   fee: 1000
-      // })
+      const transactionId = await executeTransaction({
+        transitions: [
+          {
+            program: 'token_v0.aleo', // Token transfer contract
+            functionName: 'transfer_public_to_private',
+            inputs: [
+              serviceAddress,           // Recipient (service)
+              `${SUBSCRIPTION_COST}u64`  // Amount: 5 tokens
+            ]
+          }
+        ],
+        fee: 100000,
+        feePrivate: false
+      })
 
-      // Simulate payment processing with a slight delay
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      if (!transactionId) {
+        throw new Error('Transaction failed: no transaction ID returned')
+      }
 
-      // Generate a simulated transaction hash
-      const mockTxHash = `0x${Math.random().toString(16).slice(2)}${Date.now().toString(16)}`
+      console.log('[v0] Subscription payment successful:', transactionId)
 
-      // Set subscription status
-      setSubscriptionStatus(mockTxHash, SUBSCRIPTION_DURATION)
+      // Store subscription status
+      const expiryDate = new Date()
+      expiryDate.setDate(expiryDate.getDate() + SUBSCRIPTION_DURATION)
+      
+      setSubscriptionStatus({
+        isActive: true,
+        expiryDate: expiryDate.toISOString(),
+        transactionId: transactionId,
+        paidAmount: SUBSCRIPTION_COST
+      })
 
-      console.log('[v0] Subscription activated:', mockTxHash)
       addActivityLog(
         'Subscribe',
-        'payment',
-        `Subscription activated for ${SUBSCRIPTION_DURATION} days`,
+        'subscription',
+        `Paid ${SUBSCRIPTION_COST} tokens for 1-year unlimited attributes subscription`,
         'success'
       )
 
       setSuccess(true)
-
-      // Auto-close after 2 seconds
+      
+      // Call onSuccess callback after 2 seconds
       setTimeout(() => {
-        setSuccess(false)
         onSuccess?.()
         onClose()
       }, 2000)
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Payment failed'
-      console.error('[v0] Subscription error:', err)
+      const errorMsg = err instanceof Error ? err.message : 'Subscription payment failed'
+      console.error('[v0] Subscription error:', errorMsg)
       setError(errorMsg)
       addActivityLog(
         'Subscribe',
-        'payment',
+        'subscription',
         `Subscription failed: ${errorMsg}`,
         'error'
       )

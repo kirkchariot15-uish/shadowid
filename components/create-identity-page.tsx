@@ -22,7 +22,7 @@ export function CreateIdentityPage() {
   const { address, executeTransaction } = useAleoWallet()
   const isConnected = !!address
   const [mounted, setMounted] = useState(false)
-  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({})
+  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, { value: string; enabled: boolean }>>({})
   const [isCreating, setIsCreating] = useState(false)
   const [creationComplete, setCreationComplete] = useState(false)
   const [commitment, setCommitment] = useState<string>('')
@@ -52,19 +52,13 @@ export function CreateIdentityPage() {
   }, [address, executeTransaction, mounted, isConnected])
 
   const handleAttributeChange = (attrId: string, value: string) => {
-    const maxAttributes = getMaxAttributesForUser()
-    const currentCount = Object.keys(selectedAttributes).filter(key => selectedAttributes[key]).length
-    
-    if (value && currentCount >= maxAttributes && !selectedAttributes[attrId]) {
-      setError(`You can only claim ${maxAttributes} attributes. ${subscriptionInfo.isActive ? '' : 'Subscribe for unlimited.'}`)
-      setShowSubscriptionModal(true)
-      return
-    }
-
-    // Update value
+    // Update the attribute value (users can fill any attribute)
     setSelectedAttributes(prev => ({
       ...prev,
-      [attrId]: value
+      [attrId]: {
+        value,
+        enabled: prev[attrId]?.enabled ?? false
+      }
     }))
 
     // Validate the input
@@ -85,6 +79,28 @@ export function CreateIdentityPage() {
     }
   }
 
+  const handleAttributeToggle = (attrId: string) => {
+    const maxAttributes = getMaxAttributesForUser()
+    const currentEnabledCount = Object.values(selectedAttributes).filter(attr => attr.enabled).length
+    
+    // Check if we're trying to enable a new attribute beyond the limit
+    if (!selectedAttributes[attrId]?.enabled && currentEnabledCount >= maxAttributes) {
+      setError(`Maximum ${maxAttributes} attributes allowed to claim. ${!subscriptionInfo.isActive ? 'Subscribe for unlimited.' : ''}`)
+      setShowSubscriptionModal(true)
+      return
+    }
+
+    setSelectedAttributes(prev => ({
+      ...prev,
+      [attrId]: {
+        ...prev[attrId],
+        enabled: !prev[attrId]?.enabled
+      }
+    }))
+    
+    setError(null)
+  }
+
   if (!mounted) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -94,26 +110,22 @@ export function CreateIdentityPage() {
   }
 
   const handleCreateIdentity = async () => {
-    // Validate: only attributes from STANDARD_ATTRIBUTES
-    const selectedAttrIds = Object.keys(selectedAttributes)
-      .filter(key => {
-        const isValid = key in STANDARD_ATTRIBUTES && selectedAttributes[key].trim()
-        if (!isValid && selectedAttributes[key].trim()) {
-          console.warn('[v0] Invalid attribute ID:', key)
-        }
-        return isValid
-      })
+    // Get ENABLED attributes only (not all filled attributes)
+    const enabledAttrIds = Object.keys(selectedAttributes)
+      .filter(key => selectedAttributes[key].enabled && selectedAttributes[key].value.trim())
     
-    if (selectedAttrIds.length === 0) {
-      setError('Select and fill at least one valid attribute to claim')
+    if (enabledAttrIds.length === 0) {
+      setError('Toggle and enable at least one attribute to claim')
       return
     }
 
-    // Validate all attributes before creating identity
-    const validationErrors = validateAllAttributes(selectedAttrIds.reduce((acc, key) => {
-      acc[key] = selectedAttributes[key]
+    // Validate all ENABLED attributes before creating identity
+    const enabledAttrs = enabledAttrIds.reduce((acc, key) => {
+      acc[key] = selectedAttributes[key].value
       return acc
-    }, {} as Record<string, string>), STANDARD_ATTRIBUTES)
+    }, {} as Record<string, string>)
+
+    const validationErrors = validateAllAttributes(enabledAttrs, STANDARD_ATTRIBUTES)
 
     if (hasValidationErrors(validationErrors)) {
       const errorMap = validationErrors.reduce((acc, err) => {
@@ -121,12 +133,12 @@ export function CreateIdentityPage() {
         return acc
       }, {} as Record<string, string>)
       setValidationErrors(errorMap)
-      setError('Please fix validation errors before creating your identity')
+      setError('Please fix validation errors in enabled attributes')
       return
     }
 
     const maxAttributes = getMaxAttributesForUser()
-    if (selectedAttrIds.length > maxAttributes) {
+    if (enabledAttrIds.length > maxAttributes) {
       setError(`Maximum ${maxAttributes} attributes allowed. Subscribe for unlimited.`)
       setShowSubscriptionModal(true)
       return
@@ -157,7 +169,7 @@ export function CreateIdentityPage() {
       const timestamp = Math.floor(Date.now() / 1000);
       
       // Step 1: Generate commitment locally (deterministic based on user + attributes + timestamp)
-      const data = `${address}-${selectedAttrIds.join(',')}-${timestamp}`
+      const data = `${address}-${enabledAttrIds.join(',')}-${timestamp}`
       const encoder = new TextEncoder()
       const dataBuffer = encoder.encode(data)
       const hashBuffer = await window.crypto.subtle.digest('SHA-256', dataBuffer)
@@ -168,8 +180,8 @@ export function CreateIdentityPage() {
 
       // Step 2: Create attribute hash that will be stored on-chain
       const attributeMap: Record<string, string> = {}
-      selectedAttrIds.forEach(attr => {
-        attributeMap[attr] = selectedAttributes[attr]
+      enabledAttrIds.forEach(attr => {
+        attributeMap[attr] = selectedAttributes[attr].value
       })
       const attributeHash = await createAttributeHash(attributeMap, timestamp)
 
@@ -226,8 +238,8 @@ export function CreateIdentityPage() {
         issuanceDate: new Date().toISOString(),
         credentialSubject: {
           id: address,
-          claims: selectedAttrIds.reduce((acc, attr) => {
-            acc[attr] = { attributeId: attr, value: selectedAttributes[attr] }
+          claims: enabledAttrIds.reduce((acc, attr) => {
+            acc[attr] = { attributeId: attr, value: selectedAttributes[attr].value }
             return acc
           }, {} as Record<string, any>)
         },
@@ -266,7 +278,7 @@ export function CreateIdentityPage() {
       await storeEncryptedCredential(blockchainResult.commitmentHash, credential, address)
 
       setCommitment(blockchainResult.commitmentHash)
-      addActivityLog('Create ShadowID', 'identity', `Created ZK identity with ${selectedAttrIds.length} attributes`, 'success')
+      addActivityLog('Create ShadowID', 'identity', `Created ZK identity with ${enabledAttrIds.length} attributes`, 'success')
       setCreationComplete(true)
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to create identity'
@@ -397,86 +409,106 @@ export function CreateIdentityPage() {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold">Available Attributes</h2>
                 <span className="text-xs font-mono bg-accent/10 px-2 py-1 rounded">
-                  {Object.keys(selectedAttributes).filter(k => selectedAttributes[k]).length}/{getMaxAttributesForUser()} Selected
+                  {Object.values(selectedAttributes).filter(attr => attr.enabled).length}/{getMaxAttributesForUser()} Claimed
                 </span>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <p className="text-sm text-muted-foreground mb-4">Fill in any attributes you want. Toggle ON/OFF to claim the ones you want to prove. Free plan: {getMaxAttributesForUser()} claims max.</p>
+              
+              <div className="space-y-3">
                 {Object.values(STANDARD_ATTRIBUTES).map(attr => {
-                  const isSelected = !!selectedAttributes[attr.id]
-                  const maxAttributes = getMaxAttributesForUser()
-                  const currentCount = Object.keys(selectedAttributes).filter(k => selectedAttributes[k]).length
-                  const isAtMaxLimit = currentCount >= maxAttributes
-                  const canSelect = isSelected || !isAtMaxLimit
+                  const attrData = selectedAttributes[attr.id] || { value: '', enabled: false }
+                  const isEnabled = attrData.enabled
+                  const currentEnabledCount = Object.values(selectedAttributes).filter(a => a.enabled).length
+                  const canEnable = isEnabled || currentEnabledCount < getMaxAttributesForUser()
                   
                   return (
-                    <div key={attr.id} className={`p-4 rounded-lg border transition-colors ${isAtMaxLimit && !isSelected ? 'border-border opacity-50 cursor-not-allowed' : 'border-border hover:border-accent/50'}`}>
-                      <div className="flex items-start gap-3 mb-3">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={(e) => {
-                            if (e.target.checked && !canSelect) {
-                              setError('Maximum 4 attributes allowed per identity.')
-                              return
-                            }
-                            if (e.target.checked) {
-                              setSelectedAttributes({...selectedAttributes, [attr.id]: ''})
-                              setError(null)
-                            } else {
-                              const {[attr.id]: _, ...rest} = selectedAttributes
-                              setSelectedAttributes(rest)
-                            }
-                          }}
-                          disabled={isAtMaxLimit && !isSelected}
-                          className="mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                        />
+                    <div key={attr.id} className={`p-4 rounded-lg border transition-all ${isEnabled ? 'border-accent bg-accent/5' : 'border-border'}`}>
+                      <div className="flex items-start justify-between gap-4 mb-3">
                         <div className="flex-1">
                           <p className="font-semibold text-sm">{attr.name}</p>
-                          <p className="text-xs text-muted-foreground mt-1">{attr.description}</p>
-                          <p className="text-xs text-accent mt-2">Privacy: {attr.privacyLevel}</p>
+                          <p className="text-xs text-muted-foreground">{attr.description}</p>
                         </div>
+                        {/* Toggle Switch */}
+                        <button
+                          onClick={() => handleAttributeToggle(attr.id)}
+                          disabled={!canEnable}
+                          className={`px-3 py-1 rounded-full text-xs font-medium transition-colors flex-shrink-0 ${
+                            isEnabled
+                              ? 'bg-accent text-accent-foreground'
+                              : 'bg-border text-muted-foreground hover:bg-accent/20'
+                          } ${!canEnable ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          {isEnabled ? 'Claimed' : 'Claim'}
+                        </button>
                       </div>
-                      {isSelected && (
-                        <div className="space-y-2">
-                          {attr.type === 'date' ? (
-                            <div className="flex gap-2">
-                              <input
-                                type="date"
-                                value={selectedAttributes[attr.id] ? new Date(selectedAttributes[attr.id]).toISOString().split('T')[0] : ''}
-                                onChange={(e) => handleAttributeChange(attr.id, e.target.value)}
-                                className="flex-1 px-3 py-2 rounded border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent"
-                              />
-                              <span className="text-xs text-muted-foreground py-2">or</span>
-                              <input
-                                type="text"
-                                placeholder="YYYY-MM-DD"
-                                value={selectedAttributes[attr.id] || ''}
-                                onChange={(e) => handleAttributeChange(attr.id, e.target.value)}
-                                className="flex-1 px-3 py-2 rounded border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent"
-                              />
-                            </div>
-                          ) : attr.type === 'enum' && attr.enum ? (
-                            <select
-                              value={selectedAttributes[attr.id] || ''}
+                      
+                      {/* Always show input fields */}
+                      <div className="space-y-2">
+                        {attr.type === 'date' ? (
+                          <div className="flex gap-2">
+                            <input
+                              type="date"
+                              value={attrData.value ? new Date(attrData.value).toISOString().split('T')[0] : ''}
                               onChange={(e) => handleAttributeChange(attr.id, e.target.value)}
-                              className="w-full px-3 py-2 rounded border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent"
-                            >
-                              <option value="">Select {attr.name}...</option>
-                              {attr.enum.map((option: string) => (
-                                <option key={option} value={option}>
-                                  {option}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
+                              placeholder={`Enter ${attr.name}...`}
+                              className="flex-1 px-3 py-2 rounded border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent"
+                            />
                             <input
                               type="text"
-                              placeholder={`Enter ${attr.name}...`}
-                              value={selectedAttributes[attr.id] || ''}
+                              placeholder="YYYY-MM-DD"
+                              value={attrData.value || ''}
                               onChange={(e) => handleAttributeChange(attr.id, e.target.value)}
-                              className="w-full px-3 py-2 rounded border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent"
+                              className="flex-1 px-3 py-2 rounded border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent"
                             />
-                          )}
+                          </div>
+                        ) : attr.type === 'enum' && attr.enum ? (
+                          <select
+                            value={attrData.value || ''}
+                            onChange={(e) => handleAttributeChange(attr.id, e.target.value)}
+                            className="w-full px-3 py-2 rounded border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent"
+                          >
+                            <option value="">Select {attr.name}...</option>
+                            {attr.enum.map((option: string) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            type="text"
+                            placeholder={`Enter ${attr.name}...`}
+                            value={attrData.value || ''}
+                            onChange={(e) => handleAttributeChange(attr.id, e.target.value)}
+                            className="w-full px-3 py-2 rounded border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent"
+                          />
+                        )}
+                        
+                        {/* Validation Error Display */}
+                        {validationErrors[attr.id] && (
+                          <p className="text-xs text-red-400 flex items-start gap-1">
+                            <span className="mt-0.5">⚠</span>
+                            <span>{validationErrors[attr.id]}</span>
+                          </p>
+                        )}
+                        
+                        {/* Success Indicator */}
+                        {!validationErrors[attr.id] && attrData.value && (
+                          <p className="text-xs text-accent flex items-start gap-1">
+                            <span className="mt-0.5">✓</span>
+                            <span>Valid {attr.name}</span>
+                          </p>
+                        )}
+                        
+                        {attr.type === 'date' && (
+                          <p className="text-xs text-muted-foreground">Format: YYYY-MM-DD</p>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
                           
                           {/* Validation Error Display */}
                           {validationErrors[attr.id] && (
