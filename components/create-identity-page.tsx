@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { debugWalletState } from '@/lib/blockchain-transaction-handler'
-import { hexToField } from '@/lib/aleo-field-formatter'
 import { Navigation } from '@/components/navigation'
 import { ProgressIndicator } from '@/components/progress-indicator'
 import { LoadingSpinner } from '@/components/loading-spinner'
@@ -12,7 +11,7 @@ import { Lock, Sparkles, CheckCircle2, ArrowLeft, Plus, AlertCircle } from 'luci
 import Link from 'next/link'
 import { addActivityLog } from '@/lib/activity-logger'
 import { STANDARD_ATTRIBUTES } from '@/lib/attribute-schema'
-import { registerCommitmentWithAttributesOnChain, createAttributeHash, signAttributeCommitment } from '@/lib/aleo-sdk-integration'
+import { registerAttributesAndGetCommitment, createAttributeHash, signAttributeCommitment } from '@/lib/aleo-sdk-integration'
 import { storeEncryptedCredential } from '@/lib/encrypted-storage'
 import { validateAttributeValue, validateAllAttributes, hasValidationErrors } from '@/lib/attribute-validator'
 import { getMaxAttributesForUser, getSubscriptionInfo } from '@/lib/subscription-manager'
@@ -168,43 +167,31 @@ export function CreateIdentityPage() {
 
       const timestamp = Math.floor(Date.now() / 1000);
       
-      // Step 1: Create attribute hash (local)
+      // Step 1: Create attribute hash (local - will be sent to blockchain)
       const attributeMap: Record<string, string> = {}
       enabledAttrIds.forEach(attr => {
         attributeMap[attr] = selectedAttributes[attr].value
       })
       const attributeHash = await createAttributeHash(attributeMap, timestamp)
 
-      // Step 2: Generate commitment locally (deterministic based on user + attributes + timestamp)
-      const data = `${address}-${enabledAttrIds.join(',')}-${timestamp}`
-      const encoder = new TextEncoder()
-      const dataBuffer = encoder.encode(data)
-      const hashBuffer = await window.crypto.subtle.digest('SHA-256', dataBuffer)
-      const hashArray = Array.from(new Uint8Array(hashBuffer))
-      const hexString = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
-      const commitmentHashForTx = hexToField(hexString)
-      const commitmentDisplayHex = hexString.slice(0, 16).toUpperCase()
-
-      // Step 3: Sign the commitment + attributes (proves user created this)
+      // Step 2: Sign the attributes (proves user authorized this)
       const signature = await signAttributeCommitment(
-        commitmentHashForTx,
+        attributeHash, // Sign the attributes, not a commitment (commitment comes from blockchain)
         attributeHash,
         timestamp,
         address
       )
 
-      console.log('[v0] Commitment generation:', {
-        commitment: commitmentHashForTx,
+      console.log('[v0] Sending attributes to blockchain for commitment generation:', {
         attributeHash,
         signature,
         timestamp,
         attributes: attributeMap
       })
 
-      // Step 4: Register on blockchain - blockchain will verify and store the commitment
-      // Blockchain returns the VERIFIED commitment (proving it was stored)
-      const blockchainResult = await registerCommitmentWithAttributesOnChain(
-        commitmentHashForTx,
+      // Step 3: Send ONLY attributes to blockchain - blockchain generates commitment
+      // CRITICAL: We do NOT send a pre-made commitment. Blockchain generates it from attributes.
+      const blockchainResult = await registerAttributesAndGetCommitment(
         attributeHash,
         signature,
         timestamp,
@@ -212,6 +199,9 @@ export function CreateIdentityPage() {
         enabledAttrIds.length,
         executeTransaction
       )
+      
+      // Extract the BLOCKCHAIN-GENERATED commitment
+      const commitmentDisplayHex = blockchainResult.commitmentHash?.slice(0, 16).toUpperCase() || ''
 
       if (!blockchainResult.success) {
         console.error('[v0] Blockchain registration failed:', blockchainResult.error)
