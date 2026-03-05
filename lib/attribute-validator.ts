@@ -63,6 +63,15 @@ function validateDate(
   value: string,
   attr: any
 ): ValidationError | null {
+  // Type guard
+  if (typeof value !== 'string') {
+    return {
+      field: fieldId,
+      message: `${attr.name} must be a valid date`,
+      type: 'error'
+    };
+  }
+
   // Accept ISO date format or common formats
   const dateRegex = /^(\d{4})-(\d{2})-(\d{2})$|^(\d{1,2})\/(\d{1,2})\/(\d{4})$|^(\d{1,2})-(\d{1,2})-(\d{4})$/;
   
@@ -120,6 +129,15 @@ function validateEmail(
   value: string,
   attr: any
 ): ValidationError | null {
+  // Type guard
+  if (typeof value !== 'string') {
+    return {
+      field: fieldId,
+      message: `${attr.name} must be a valid email address`,
+      type: 'error'
+    };
+  }
+
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   
   if (!emailRegex.test(value.trim())) {
@@ -149,6 +167,15 @@ function validatePhone(
   value: string,
   attr: any
 ): ValidationError | null {
+  // Type guard
+  if (typeof value !== 'string') {
+    return {
+      field: fieldId,
+      message: `${attr.name} must be a valid phone number`,
+      type: 'error'
+    };
+  }
+
   // Accept various phone formats: +1234567890, (123) 456-7890, 123-456-7890, etc.
   const phoneRegex = /^[\d\s\-\(\)\+]+$/;
   const digitsOnly = value.replace(/\D/g, '');
@@ -188,6 +215,15 @@ function validateEnum(
   value: string,
   attr: any
 ): ValidationError | null {
+  // Type guard
+  if (typeof value !== 'string') {
+    return {
+      field: fieldId,
+      message: `${attr.name} must be one of: ${attr.enum?.join(', ') || 'valid options'}`,
+      type: 'error'
+    };
+  }
+
   if (!attr.enum || !Array.isArray(attr.enum)) {
     return null;
   }
@@ -211,6 +247,15 @@ function validateNumber(
   value: string,
   attr: any
 ): ValidationError | null {
+  // Type guard
+  if (typeof value !== 'string') {
+    return {
+      field: fieldId,
+      message: `${attr.name} must be a valid number`,
+      type: 'error'
+    };
+  }
+
   const num = parseFloat(value.trim());
 
   if (isNaN(num)) {
@@ -248,6 +293,15 @@ function validateString(
   value: string,
   attr: any
 ): ValidationError | null {
+  // Type guard
+  if (typeof value !== 'string') {
+    return {
+      field: fieldId,
+      message: `${attr.name} must be a valid text`,
+      type: 'error'
+    };
+  }
+
   const trimmed = value.trim();
 
   if (attr.minLength && trimmed.length < attr.minLength) {
