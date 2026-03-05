@@ -337,7 +337,7 @@ export function CreateIdentityPage() {
                   </Button>
                 </Link>
                 <Link href="/dashboard">
-                  <Button className="bg-blue hover:bg-blue/90 text-blue-foreground">Go to Dashboard</Button>
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">Go to Dashboard</Button>
                 </Link>
               </div>
             </div>

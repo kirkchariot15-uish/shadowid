@@ -5,14 +5,16 @@ import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
-import { Lock, ArrowLeft, Download, Eye, EyeOff, Copy, CheckCircle } from 'lucide-react'
+import { Lock, ArrowLeft, Download, Eye, EyeOff, Copy, CheckCircle, Clock } from 'lucide-react'
 import Link from 'next/link'
 import QRCode from 'qrcode'
 import { addActivityLog } from '@/lib/activity-logger'
+import { getExpirationConfig, addExpirationToQRData, formatTimeRemaining } from '@/lib/disclosure-expiration'
 
 interface StoredQRCode {
   commitment: string
   createdAt: string
+  expiresAt: string
   userInfo: {
     hasPhoto: boolean
     documentCount: number
@@ -41,24 +43,31 @@ export default function QRCodesPage() {
     if (commitment && createdAt && userInfoStr) {
       try {
         const userInfo = JSON.parse(userInfoStr)
+        
+        // Calculate expiration based on current settings
+        const expirationConfig = getExpirationConfig()
+        const createdDate = new Date(createdAt)
+        const expiresDate = new Date(createdDate.getTime() + expirationConfig.defaultExpirationHours * 60 * 60 * 1000)
+        
         const qrData = {
           commitment,
           createdAt,
+          expiresAt: expiresDate.toISOString(),
           userInfo,
         }
 
         setQrCodes([qrData])
 
-        // Generate QR code
-        generateQRCode(commitment, userInfo)
-        addActivityLog('View QR codes', 'qrcode', `Viewed ${commitment.substring(0, 8)}...`, 'success')
+        // Generate QR code with expiration info
+        generateQRCode(commitment, userInfo, expiresDate.toISOString())
+        addActivityLog('View QR codes', 'qrcode', `Viewed ${commitment.substring(0, 8)}... (Expires: ${expiresDate.toLocaleDateString()})`, 'success')
       } catch (err) {
         console.error('[v0] Error loading QR codes:', err)
       }
     }
   }, [isConnected])
 
-  const generateQRCode = async (commitment: string, userInfo: any) => {
+  const generateQRCode = async (commitment: string, userInfo: any, expiresAt: string) => {
     try {
       // Get blockchain-verified cryptographic data (NOT local generated data)
       const userAddress = localStorage.getItem('shadowid-user-id')
@@ -77,9 +86,8 @@ export default function QRCodesPage() {
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
       const verificationLink = `${baseUrl}/verify?commitment=${commitment}`
       
-      // QR code data ONLY includes cryptographic proofs, not raw attributes
-      // Verifier will validate signature and fetch attributes from blockchain
-      const qrData = JSON.stringify({
+      // QR code data with REAL expiration time
+      const qrData = JSON.stringify(addExpirationToQRData({
         commitment,
         type: 'shadowid-v3',
         version: '3.0',
@@ -89,7 +97,7 @@ export default function QRCodesPage() {
         timestamp,
         ownerAddress: userAddress,
         verificationLink,      // Link to view full profile
-      })
+      }))
 
       const qrUrl = await QRCode.toDataURL(qrData, {
         errorCorrectionLevel: 'H',
@@ -181,19 +189,29 @@ export default function QRCodesPage() {
                 <div key={idx} className="rounded-lg border border-border bg-card overflow-hidden">
                   {/* Header */}
                   <div className="p-6 border-b border-border/50 bg-muted/20">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-semibold text-lg">ShadowID #{idx + 1}</h3>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Created: {new Date(qr.createdAt).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
-                      </div>
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="font-semibold text-lg">ShadowID #{idx + 1}</h3>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Created: {new Date(qr.createdAt).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                          <p className="text-xs text-accent flex items-center gap-1 mt-2">
+                            <Clock className="h-3 w-3" />
+                            Expires: {new Date(qr.expiresAt).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
                       <button
                         onClick={() => setExpandedId(expandedId === qr.commitment ? null : qr.commitment)}
                         className="p-2 hover:bg-muted/40 rounded transition-colors"

@@ -48,6 +48,8 @@ export default function PrivacyDashboard() {
   const [sessionData, setSessionData] = useState<any>(null)
   const [rateLimitStats, setRateLimitStats] = useState<any>(null)
   const [isRevoking, setIsRevoking] = useState(false)
+  const [expirationHours, setExpirationHours] = useState(getExpirationConfig().defaultExpirationHours)
+  const [inactivityTimeout, setInactivityTimeoutState] = useState(30)
 
   const handleRevokeCredential = async (commitment: string) => {
     if (!address) return
@@ -124,15 +126,15 @@ export default function PrivacyDashboard() {
           </div>
 
           {/* Tab Navigation */}
-          <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
+          <div className="flex gap-1 mb-8 overflow-x-auto pb-2 border-b border-border/30">
             {['overview', 'credentials', 'disclosures', 'audit', 'session', 'settings'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab as any)}
-                className={`px-4 py-2 rounded-lg font-semibold uppercase tracking-widest text-xs whitespace-nowrap transition-colors ${
+                className={`px-4 py-3 font-semibold uppercase tracking-widest text-xs whitespace-nowrap transition-all border-b-2 ${
                   activeTab === tab
-                    ? 'bg-accent text-accent-foreground'
-                    : 'bg-card text-muted-foreground hover:bg-muted/50'
+                    ? 'border-accent text-accent'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {tab === 'overview' && '📊 Overview'}
@@ -413,8 +415,12 @@ export default function PrivacyDashboard() {
                   <div>
                     <label className="block text-sm font-semibold mb-3">Default QR Code Expiration</label>
                     <select
-                      defaultValue={getExpirationConfig().defaultExpirationHours}
-                      onChange={(e) => setDefaultExpirationHours(parseInt(e.target.value))}
+                      value={expirationHours}
+                      onChange={(e) => {
+                        const hours = parseInt(e.target.value)
+                        setExpirationHours(hours)
+                        setDefaultExpirationHours(hours)
+                      }}
                       className="w-full px-4 py-2 rounded-lg border border-accent/20 bg-background text-foreground focus:outline-none focus:border-accent"
                     >
                       <option value={1}>1 hour</option>
@@ -423,15 +429,19 @@ export default function PrivacyDashboard() {
                       <option value={72}>72 hours (3 days)</option>
                       <option value={168}>1 week</option>
                     </select>
-                    <p className="text-xs text-muted-foreground mt-2">All generated QR codes will automatically expire after this duration.</p>
+                    <p className="text-xs text-muted-foreground mt-2">All generated QR codes will automatically expire after this duration. Currently set to {expirationHours} hour(s).</p>
                   </div>
 
                   {/* Inactivity Timeout */}
                   <div>
                     <label className="block text-sm font-semibold mb-3">Session Inactivity Timeout</label>
                     <select
-                      defaultValue="30"
-                      onChange={(e) => setInactivityTimeout(parseInt(e.target.value))}
+                      value={inactivityTimeout}
+                      onChange={(e) => {
+                        const timeout = parseInt(e.target.value)
+                        setInactivityTimeoutState(timeout)
+                        setInactivityTimeout(timeout)
+                      }}
                       className="w-full px-4 py-2 rounded-lg border border-accent/20 bg-background text-foreground focus:outline-none focus:border-accent"
                     >
                       <option value={5}>5 minutes</option>
@@ -440,7 +450,7 @@ export default function PrivacyDashboard() {
                       <option value={60}>1 hour</option>
                       <option value={480}>8 hours</option>
                     </select>
-                    <p className="text-xs text-muted-foreground mt-2">You'll be logged out automatically after this period of inactivity.</p>
+                    <p className="text-xs text-muted-foreground mt-2">You'll be logged out automatically after {inactivityTimeout} minutes of inactivity.</p>
                   </div>
 
                   {/* Rate Limits Info */}
