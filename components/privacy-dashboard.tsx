@@ -305,7 +305,7 @@ export default function PrivacyDashboard() {
           {activeTab === 'audit' && (
             <div className="space-y-6">
               <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-8">
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-6">
                   <h3 className="text-lg font-semibold">Audit Trail</h3>
                   <Button
                     onClick={() => {
@@ -316,10 +316,10 @@ export default function PrivacyDashboard() {
                       link.click()
                     }}
                     variant="outline"
-                    className="gap-2"
+                    className="gap-2 w-full sm:w-auto"
                   >
                     <Download className="h-4 w-4" />
-                    Export
+                    Export Audit Trail
                   </Button>
                 </div>
 
@@ -388,16 +388,18 @@ export default function PrivacyDashboard() {
                       </div>
                     </div>
 
-                    <Button
-                      onClick={() => {
-                        forceLogout('User initiated logout from Privacy Dashboard')
-                        window.location.href = '/dashboard'
-                      }}
-                      className="w-full bg-accent hover:bg-accent/90 gap-2"
-                    >
-                      <Lock className="h-4 w-4" />
-                      End Session
-                    </Button>
+                    <div className="pt-6 border-t border-border/30">
+                      <Button
+                        onClick={() => {
+                          forceLogout('User initiated logout from Privacy Dashboard')
+                          window.location.href = '/dashboard'
+                        }}
+                        className="w-full bg-accent hover:bg-accent/90 gap-2 py-6"
+                      >
+                        <Lock className="h-4 w-4" />
+                        End Session
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -467,18 +469,19 @@ export default function PrivacyDashboard() {
                   </div>
 
                   {/* Danger Zone */}
-                  <div className="p-4 rounded-lg border border-red-500/20 bg-red-500/5">
-                    <p className="text-sm font-semibold mb-4 flex items-center gap-2">
+                  <div className="p-6 rounded-lg border border-red-500/30 bg-red-500/5 space-y-4">
+                    <p className="text-sm font-semibold flex items-center gap-2">
                       <AlertCircle className="h-4 w-4 text-red-500" />
                       Danger Zone
                     </p>
+                    <p className="text-xs text-muted-foreground">Irreversible actions that permanently delete your data.</p>
                     <Button
                       onClick={() => {
                         if (confirm('This will permanently delete all audit records. This cannot be undone.')) {
                           clearAuditTrail()
                         }
                       }}
-                      className="w-full bg-red-600/80 hover:bg-red-700 text-white gap-2"
+                      className="w-full bg-red-600/80 hover:bg-red-700 text-white gap-2 py-5"
                     >
                       <Trash2 className="h-4 w-4" />
                       Clear Audit Trail
