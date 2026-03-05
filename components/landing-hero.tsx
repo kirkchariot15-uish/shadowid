@@ -46,7 +46,7 @@ export function LandingHero() {
             </p>
           ) : (
             <Link href="/dashboard">
-              <Button size="lg" className="h-12 px-8 gap-2">
+              <Button size="lg" className="h-12 px-8 gap-2 bg-blue-600 hover:bg-blue-700 text-white">
                 Go to Dashboard
                 <ArrowRight className="w-4 h-4" />
               </Button>

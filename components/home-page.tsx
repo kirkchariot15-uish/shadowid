@@ -46,7 +46,7 @@ export default function HomePage() {
           
           {isConnected && (
             <Link href="/dashboard">
-              <Button size="lg" className="rounded-full bg-accent hover:bg-accent/90 font-semibold px-8">
+              <Button size="lg" className="rounded-full bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8">
                 Go to Dashboard
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
