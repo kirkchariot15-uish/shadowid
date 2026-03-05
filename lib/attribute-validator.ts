@@ -17,6 +17,15 @@ export function validateAttributeValue(
   value: string,
   schema: Record<string, any>
 ): ValidationError | null {
+  // Ensure value is a string
+  if (typeof value !== 'string') {
+    return {
+      field: attributeId,
+      message: `Invalid input type for ${schema[attributeId]?.name || attributeId}`,
+      type: 'error'
+    };
+  }
+
   if (!value || !value.trim()) {
     return {
       field: attributeId,

@@ -51,6 +51,12 @@ export function CreateIdentityPage() {
   }, [address, executeTransaction, mounted, isConnected])
 
   const handleAttributeChange = (attrId: string, value: string) => {
+    // Ensure value is a string and safe to use
+    if (typeof value !== 'string') {
+      console.warn('[v0] Invalid value type for attribute:', attrId, typeof value);
+      return;
+    }
+
     // Update the attribute value (users can fill any attribute)
     setSelectedAttributes(prev => ({
       ...prev,
