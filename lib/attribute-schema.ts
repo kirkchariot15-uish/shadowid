@@ -43,48 +43,16 @@ export interface ValidationRule {
 }
 
 /**
- * Standard Attribute Schemas
+ * Standard Attribute Schemas - MVP Edition
+ * Reduced to 8 peer-verifiable attributes suitable for grassroots verification
  */
 export const STANDARD_ATTRIBUTES: Record<string, AttributeSchema> = {
-  // Personal Information
-  'attr:full-name': {
-    id: 'attr:full-name',
-    name: 'Full Legal Name',
-    category: 'personal',
-    description: 'Legal name as appears on government-issued ID',
-    dataType: 'string',
-    required: false,
-    issuerRequired: true,
-    allowedProofTypes: ['exact', 'existence'],
-    validationRules: [
-      { type: 'length', value: { min: 2, max: 100 }, message: 'Name must be 2-100 characters' }
-    ],
-    exampleValue: 'Jane Smith',
-    privacyLevel: 'high'
-  },
-
-  'attr:date-of-birth': {
-    id: 'attr:date-of-birth',
-    name: 'Date of Birth',
-    category: 'personal',
-    description: 'Birth date for age verification',
-    dataType: 'date',
-    format: 'YYYY-MM-DD',
-    required: false,
-    issuerRequired: true,
-    allowedProofTypes: ['range', 'existence'], // Can prove "over 21" without exact date
-    validationRules: [
-      { type: 'pattern', value: /^\d{4}-\d{2}-\d{2}$/, message: 'Must be YYYY-MM-DD format' }
-    ],
-    exampleValue: '1990-05-15',
-    privacyLevel: 'critical'
-  },
-
+  // Personal Information (2)
   'attr:age-range': {
     id: 'attr:age-range',
     name: 'Age Range',
     category: 'personal',
-    description: 'Age category without exact age',
+    description: 'Age category for privacy - peers can verify they know your approximate age',
     dataType: 'enum',
     enumValues: ['13-17', '18-24', '25-34', '35-44', '45-54', '55-64', '65+'],
     required: false,
@@ -99,27 +67,27 @@ export const STANDARD_ATTRIBUTES: Record<string, AttributeSchema> = {
     id: 'attr:country',
     name: 'Country of Residence',
     category: 'personal',
-    description: 'Current country of residence',
+    description: 'Current country of residence - peers who know you can verify',
     dataType: 'string',
     required: false,
     issuerRequired: false,
     allowedProofTypes: ['exact', 'membership'],
     validationRules: [
-      { type: 'pattern', value: /^[A-Z]{2}$/, message: 'Must be 2-letter country code' }
+      { type: 'pattern', value: /^[A-Z]{2}$/, message: 'Must be 2-letter country code (e.g., US, UK)' }
     ],
     exampleValue: 'US',
-    privacyLevel: 'medium'
+    privacyLevel: 'low'
   },
 
-  // Professional Information
+  // Professional Information (3)
   'attr:job-title': {
     id: 'attr:job-title',
     name: 'Job Title',
     category: 'professional',
-    description: 'Current professional role',
+    description: 'Current professional role - colleagues can verify',
     dataType: 'string',
     required: false,
-    issuerRequired: true, // Should be verified by employer
+    issuerRequired: false,
     allowedProofTypes: ['exact', 'existence'],
     validationRules: [
       { type: 'length', value: { min: 2, max: 100 }, message: 'Title must be 2-100 characters' }
@@ -132,10 +100,10 @@ export const STANDARD_ATTRIBUTES: Record<string, AttributeSchema> = {
     id: 'attr:employer',
     name: 'Employer',
     category: 'professional',
-    description: 'Current employer organization',
+    description: 'Current employer organization - colleagues can verify',
     dataType: 'string',
     required: false,
-    issuerRequired: true,
+    issuerRequired: false,
     allowedProofTypes: ['exact', 'membership'],
     validationRules: [
       { type: 'length', value: { min: 2, max: 100 }, message: 'Employer must be 2-100 characters' }
@@ -146,9 +114,9 @@ export const STANDARD_ATTRIBUTES: Record<string, AttributeSchema> = {
 
   'attr:years-experience': {
     id: 'attr:years-experience',
-    name: 'Years of Experience',
+    name: 'Years of Professional Experience',
     category: 'professional',
-    description: 'Total years of professional experience',
+    description: 'Total years of professional experience - peers familiar with your career can verify',
     dataType: 'number',
     required: false,
     issuerRequired: false,
@@ -161,74 +129,16 @@ export const STANDARD_ATTRIBUTES: Record<string, AttributeSchema> = {
     privacyLevel: 'low'
   },
 
-  // Government/ID
-  'attr:government-id': {
-    id: 'attr:government-id',
-    name: 'Government ID Number',
-    category: 'government',
-    description: 'Government-issued identification number',
-    dataType: 'string',
-    required: false,
-    issuerRequired: true,
-    allowedProofTypes: ['existence'], // Never reveal actual ID
-    validationRules: [],
-    exampleValue: '***-**-1234',
-    privacyLevel: 'critical'
-  },
-
-  'attr:drivers-license': {
-    id: 'attr:drivers-license',
-    name: 'Driver\'s License',
-    category: 'government',
-    description: 'Valid driver\'s license',
-    dataType: 'boolean',
-    required: false,
-    issuerRequired: true,
-    allowedProofTypes: ['existence'],
-    validationRules: [],
-    exampleValue: 'true',
-    privacyLevel: 'high'
-  },
-
-  // Membership
-  'attr:dao-membership': {
-    id: 'attr:dao-membership',
-    name: 'DAO Membership',
-    category: 'membership',
-    description: 'Membership in a DAO organization',
-    dataType: 'string',
-    required: false,
-    issuerRequired: true, // DAO smart contract verification
-    allowedProofTypes: ['exact', 'existence'],
-    validationRules: [],
-    exampleValue: 'Aleo DAO',
-    privacyLevel: 'low'
-  },
-
-  'attr:professional-certification': {
-    id: 'attr:professional-certification',
-    name: 'Professional Certification',
-    category: 'professional',
-    description: 'Professional certification or license',
-    dataType: 'string',
-    required: false,
-    issuerRequired: true,
-    allowedProofTypes: ['exact', 'existence'],
-    validationRules: [],
-    exampleValue: 'AWS Certified Solutions Architect',
-    privacyLevel: 'low'
-  },
-
-  // Education
+  // Education (2)
   'attr:degree': {
     id: 'attr:degree',
     name: 'Educational Degree',
     category: 'education',
-    description: 'Academic degree earned',
+    description: 'Academic degree earned - classmates and educators can verify',
     dataType: 'enum',
-    enumValues: ['High School', 'Associate', 'Bachelor', 'Master', 'Doctorate'],
+    enumValues: ['High School', 'Associate', 'Bachelor', 'Master', 'Doctorate', 'Other'],
     required: false,
-    issuerRequired: true,
+    issuerRequired: false,
     allowedProofTypes: ['exact', 'membership'],
     validationRules: [],
     exampleValue: 'Bachelor',
@@ -239,30 +149,33 @@ export const STANDARD_ATTRIBUTES: Record<string, AttributeSchema> = {
     id: 'attr:university',
     name: 'University',
     category: 'education',
-    description: 'Educational institution attended',
+    description: 'Educational institution attended - alumni and classmates can verify',
     dataType: 'string',
     required: false,
-    issuerRequired: true,
+    issuerRequired: false,
     allowedProofTypes: ['exact', 'membership'],
-    validationRules: [],
+    validationRules: [
+      { type: 'length', value: { min: 2, max: 150 }, message: 'University name must be 2-150 characters' }
+    ],
     exampleValue: 'MIT',
     privacyLevel: 'low'
   },
 
-  // Financial
-  'attr:credit-score-range': {
-    id: 'attr:credit-score-range',
-    name: 'Credit Score Range',
-    category: 'financial',
-    description: 'Credit score category',
-    dataType: 'enum',
-    enumValues: ['Poor (300-579)', 'Fair (580-669)', 'Good (670-739)', 'Very Good (740-799)', 'Excellent (800-850)'],
+  // Skills/Expertise (1 - can be extended with custom)
+  'attr:expertise': {
+    id: 'attr:expertise',
+    name: 'Area of Expertise',
+    category: 'professional',
+    description: 'Primary area of expertise or specialization - collaborators and peers can verify',
+    dataType: 'string',
     required: false,
-    issuerRequired: true,
-    allowedProofTypes: ['exact', 'range'],
-    validationRules: [],
-    exampleValue: 'Good (670-739)',
-    privacyLevel: 'high'
+    issuerRequired: false,
+    allowedProofTypes: ['exact', 'existence'],
+    validationRules: [
+      { type: 'length', value: { min: 2, max: 100 }, message: 'Expertise must be 2-100 characters' }
+    ],
+    exampleValue: 'Blockchain Development',
+    privacyLevel: 'low'
   },
 }
 

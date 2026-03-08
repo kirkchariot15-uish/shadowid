@@ -397,17 +397,17 @@ export function CreateIdentityPage() {
             <div className="rounded-lg border border-accent/20 bg-accent/5 p-4 flex items-start gap-3">
               <Lock className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
               <p className="text-sm text-muted-foreground">
-                Select up to {getMaxAttributesForUser()} attributes to claim. Zero-knowledge credentials prove claims without revealing the underlying data.
+                Select up to {getMaxAttributesForUser()} attributes to activate. Zero-knowledge credentials prove claims without revealing the underlying data.
               </p>
             </div>
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold">Available Attributes</h2>
                 <span className="text-xs font-mono bg-accent/10 px-2 py-1 rounded">
-                  {Object.values(selectedAttributes).filter(attr => attr.enabled).length}/{getMaxAttributesForUser()} Claimed
+                  {Object.values(selectedAttributes).filter(attr => attr.enabled).length}/{getMaxAttributesForUser()} Activated
                 </span>
               </div>
-              <p className="text-sm text-muted-foreground mb-4">Fill in any attributes you want. Toggle ON/OFF to claim the ones you want to prove. Free plan: {getMaxAttributesForUser()} claims max.</p>
+              <p className="text-sm text-muted-foreground mb-4">Fill in any attributes you want. Toggle ON/OFF to activate the ones you want to prove. Free plan: {getMaxAttributesForUser()} activations max.</p>
               
               <div className="space-y-3">
                 {Object.values(STANDARD_ATTRIBUTES).map(attr => {
@@ -433,13 +433,13 @@ export function CreateIdentityPage() {
                               : 'bg-border text-muted-foreground hover:bg-accent/20'
                           } ${!canEnable ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                          {isEnabled ? 'Claimed' : 'Claim'}
+                          {isEnabled ? 'Activated' : 'Activate'}
                         </button>
                       </div>
                       
                       {/* Always show input fields */}
                       <div className="space-y-2">
-                        {attr.type === 'date' ? (
+                        {attr.dataType === 'date' ? (
                           <div className="flex gap-2">
                             <input
                               type="date"
@@ -456,19 +456,27 @@ export function CreateIdentityPage() {
                               className="flex-1 px-3 py-2 rounded border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent"
                             />
                           </div>
-                        ) : attr.type === 'enum' && attr.enum ? (
+                        ) : attr.dataType === 'enum' && attr.enumValues ? (
                           <select
                             value={attrData.value || ''}
                             onChange={(e) => handleAttributeChange(attr.id, e.target.value)}
                             className="w-full px-3 py-2 rounded border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent"
                           >
                             <option value="">Select {attr.name}...</option>
-                            {attr.enum.map((option: string) => (
+                            {attr.enumValues.map((option: string) => (
                               <option key={option} value={option}>
                                 {option}
                               </option>
                             ))}
                           </select>
+                        ) : attr.dataType === 'number' ? (
+                          <input
+                            type="number"
+                            placeholder={`Enter ${attr.name}...`}
+                            value={attrData.value || ''}
+                            onChange={(e) => handleAttributeChange(attr.id, e.target.value)}
+                            className="w-full px-3 py-2 rounded border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent"
+                          />
                         ) : (
                           <input
                             type="text"
@@ -495,7 +503,7 @@ export function CreateIdentityPage() {
                           </p>
                         )}
                         
-                        {attr.type === 'date' && (
+                        {attr.dataType === 'date' && (
                           <p className="text-xs text-muted-foreground">Format: YYYY-MM-DD</p>
                         )}
                       </div>
