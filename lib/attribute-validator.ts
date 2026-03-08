@@ -37,7 +37,10 @@ export function validateAttributeValue(
   const attr = schema[attributeId];
   if (!attr) return null;
 
-  switch (attr.type) {
+  // Use dataType for new schema, fallback to type for backward compatibility
+  const dataType = attr.dataType || attr.type;
+  
+  switch (dataType) {
     case 'date':
       return validateDate(attributeId, value, attr);
     case 'email':
@@ -50,6 +53,8 @@ export function validateAttributeValue(
       return validateNumber(attributeId, value, attr);
     case 'string':
       return validateString(attributeId, value, attr);
+    case 'boolean':
+      return null; // No validation for boolean
     default:
       return null;
   }
@@ -217,21 +222,25 @@ function validateEnum(
 ): ValidationError | null {
   // Type guard
   if (typeof value !== 'string') {
+    const enumOptions = attr.enumValues || attr.enum;
     return {
       field: fieldId,
-      message: `${attr.name} must be one of: ${attr.enum?.join(', ') || 'valid options'}`,
+      message: `${attr.name} must be one of: ${enumOptions?.join(', ') || 'valid options'}`,
       type: 'error'
     };
   }
 
-  if (!attr.enum || !Array.isArray(attr.enum)) {
+  // Use enumValues for new schema, fallback to enum for backward compatibility
+  const enumOptions = attr.enumValues || attr.enum;
+  
+  if (!enumOptions || !Array.isArray(enumOptions)) {
     return null;
   }
 
-  if (!attr.enum.includes(value.trim())) {
+  if (!enumOptions.includes(value.trim())) {
     return {
       field: fieldId,
-      message: `${attr.name} must be one of: ${attr.enum.join(', ')}`,
+      message: `${attr.name} must be one of: ${enumOptions.join(', ')}`,
       type: 'error'
     };
   }

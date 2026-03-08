@@ -180,7 +180,7 @@ export function SubscriptionModal({
               <CheckCircle2 className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-foreground">Subscription Activated!</p>
-                <p className="text-xs text-muted-foreground mt-1">You can now claim unlimited attributes.</p>
+                <p className="text-xs text-muted-foreground mt-1">You can now activate unlimited attributes.</p>
               </div>
             </div>
           )}

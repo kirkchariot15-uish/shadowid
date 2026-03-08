@@ -114,7 +114,7 @@ export default function DashboardPage() {
             <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-6">
               <p className="text-xs uppercase tracking-widest font-semibold text-accent mb-3">Credentials</p>
               <p className="text-2xl font-bold text-foreground">{credentials}</p>
-              <p className="text-xs text-muted-foreground mt-2">Claimed attributes</p>
+              <p className="text-xs text-muted-foreground mt-2">Activated attributes</p>
             </div>
           </div>
 

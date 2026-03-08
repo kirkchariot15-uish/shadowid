@@ -120,7 +120,7 @@ export function CreateIdentityPage() {
       .filter(key => selectedAttributes[key].enabled && selectedAttributes[key].value.trim())
     
     if (enabledAttrIds.length === 0) {
-      setError('Toggle and enable at least one attribute to claim')
+      setError('Toggle and enable at least one attribute to activate')
       return
     }
 
@@ -327,7 +327,7 @@ export function CreateIdentityPage() {
                 <p className="text-xl font-mono font-bold break-all">{commitment}</p>
               </div>
               <p className="text-sm text-muted-foreground mb-8">
-                Selected attributes: {Object.keys(selectedAttributes).join(', ')}
+                Activated attributes: {Object.keys(selectedAttributes).filter(k => selectedAttributes[k].enabled).map(k => selectedAttributes[k].value || k).join(', ')}
               </p>
               <div className="flex gap-3 justify-center">
                 <Link href="/request-attestation">
@@ -360,17 +360,17 @@ export function CreateIdentityPage() {
           </Link>
           <div className="mb-12">
             <h1 className="text-3xl font-bold mb-2">Create Your ShadowID</h1>
-            <p className="text-muted-foreground">Select attributes you want to claim. Request attestations from trusted issuers to verify each claim.</p>
+            <p className="text-muted-foreground">Select and activate attributes to create your zero-knowledge identity. Request endorsements from trusted peers to verify your claims.</p>
           </div>
 
-          {/* Progress Indicator */}
-          <div className="mb-12">
-            <ProgressIndicator steps={[
-              { id: 'select', label: 'Select Attributes', status: Object.keys(selectedAttributes).length > 0 ? 'completed' : 'in-progress' },
-              { id: 'fill', label: 'Fill Attribute Values', status: Object.keys(selectedAttributes).filter(k => selectedAttributes[k].trim()).length > 0 ? 'completed' : 'pending' },
-              { id: 'create', label: 'Create Identity', status: creationComplete ? 'completed' : 'pending' }
-            ]} />
-          </div>
+            {/* Progress Indicator */}
+            <div className="mb-12">
+              <ProgressIndicator steps={[
+                { id: 'select', label: 'Select Attributes', status: Object.keys(selectedAttributes).length > 0 ? 'completed' : 'in-progress' },
+                { id: 'fill', label: 'Fill Attribute Values', status: Object.keys(selectedAttributes).filter(k => selectedAttributes[k].value?.trim()).length > 0 ? 'completed' : 'pending' },
+                { id: 'create', label: 'Create Identity', status: creationComplete ? 'completed' : 'pending' }
+              ]} />
+            </div>
 
           <div className="space-y-6">
             {/* Subscription Status */}

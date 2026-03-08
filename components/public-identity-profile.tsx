@@ -234,14 +234,14 @@ export default function PublicIdentityProfile({ commitment }: PublicIdentityProf
               </div>
             )}
 
-            {/* Claimed Attributes */}
+            {/* Activated Attributes */}
             {attributesList.length > 0 ? (
               <div className="space-y-3 border-t border-border pt-6">
                 <div className="flex items-center gap-2">
                   <Shield className="h-4 w-4 text-accent" />
-                  <label className="text-sm font-semibold text-foreground">Claimed Attributes ({attributesList.length})</label>
+                  <label className="text-sm font-semibold text-foreground">Activated Attributes ({attributesList.length})</label>
                 </div>
-                <p className="text-xs text-muted-foreground">These attributes were claimed by the identity owner</p>
+                <p className="text-xs text-muted-foreground">These attributes were activated by the identity owner</p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {attributesList.map(([attrId, value]) => {
@@ -252,7 +252,7 @@ export default function PublicIdentityProfile({ commitment }: PublicIdentityProf
                         <p className="text-xs text-muted-foreground mt-1">{schema?.description}</p>
                         <div className="flex items-center justify-between mt-3 pt-3 border-t border-accent/10">
                           <span className="text-xs font-mono bg-background/50 rounded px-2 py-1">{value}</span>
-                          <span className="text-xs text-accent">Claimed</span>
+                          <span className="text-xs text-accent">Activated</span>
                         </div>
                       </div>
                     )
@@ -261,7 +261,7 @@ export default function PublicIdentityProfile({ commitment }: PublicIdentityProf
               </div>
             ) : (
               <div className="border-t border-border pt-6">
-                <p className="text-sm text-muted-foreground italic">No public attributes claimed</p>
+                <p className="text-sm text-muted-foreground italic">No public attributes activated</p>
               </div>
             )}
           </div>
@@ -283,7 +283,7 @@ export default function PublicIdentityProfile({ commitment }: PublicIdentityProf
               </li>
               <li className="flex gap-3">
                 <span className="text-accent font-semibold">•</span>
-                <span>Claimed attributes are cryptographically bound to this commitment</span>
+                <span>Activated attributes are cryptographically bound to this commitment</span>
               </li>
               <li className="flex gap-3">
                 <span className="text-accent font-semibold">•</span>
