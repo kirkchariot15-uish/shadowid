@@ -1,0 +1,5 @@
+[package]
+name = "shadowid_v3"
+version = "0.1.0"
+description = "Zero-Knowledge Identity with Peer-Based Attestation System"
+license = "GPL-3.0"
