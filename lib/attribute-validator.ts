@@ -313,6 +313,61 @@ function validateString(
 
   const trimmed = value.trim();
 
+  // Check validation rules from schema
+  if (attr.validationRules && Array.isArray(attr.validationRules)) {
+    for (const rule of attr.validationRules) {
+      if (rule.type === 'length') {
+        if (rule.value.min && trimmed.length < rule.value.min) {
+          return {
+            field: fieldId,
+            message: rule.message || `${attr.name} must be at least ${rule.value.min} characters`,
+            type: 'error'
+          };
+        }
+        if (rule.value.max && trimmed.length > rule.value.max) {
+          return {
+            field: fieldId,
+            message: rule.message || `${attr.name} must not exceed ${rule.value.max} characters`,
+            type: 'error'
+          };
+        }
+      }
+
+      if (rule.type === 'pattern' && rule.value instanceof RegExp) {
+        if (!rule.value.test(trimmed)) {
+          return {
+            field: fieldId,
+            message: rule.message || `${attr.name} format is invalid`,
+            type: 'error'
+          };
+        }
+      }
+
+      if (rule.type === 'min' && typeof rule.value === 'number') {
+        const num = parseInt(trimmed);
+        if (!isNaN(num) && num < rule.value) {
+          return {
+            field: fieldId,
+            message: rule.message || `${attr.name} must be at least ${rule.value}`,
+            type: 'error'
+          };
+        }
+      }
+
+      if (rule.type === 'max' && typeof rule.value === 'number') {
+        const num = parseInt(trimmed);
+        if (!isNaN(num) && num > rule.value) {
+          return {
+            field: fieldId,
+            message: rule.message || `${attr.name} must not exceed ${rule.value}`,
+            type: 'error'
+          };
+        }
+      }
+    }
+  }
+
+  // Fallback checks (legacy)
   if (attr.minLength && trimmed.length < attr.minLength) {
     return {
       field: fieldId,
