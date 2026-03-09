@@ -11,6 +11,7 @@ import { generateProof, ProofRequest } from '@/lib/proof-generator'
 import { PROGRAM_ID } from '@/lib/aleo-sdk-integration'
 import { addActivityLog } from '@/lib/activity-logger'
 import { getDecryptedCredential } from '@/lib/encrypted-storage'
+import { CONFIG, getQRValidityHours } from '@/lib/config'
 
 export default function SelectiveDisclosurePage() {
   const { address } = useAleoWallet()
@@ -201,7 +202,7 @@ export default function SelectiveDisclosurePage() {
                   <>
                     <img src={qrUrl} alt="ZK Proof QR" className="w-full rounded-lg mb-4 border border-border" />
                     <p className="text-xs text-muted-foreground mb-4">
-                      This QR code contains a cryptographic proof of your selected attributes, valid for 1 hour.
+                      This QR code contains a cryptographic proof of your selected attributes, valid for {getQRValidityHours()} hour{getQRValidityHours() !== 1 ? 's' : ''}.
                     </p>
                     <Button
                       onClick={downloadProof}
