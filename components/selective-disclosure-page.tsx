@@ -201,7 +201,7 @@ export default function SelectiveDisclosurePage() {
                   <>
                     <img src={qrUrl} alt="ZK Proof QR" className="w-full rounded-lg mb-4 border border-border" />
                     <p className="text-xs text-muted-foreground mb-4">
-                      This QR code contains a cryptographic proof of your selected attributes, valid for 72 hours.
+                      This QR code contains a cryptographic proof of your selected attributes, valid for 1 hour.
                     </p>
                     <Button
                       onClick={downloadProof}

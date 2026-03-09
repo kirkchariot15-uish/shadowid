@@ -154,11 +154,12 @@ export function CreateIdentityPage() {
       return
     }
 
-    const existingCommitment = localStorage.getItem('shadowid-commitment')
-    if (existingCommitment) {
-      setError('You already have a ShadowID. Edit your existing identity instead of creating a new one.')
-      return
-    }
+    // TODO: Implement edit/view existing identity functionality
+    // const existingCommitment = localStorage.getItem('shadowid-commitment')
+    // if (existingCommitment) {
+    //   setError('You already have a ShadowID. Edit your existing identity instead of creating a new one.')
+    //   return
+    // }
 
     if (!isConnected || !executeTransaction) {
       setError('Wallet not connected. Please connect your wallet first.');

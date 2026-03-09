@@ -13,7 +13,7 @@ export interface SubscriptionStatus {
 
 const SUBSCRIPTION_LIMITS = {
   FREE: 2,
-  SUBSCRIBED: 999 // Unlimited
+  SUBSCRIBED: 8 // All 8 standard attributes
 };
 
 const SUBSCRIPTION_COST = 5; // testnet tokens
@@ -103,7 +103,7 @@ export function getSubscriptionInfo() {
       maxAttributes: SUBSCRIPTION_LIMITS.FREE,
       remaining: SUBSCRIPTION_LIMITS.FREE,
       cost: SUBSCRIPTION_COST,
-      message: `You can claim up to ${SUBSCRIPTION_LIMITS.FREE} attributes. Subscribe for unlimited.`,
+      message: `You can activate up to ${SUBSCRIPTION_LIMITS.FREE} attributes. Subscribe for all 8.`,
       isActive: false
     };
   }
@@ -119,7 +119,7 @@ export function getSubscriptionInfo() {
       maxAttributes: SUBSCRIPTION_LIMITS.SUBSCRIBED,
       remaining: SUBSCRIPTION_LIMITS.SUBSCRIBED,
       cost: SUBSCRIPTION_COST,
-      message: `Unlimited attributes. Subscription expires in ${daysRemaining} days.`,
+      message: `All 8 attributes unlocked. Subscription expires in ${daysRemaining} days.`,
       isActive: true,
       expiresAt: expiresDate.toLocaleDateString()
     };
@@ -131,7 +131,7 @@ export function getSubscriptionInfo() {
     maxAttributes: SUBSCRIPTION_LIMITS.FREE,
     remaining: SUBSCRIPTION_LIMITS.FREE,
     cost: SUBSCRIPTION_COST,
-    message: `Your subscription expired. Subscribe again for unlimited attributes.`,
+    message: `Your subscription expired. Subscribe again to activate all 8 attributes.`,
     isActive: false,
     expiredAt: new Date(status.expiresAt!).toLocaleDateString()
   };
