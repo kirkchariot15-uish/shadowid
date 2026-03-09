@@ -142,6 +142,18 @@ export default function DashboardPage() {
                 </div>
               </Link>
 
+              {localStorage.getItem('shadowid-commitment') && (
+                <Link href="/identity" className="group">
+                  <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-8 hover:border-accent/40 transition-all cursor-pointer">
+                    <Sparkles className="h-8 w-8 text-accent mb-4" />
+                    <h3 className="font-semibold text-lg mb-2">View My ShadowID</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Manage your identity, shadow score, and endorsements.
+                    </p>
+                  </div>
+                </Link>
+              )}
+
               <Link href="/logs" className="group">
                 <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-8 hover:border-accent/40 transition-all cursor-pointer">
                   <Activity className="h-8 w-8 text-accent mb-4" />
