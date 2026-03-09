@@ -33,7 +33,7 @@ interface Identity {
   isVerified: boolean
 }
 
-export default function IdentityManagementPage() {
+export function IdentityManagementPage() {
   const { address } = useAleoWallet()
   const [identity, setIdentity] = useState<Identity | null>(null)
   const [isEditing, setIsEditing] = useState(false)
