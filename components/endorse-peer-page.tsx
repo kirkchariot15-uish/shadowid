@@ -12,7 +12,7 @@ import { STANDARD_ATTRIBUTES } from '@/lib/attribute-schema'
 import { hexToField } from '@/lib/aleo-field-formatter'
 import { executeTransactionWithWallet, CONTRACTS } from '@/lib/aleo-sdk-integration'
 import { addActivityLog } from '@/lib/activity-logger'
-import { validateEndorsementAttempt, checkRateLimit } from '@/lib/anti-sybil'
+import { validateEndorsementAttempt, checkRateLimit, trackEndorsement } from '@/lib/anti-sybil'
 
 interface EndorsementRequest {
   targetCommitment: string
@@ -41,8 +41,18 @@ export function EndorsePeerPage() {
   }))
 
   const handleEndorse = async () => {
-    if (!targetCommitment || !selectedAttribute || !address || !executeTransaction) {
+    if (!targetCommitment?.trim() || !selectedAttribute || !address || !executeTransaction) {
       setError('Please fill in all fields and ensure wallet is connected')
+      return
+    }
+
+    // Sanitize and validate commitment hash
+    const sanitizedCommitment = targetCommitment.trim().toLowerCase();
+    
+    // Validate hex format and length (32 chars = 16 bytes for field)
+    const hexPattern = /^(0x)?[0-9a-f]{32,}$/;
+    if (!hexPattern.test(sanitizedCommitment)) {
+      setError('Invalid commitment hash format. Must be a valid hex string.')
       return
     }
 
@@ -52,7 +62,7 @@ export function EndorsePeerPage() {
     // Validate against self-endorsement and sybil attacks
     const validationError = validateEndorsementAttempt(
       address,
-      targetCommitment,
+      sanitizedCommitment,
       userCommitment
     )
 
@@ -72,15 +82,15 @@ export function EndorsePeerPage() {
 
     try {
       console.log('[v0] Endorsing attribute:', {
-        targetCommitment,
+        targetCommitment: sanitizedCommitment,
         attributeId: selectedAttribute,
         endorser: address
       })
 
       // Convert commitment string to field format
-      const targetField = targetCommitment.startsWith('0x') 
-        ? hexToField(targetCommitment) 
-        : targetCommitment
+      const targetField = sanitizedCommitment.startsWith('0x') 
+        ? hexToField(sanitizedCommitment) 
+        : sanitizedCommitment
 
       // Parse attribute ID to u32
       const attrIdMatch = selectedAttribute.match(/\d+/)
@@ -102,14 +112,39 @@ export function EndorsePeerPage() {
       )
 
       if (result.success) {
+        // Track endorsement for collusion detection
+        trackEndorsement(userCommitment || '', sanitizedCommitment)
+
         const endorsement: EndorsementRequest = {
-          targetCommitment,
+          targetCommitment: sanitizedCommitment,
           targetAddress: address,
           attributeId: selectedAttribute,
           attributeName: STANDARD_ATTRIBUTES[selectedAttribute as keyof typeof STANDARD_ATTRIBUTES]?.name || selectedAttribute,
           status: 'success',
           message: `Successfully endorsed! Transaction: ${result.transactionId}`
         }
+
+        setEndorsementResult(endorsement)
+        addActivityLog('Endorse Peer', 'attestation', `Endorsed ${endorsement.attributeName}`, 'success')
+        
+        // Reset form after success
+        setTimeout(() => {
+          setTargetCommitment('')
+          setSelectedAttribute('')
+          setStep('input')
+        }, 3000)
+      } else {
+        const endorsement: EndorsementRequest = {
+          targetCommitment: sanitizedCommitment,
+          targetAddress: address,
+          attributeId: selectedAttribute,
+          attributeName: STANDARD_ATTRIBUTES[selectedAttribute as keyof typeof STANDARD_ATTRIBUTES]?.name || selectedAttribute,
+          status: 'error',
+          message: result.error || 'Failed to submit endorsement'
+        }
+        setEndorsementResult(endorsement)
+        addActivityLog('Endorse Peer', 'attestation', `Failed to endorse: ${result.error}`, 'error')
+      }
 
         setEndorsementResult(endorsement)
         addActivityLog('Endorse Peer', 'attestation', `Endorsed ${endorsement.attributeName}`, 'success')

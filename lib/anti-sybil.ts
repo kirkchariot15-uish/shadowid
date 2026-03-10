@@ -40,6 +40,12 @@ export function validateEndorsementAttempt(
     return 'Invalid commitment hash format';
   }
 
+  // Check for mutual endorsement (collusion detection)
+  const mutualCheck = checkMutualEndorsement(userCommitment, targetCommitment);
+  if (mutualCheck.isMutual && mutualCheck.riskLevel === 'high') {
+    return 'Cannot endorse: mutual endorsement pattern detected (sybil risk)';
+  }
+
   return null;
 }
 
@@ -50,6 +56,63 @@ function isValidCommitmentFormat(commitment: string): boolean {
   // Check if it's a valid hex string of appropriate length
   const hexPattern = /^[0-9A-Fa-f]+$/;
   return hexPattern.test(commitment) && commitment.length >= 16;
+}
+
+  // Prevent self-endorsement
+  if (isSelfEndorsement(userCommitment, targetCommitment)) {
+    return 'You cannot endorse your own attributes';
+  }
+
+  // Validate commitment format (should be valid field hash)
+  if (!isValidCommitmentFormat(targetCommitment)) {
+    return 'Invalid commitment hash format';
+  }
+
+  return null;
+}
+
+/**
+ * Detect mutual endorsement (collusion)
+ * Tracks if commitment A endorsed commitment B, and B endorsed A
+ * This helps identify sybil pairs artificially inflating scores
+ */
+export function checkMutualEndorsement(
+  userCommitment: string,
+  targetCommitment: string
+): { isMutual: boolean; riskLevel: 'high' | 'medium' | 'low' } {
+  try {
+    const key1 = `shadowid-endorsement-${userCommitment}-${targetCommitment}`;
+    const key2 = `shadowid-endorsement-${targetCommitment}-${userCommitment}`;
+
+    const userEndorsedTarget = localStorage.getItem(key1);
+    const targetEndorsedUser = localStorage.getItem(key2);
+
+    if (userEndorsedTarget && targetEndorsedUser) {
+      // Both directions endorsed - high risk of collusion
+      return { isMutual: true, riskLevel: 'high' };
+    }
+
+    return { isMutual: false, riskLevel: 'low' };
+  } catch (error) {
+    console.error('[v0] Error checking mutual endorsement:', error);
+    return { isMutual: false, riskLevel: 'low' };
+  }
+}
+
+/**
+ * Track endorsement for both directions
+ */
+export function trackEndorsement(
+  userCommitment: string,
+  targetCommitment: string
+): void {
+  try {
+    const key = `shadowid-endorsement-${userCommitment}-${targetCommitment}`;
+    const timestamp = Date.now();
+    localStorage.setItem(key, JSON.stringify({ timestamp, endorsed: true }));
+  } catch (error) {
+    console.error('[v0] Error tracking endorsement:', error);
+  }
 }
 
 /**
