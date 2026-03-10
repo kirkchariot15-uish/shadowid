@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * Secure Storage Encryption
  * Encrypts sensitive data before storing in localStorage
@@ -51,6 +53,8 @@ export function storeEncryptedData(
   walletAddress: string
 ): void {
   try {
+    if (typeof window === 'undefined') return; // Skip on server
+    
     const sessionKey = generateSessionKey(walletAddress);
     const encrypted = encryptData(value, sessionKey);
     localStorage.setItem(`enc_${key}`, encrypted);
@@ -69,6 +73,8 @@ export function getDecryptedData(
   walletAddress: string
 ): string | null {
   try {
+    if (typeof window === 'undefined') return null; // Skip on server
+    
     const encrypted = localStorage.getItem(`enc_${key}`);
     const storedAddress = localStorage.getItem(`enc_meta_${key}`);
 
@@ -89,8 +95,14 @@ export function getDecryptedData(
  * Clear encrypted data
  */
 export function clearEncryptedData(key: string): void {
-  localStorage.removeItem(`enc_${key}`);
-  localStorage.removeItem(`enc_meta_${key}`);
+  try {
+    if (typeof window === 'undefined') return; // Skip on server
+    
+    localStorage.removeItem(`enc_${key}`);
+    localStorage.removeItem(`enc_meta_${key}`);
+  } catch (error) {
+    console.error('[v0] Error clearing encrypted data:', error);
+  }
 }
 
 /**
