@@ -1,0 +1,5 @@
+[project]
+name = "shadowid_v5"
+version = "1.0.0"
+description = "Privacy-first zero-knowledge identity on Aleo blockchain"
+license = "MIT"
