@@ -17,7 +17,9 @@ export function NavigationMenu() {
 
   const navigationItems = [
     { href: '/dashboard', label: 'Dashboard', icon: Home },
+    { href: '/identity', label: 'My ShadowID', icon: Shield },
     { href: '/create-identity', label: 'Create Identity', icon: FileText },
+    { href: '/endorse-peer', label: 'Endorse Peers', icon: Award },
     { href: '/selective-disclosure', label: 'Disclosure', icon: FileText },
     { href: '/profile', label: 'Profile', icon: User },
     { href: '/credentials', label: 'My Credentials', icon: Award },
