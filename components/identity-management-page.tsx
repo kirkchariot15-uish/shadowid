@@ -54,32 +54,44 @@ export function IdentityManagementPage() {
 
   const loadIdentity = () => {
     try {
-      const storedIdentity = localStorage.getItem('shadowid-identity')
-      const storedAttributes = localStorage.getItem('shadowid-attributes')
-      const storedScore = localStorage.getItem('shadowid-shadow-score')
-      const storedEndorsements = localStorage.getItem('shadowid-endorsements')
+      const storedCommitment = localStorage.getItem('shadowid-commitment')
+      const storedCommitmentHex = localStorage.getItem('shadowid-commitment-hex')
+      const storedAttributes = localStorage.getItem('shadowid-credential')
+      const storedCreatedAt = localStorage.getItem('shadowid-created-at')
+      const storedAttributeHash = localStorage.getItem('shadowid-attribute-hash')
 
-      if (storedIdentity && storedAttributes) {
-        const attrs = JSON.parse(storedAttributes)
+      if (storedCommitment) {
+        // Parse credential to get activated attributes
+        let activatedAttributes: Record<string, { value: string; enabled: boolean }> = {}
+        if (storedAttributes) {
+          try {
+            const credential = JSON.parse(storedAttributes)
+            activatedAttributes = credential.attributes || {}
+          } catch (e) {
+            console.log('[v0] Could not parse credential attributes')
+          }
+        }
+
         setIdentity({
-          commitment: JSON.parse(storedIdentity).commitment || 'Not created',
-          attributeHash: JSON.parse(storedIdentity).attributeHash || '',
-          activatedAttributes: attrs,
-          shadowScore: parseInt(storedScore || '50'),
-          endorsementCount: parseInt(storedEndorsements || '0'),
-          createdAt: JSON.parse(storedIdentity).createdAt || new Date().toISOString(),
-          isVerified: false
+          commitment: storedCommitment,
+          attributeHash: storedAttributeHash || '',
+          activatedAttributes,
+          shadowScore: 50, // Default, will be fetched from blockchain
+          endorsementCount: 0, // Default, will be fetched from blockchain
+          createdAt: storedCreatedAt || new Date().toISOString(),
+          isVerified: true
         })
+        
         setEditedAttributes(
-          Object.keys(attrs).reduce((acc, key) => {
-            acc[key] = attrs[key].enabled || false
+          Object.keys(activatedAttributes).reduce((acc, key) => {
+            acc[key] = activatedAttributes[key].enabled || false
             return acc
           }, {} as Record<string, boolean>)
         )
       }
       setLoading(false)
     } catch (error) {
-      console.error('Error loading identity:', error)
+      console.error('[v0] Error loading identity:', error)
       setLoading(false)
     }
   }
