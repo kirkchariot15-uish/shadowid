@@ -62,7 +62,7 @@ export default function DashboardPage() {
             </div>
             <h1 className="text-4xl font-bold mb-4">Dashboard Locked</h1>
             <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-              Connect your wallet to access your private identity dashboard. Your zero-knowledge identity layer will be initialized on the Aleo network.
+              Connect your wallet to access your ShadowID dashboard. Create identities, request peer endorsements, and generate selective disclosure proofs.
             </p>
             <div className="flex justify-center">
               <WalletMultiButton />
@@ -87,7 +87,7 @@ export default function DashboardPage() {
             <div className="flex items-start justify-between">
               <div>
                 <h1 className="text-4xl font-bold tracking-tight mb-2">Your ShadowID</h1>
-                <p className="text-muted-foreground text-lg">Manage your private identity and disclosures</p>
+                <p className="text-muted-foreground text-lg">Manage your identity, endorsements, and credentials</p>
               </div>
             </div>
           </div>

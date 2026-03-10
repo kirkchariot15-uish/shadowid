@@ -27,12 +27,12 @@ export function LandingHero() {
         </div>
 
         <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6 text-balance">
-          Prove who you are
-          <span className="text-accent"> without revealing why</span>
+          Your Identity
+          <span className="text-accent"> Your Control. Peer Verified.</span>
         </h1>
 
         <p className="text-lg text-muted-foreground max-w-2xl mb-10 text-balance leading-relaxed">
-          ShadowID enables cryptographic proofs that verify your attributes on the blockchain, while keeping your identity completely private.
+          Create a zero-knowledge identity with peer endorsements. Build credibility on the Aleo blockchain while keeping your data private. Share selective proofs without revealing everything.
         </p>
 
         {/* ID Card Preview - Interactive with wallet connection */}
@@ -87,42 +87,79 @@ export function LandingHero() {
 
       <section className="py-20 px-4">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl font-bold mb-4 text-center">Real Privacy, Real Use Cases</h2>
+          <h2 className="text-3xl font-bold mb-4 text-center">How It Works</h2>
           <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
-            From journalists protecting sources to developers proving credentials, ShadowID enables privacy where it matters most.
+            Build verifiable credibility on the blockchain through peer attestation and selective disclosure.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="border border-border rounded-lg p-8 bg-background/50">
+              <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-accent/10 mb-4">
+                <span className="text-xl font-bold text-accent">1</span>
+              </div>
+              <h3 className="font-semibold text-lg mb-3">Create Identity</h3>
+              <p className="text-sm text-muted-foreground">
+                Select attributes you want to claim (Age Range, Country, Job Title, etc.) and register your commitment on the Aleo blockchain.
+              </p>
+            </div>
+
+            <div className="border border-border rounded-lg p-8 bg-background/50">
+              <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-accent/10 mb-4">
+                <span className="text-xl font-bold text-accent">2</span>
+              </div>
+              <h3 className="font-semibold text-lg mb-3">Get Endorsed</h3>
+              <p className="text-sm text-muted-foreground">
+                Peers endorse your attributes. Each endorsement increases your Shadow Score (0-100). Build community-verified credibility.
+              </p>
+            </div>
+
+            <div className="border border-border rounded-lg p-8 bg-background/50">
+              <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-accent/10 mb-4">
+                <span className="text-xl font-bold text-accent">3</span>
+              </div>
+              <h3 className="font-semibold text-lg mb-3">Prove Selectively</h3>
+              <p className="text-sm text-muted-foreground">
+                Generate cryptographic proofs as QR codes proving specific attributes without revealing your identity or other data.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20 px-4 bg-card/30">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl font-bold mb-4 text-center">Built For Real Privacy</h2>
+          <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+            ShadowID gives you control over your identity data. Prove what matters without exposing everything.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="border border-border rounded-lg p-8 bg-background/50 hover:border-accent/50 transition-colors">
-              <h3 className="font-semibold text-lg mb-3">Journalists & Activists</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Prove your credentials and verify legitimate sources without exposing personal information that could put you at risk.
+              <h3 className="font-semibold text-lg mb-3">Zero-Knowledge Proofs</h3>
+              <p className="text-sm text-muted-foreground">
+                Verify claims about yourself without revealing the underlying data. Your attributes stay encrypted locally.
               </p>
-              <div className="text-xs font-medium text-accent">Prove: Press credentials, employment verification</div>
             </div>
 
             <div className="border border-border rounded-lg p-8 bg-background/50 hover:border-accent/50 transition-colors">
-              <h3 className="font-semibold text-lg mb-3">Developers</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Participate in DAOs and communities that require verified credentials without revealing your true identity.
+              <h3 className="font-semibold text-lg mb-3">Peer-Verified Credibility</h3>
+              <p className="text-sm text-muted-foreground">
+                Build trust through community endorsements. Shadow Score reflects your verified credibility on-chain.
               </p>
-              <div className="text-xs font-medium text-accent">Prove: Skill level, past projects, community roles</div>
             </div>
 
             <div className="border border-border rounded-lg p-8 bg-background/50 hover:border-accent/50 transition-colors">
-              <h3 className="font-semibold text-lg mb-3">Privacy Advocates</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Reclaim your identity rights. Prove you meet requirements without surrendering personal data to corporations.
+              <h3 className="font-semibold text-lg mb-3">Selective Disclosure</h3>
+              <p className="text-sm text-muted-foreground">
+                Share specific attributes without revealing your full identity. Perfect for age verification or employment checks.
               </p>
-              <div className="text-xs font-medium text-accent">Prove: Age, location, compliance without exposure</div>
             </div>
 
             <div className="border border-border rounded-lg p-8 bg-background/50 hover:border-accent/50 transition-colors">
-              <h3 className="font-semibold text-lg mb-3">Enterprise & KYC</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Verify users meet regulatory requirements while minimizing data collection and compliance liability.
+              <h3 className="font-semibold text-lg mb-3">Blockchain Verified</h3>
+              <p className="text-sm text-muted-foreground">
+                All identities and endorsements are registered on the Aleo blockchain for permanent, transparent verification.
               </p>
-              <div className="text-xs font-medium text-accent">Prove: Compliance, age verification, credentials</div>
             </div>
           </div>
         </div>
