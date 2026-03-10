@@ -21,12 +21,9 @@ export function NavigationMenu() {
     { href: '/create-identity', label: 'Create Identity', icon: FileText },
     { href: '/endorse-peer', label: 'Endorse Peers', icon: Award },
     { href: '/selective-disclosure', label: 'Disclosure', icon: FileText },
-    { href: '/profile', label: 'Profile', icon: User },
-    { href: '/credentials', label: 'My Credentials', icon: Award },
     { href: '/request-attestation', label: 'Request Attestation', icon: CheckCircle },
     { href: '/privacy', label: 'Privacy Center', icon: Shield },
     { href: '/verify-qr', label: 'Verify QR Code', icon: CheckCircle },
-    { href: '/dao-leader', label: 'DAO Leader Dashboard', icon: Shield },
     { href: '/logs', label: 'Activity Logs', icon: FileText },
     { href: '/settings', label: 'Settings', icon: Settings },
   ]
