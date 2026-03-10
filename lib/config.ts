@@ -11,7 +11,7 @@ export const CONFIG = {
   SUBSCRIPTION: {
     FREE_ATTRIBUTES: 2,
     SUBSCRIBED_ATTRIBUTES: 8,
-    CUSTOM_ATTRIBUTES_LIMIT: 5 // Phase 3
+    CUSTOM_ATTRIBUTES_LIMIT: 5
   },
   
   // Shadow Score Settings
