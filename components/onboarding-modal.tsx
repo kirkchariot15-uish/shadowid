@@ -1,39 +1,54 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, CheckCircle, Zap, Lock, Share2, ArrowRight } from 'lucide-react'
+import { X, CheckCircle, Zap, Lock, Share2, Award, ArrowRight, TrendingUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 const ONBOARDING_STEPS = [
   {
     id: 1,
     title: 'Welcome to ShadowID',
-    description: 'A privacy-first identity system powered by zero-knowledge proofs on Aleo blockchain',
+    description: 'Privacy-first identity with peer-verified credibility',
     icon: Zap,
-    details: 'Keep your identity data encrypted locally while proving claims about yourself without revealing the actual data.'
+    details: 'Create a zero-knowledge identity, get peer endorsements, and build cryptographic proof of your credibility—all without revealing personal data.'
   },
   {
     id: 2,
     title: 'Create Your Identity',
-    description: 'Start by connecting your wallet and creating a ShadowID',
+    description: 'Start with your private ShadowID',
     icon: Lock,
-    details: 'Select attributes you want to claim (name, age, location, etc.) and generate a cryptographic commitment stored on blockchain.',
+    details: 'Select attributes (name, age, location, job) and generate a cryptographic commitment stored on the Aleo blockchain. Only you control your data.',
     action: '/create-identity'
   },
   {
     id: 3,
-    title: 'Selective Disclosure',
-    description: 'Share only what you want to share',
-    icon: Share2,
-    details: 'Create QR codes that prove specific attributes without revealing your full identity. Perfect for age verification, employment checks, or membership proofs.',
-    action: '/selective-disclosure'
+    title: 'Peer Endorsements',
+    description: 'Build credibility through community trust',
+    icon: Award,
+    details: 'Ask peers to endorse your attributes. Each endorsement increases your Shadow Score (0-100). Prevents sybil attacks with blockchain-backed verification.',
+    action: '/endorse-peer'
   },
   {
     id: 4,
+    title: 'Shadow Score',
+    description: 'Your credibility metric',
+    icon: TrendingUp,
+    details: 'Your score starts at 50 (neutral) and increases +5 per peer endorsement (max 100). Higher scores = more trustworthy identity.'
+  },
+  {
+    id: 5,
+    title: 'Selective Disclosure',
+    description: 'Share what matters, keep the rest private',
+    icon: Share2,
+    details: 'Generate QR codes proving specific attributes without revealing everything. Perfect for age verification, employment checks, or membership proofs.',
+    action: '/selective-disclosure'
+  },
+  {
+    id: 6,
     title: "You're Ready!",
-    description: 'Start using ShadowID to verify yourself on your terms',
+    description: 'Start your zero-knowledge identity journey',
     icon: CheckCircle,
-    details: 'Explore the dashboard, request DAO attestations, and verify credentials shared by others.'
+    details: 'Explore your dashboard, request peer endorsements, verify other users, and build real credibility on the blockchain.'
   }
 ]
 

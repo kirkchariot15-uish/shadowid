@@ -12,6 +12,7 @@ import { STANDARD_ATTRIBUTES } from '@/lib/attribute-schema'
 import { hexToField } from '@/lib/aleo-field-formatter'
 import { executeTransactionWithWallet, CONTRACTS } from '@/lib/aleo-sdk-integration'
 import { addActivityLog } from '@/lib/activity-logger'
+import { validateEndorsementAttempt, checkRateLimit } from '@/lib/anti-sybil'
 
 interface EndorsementRequest {
   targetCommitment: string
@@ -42,6 +43,27 @@ export function EndorsePeerPage() {
   const handleEndorse = async () => {
     if (!targetCommitment || !selectedAttribute || !address || !executeTransaction) {
       setError('Please fill in all fields and ensure wallet is connected')
+      return
+    }
+
+    // Get user's own commitment
+    const userCommitment = localStorage.getItem('shadowid-commitment')
+
+    // Validate against self-endorsement and sybil attacks
+    const validationError = validateEndorsementAttempt(
+      address,
+      targetCommitment,
+      userCommitment
+    )
+
+    if (validationError) {
+      setError(validationError)
+      return
+    }
+
+    // Check rate limiting
+    if (!checkRateLimit(targetCommitment)) {
+      setError('Too many endorsements for this commitment today. Try again tomorrow.')
       return
     }
 

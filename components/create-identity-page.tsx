@@ -14,8 +14,9 @@ import { STANDARD_ATTRIBUTES } from '@/lib/attribute-schema'
 import { registerAttributesAndGetCommitment, createAttributeHash, signAttributeCommitment } from '@/lib/aleo-sdk-integration'
 import { storeEncryptedCredential } from '@/lib/encrypted-storage'
 import { validateAttributeValue, validateAllAttributes, hasValidationErrors } from '@/lib/attribute-validator'
-import { getMaxAttributesForUser, getSubscriptionInfo } from '@/lib/subscription-manager'
+import { getMaxAttributesForUser, getSubscriptionInfo, clearSubscriptionStatus } from '@/lib/subscription-manager'
 import { SubscriptionModal } from '@/components/subscription-modal'
+import { checkAccountCreationRateLimit, trackAccountCreation } from '@/lib/anti-sybil'
 
 export function CreateIdentityPage() {
   const { address, executeTransaction } = useAleoWallet()
@@ -115,6 +116,13 @@ export function CreateIdentityPage() {
   }
 
   const handleCreateIdentity = async () => {
+    // Check account creation rate limit (prevent sybil multi-account)
+    const rateLimitError = checkAccountCreationRateLimit()
+    if (rateLimitError) {
+      setError(rateLimitError)
+      return
+    }
+
     // Get ENABLED attributes only (not all filled attributes)
     const enabledAttrIds = Object.keys(selectedAttributes)
       .filter(key => selectedAttributes[key].enabled && selectedAttributes[key].value.trim())
@@ -275,6 +283,9 @@ export function CreateIdentityPage() {
       localStorage.setItem('shadowid-tx-id', blockchainResult.transactionId)
 
       await storeEncryptedCredential(blockchainResult.commitmentHash, credential, address)
+
+      // Track account creation for sybil prevention
+      trackAccountCreation()
 
       setCommitment(blockchainResult.commitmentHash)
       addActivityLog('Create ShadowID', 'identity', `Created ZK identity with ${enabledAttrIds.length} attributes`, 'success')

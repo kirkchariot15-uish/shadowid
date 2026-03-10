@@ -91,7 +91,26 @@ export function getMaxAttributesForUser(): number {
 }
 
 /**
- * Get subscription info for display
+ * Clear subscription status (when user disconnects or deletes account)
+ */
+export function clearSubscriptionStatus(): void {
+  localStorage.removeItem('shadowid-subscription');
+  localStorage.removeItem('shadowid-subscription-expired');
+}
+
+/**
+ * Clear all user data when account is deleted/reset
+ */
+export function clearAllUserData(): void {
+  localStorage.removeItem('shadowid-subscription');
+  localStorage.removeItem('shadowid-commitment');
+  localStorage.removeItem('shadowid-commitment-hex');
+  localStorage.removeItem('shadowid-credential');
+  localStorage.removeItem('shadowid-attributes');
+  localStorage.removeItem('shadowid-created-at');
+  localStorage.removeItem('shadowid-attribute-hash');
+  localStorage.removeItem('shadowid-onboarding-done');
+}
  */
 export function getSubscriptionInfo() {
   const status = getSubscriptionStatus();
