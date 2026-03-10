@@ -58,19 +58,6 @@ function isValidCommitmentFormat(commitment: string): boolean {
   return hexPattern.test(commitment) && commitment.length >= 16;
 }
 
-  // Prevent self-endorsement
-  if (isSelfEndorsement(userCommitment, targetCommitment)) {
-    return 'You cannot endorse your own attributes';
-  }
-
-  // Validate commitment format (should be valid field hash)
-  if (!isValidCommitmentFormat(targetCommitment)) {
-    return 'Invalid commitment hash format';
-  }
-
-  return null;
-}
-
 /**
  * Detect mutual endorsement (collusion)
  * Tracks if commitment A endorsed commitment B, and B endorsed A

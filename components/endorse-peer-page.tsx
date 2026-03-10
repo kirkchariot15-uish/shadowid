@@ -146,28 +146,6 @@ export function EndorsePeerPage() {
         addActivityLog('Endorse Peer', 'attestation', `Failed to endorse: ${result.error}`, 'error')
       }
 
-        setEndorsementResult(endorsement)
-        addActivityLog('Endorse Peer', 'attestation', `Endorsed ${endorsement.attributeName}`, 'success')
-        
-        // Reset form after success
-        setTimeout(() => {
-          setTargetCommitment('')
-          setSelectedAttribute('')
-          setStep('input')
-        }, 3000)
-      } else {
-        const endorsement: EndorsementRequest = {
-          targetCommitment,
-          targetAddress: address,
-          attributeId: selectedAttribute,
-          attributeName: STANDARD_ATTRIBUTES[selectedAttribute as keyof typeof STANDARD_ATTRIBUTES]?.name || selectedAttribute,
-          status: 'error',
-          message: result.error || 'Failed to submit endorsement'
-        }
-        setEndorsementResult(endorsement)
-        addActivityLog('Endorse Peer', 'attestation', `Failed to endorse: ${result.error}`, 'error')
-      }
-
       setStep('result')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
