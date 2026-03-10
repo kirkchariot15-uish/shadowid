@@ -165,8 +165,8 @@ export function IdentityManagementPage() {
           <div className="rounded-lg border border-border bg-card p-8 text-center">
             <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <h2 className="text-xl font-semibold mb-2">No ShadowID Found</h2>
-            <p className="text-muted-foreground mb-6">You haven't created a ShadowID yet.</p>
-            <Link href="/create">
+            <p className="text-muted-foreground mb-6">You haven't created a ShadowID yet. Create one to start building your zero-knowledge identity.</p>
+            <Link href="/create-identity">
               <Button>Create ShadowID</Button>
             </Link>
           </div>
