@@ -111,7 +111,7 @@ export function clearAllUserData(): void {
   localStorage.removeItem('shadowid-attribute-hash');
   localStorage.removeItem('shadowid-onboarding-done');
 }
- */
+
 export function getSubscriptionInfo() {
   const status = getSubscriptionStatus();
   const isActive = isSubscriptionActive();
