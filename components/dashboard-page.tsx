@@ -154,6 +154,16 @@ export default function DashboardPage() {
                 </Link>
               )}
 
+              <Link href="/endorse-peer" className="group">
+                <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-8 hover:border-accent/40 transition-all cursor-pointer">
+                  <Award className="h-8 w-8 text-accent mb-4" />
+                  <h3 className="font-semibold text-lg mb-2">Endorse Peers</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Strengthen peers' credibility by endorsing their attributes.
+                  </p>
+                </div>
+              </Link>
+
               <Link href="/logs" className="group">
                 <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-8 hover:border-accent/40 transition-all cursor-pointer">
                   <Activity className="h-8 w-8 text-accent mb-4" />
