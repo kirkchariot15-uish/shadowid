@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { WalletProviderComponent } from '@/lib/wallet-provider'
 import { Navigation } from '@/components/navigation'
+import { Footer } from '@/components/footer'
 
 import './globals.css'
 
@@ -27,10 +28,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} font-sans antialiased flex flex-col min-h-screen`}>
         <WalletProviderComponent>
           <Navigation />
-          {children}
+          <main className="flex-1">
+            {children}
+          </main>
+          <Footer />
         </WalletProviderComponent>
       </body>
     </html>
