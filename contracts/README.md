@@ -17,9 +17,9 @@ leo test
 
 ## Contract Overview
 
-**Program:** `shadowid.aleo`
+**Program:** `shadowid_v5.aleo`
 
-The ShadowID contract enables users to register identity commitments on-chain while maintaining complete privacy. Commitments are cryptographic hashes that prove identity ownership without revealing any personal information.
+The ShadowID contract enables peer-to-peer attestation and identity credibility scoring on the Aleo blockchain.
 
 ### Key Features
 

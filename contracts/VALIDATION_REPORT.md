@@ -1,9 +1,7 @@
 # ShadowID Leo Contract Validation Report
 
-**Contract:** `shadowid.leo`  
-**Version:** 1.0  
-**Date:** 2026  
-**Status:** ✅ **VALIDATED - Ready for Deployment**
+**Contract:** `shadowid_v5.leo`  
+**Status:** ✅ **DEPLOYED - shadowid_v5.aleo**
 
 ---
 
@@ -101,8 +99,8 @@ async transition is_revoked(
 - ✅ **exportOnChainCertificate()** - Generates verifiable certificate
 
 ### Current Mode
-- **Development**: Uses localStorage simulation for instant testing
-- **Production Ready**: Contract syntax validated for real Aleo deployment
+- **Deployed**: shadowid_v5.aleo on Aleo Testnet
+- **Production Ready**: Live blockchain integration
 
 ---
 
