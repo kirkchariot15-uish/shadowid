@@ -197,6 +197,156 @@ export async function submitNullifierOnChain(
 }
 
 /**
+ * Register attributes on blockchain and get commitment
+ * Calls register_commitment on shadowid_v5.aleo
+ */
+export async function registerAttributesAndGetCommitment(
+  attributeHash: string,
+  signature: string,
+  timestamp: number,
+  walletAddress: string,
+  attributeCount: number,
+  executeTransactionFn?: (params: any) => Promise<string>
+): Promise<{
+  success: boolean;
+  commitmentHash?: string;
+  attributeHash?: string;
+  signature?: string;
+  timestamp?: number;
+  transactionId?: string;
+  error?: string;
+}> {
+  try {
+    if (!executeTransactionFn) {
+      return {
+        success: false,
+        error: 'Wallet transaction execution not available. Please ensure you have a connected wallet.'
+      };
+    }
+
+    console.log('[v0] Registering commitment on blockchain:', {
+      attributeHash,
+      walletAddress,
+      attributeCount
+    });
+
+    // Convert hash to field format for Leo
+    const hashField = `${attributeHash}field`;
+
+    const result = await executeProofOnChain(
+      {
+        programId: PROGRAM_ID,
+        functionName: 'register_commitment',
+        inputs: [hashField, hashField] // Both commitment and attribute_hash use same hash
+      },
+      walletAddress,
+      executeTransactionFn
+    );
+
+    if (!result.success) {
+      return {
+        success: false,
+        error: result.error || 'Failed to register commitment'
+      };
+    }
+
+    return {
+      success: true,
+      commitmentHash: attributeHash,
+      attributeHash: attributeHash,
+      signature: signature,
+      timestamp: timestamp,
+      transactionId: result.transactionId
+    };
+  } catch (error) {
+    console.error('[v0] Error registering commitment:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error registering commitment'
+    };
+  }
+}
+
+/**
+ * SHADOWID V5 FUNCTIONS
+ * Secure Identity Protocol with peer attestation
+ */
+
+/**
+ * Endorse an attribute on another user's identity
+ * Calls endorse_attribute on shadowid_v5.aleo
+ */
+export async function endorseAttribute(
+  targetCommitment: string,
+  attributeId: number,
+  endorserAddress: string,
+  executeTransactionFn?: (params: any) => Promise<string>
+): Promise<OnChainExecutionResult> {
+  return executeProofOnChain(
+    {
+      programId: PROGRAM_ID,
+      functionName: 'endorse_attribute',
+      inputs: [
+        `${targetCommitment}field`,
+        `${attributeId}u32`,
+        endorserAddress
+      ]
+    },
+    endorserAddress,
+    executeTransactionFn
+  );
+}
+
+/**
+ * Get shadow score (credibility 0-100) for a commitment
+ * Calls get_shadow_score on shadowid_v5.aleo
+ */
+export async function getShadowScore(
+  commitment: string,
+  walletAddress: string
+): Promise<{ score: number; error?: string }> {
+  try {
+    const response = await fetch(`${ALEO_API}/account/${PROGRAM_ID}/${commitment}`);
+    
+    if (!response.ok) {
+      return { score: 50, error: 'Unable to fetch shadow score' };
+    }
+
+    const data = await response.json();
+    // Default to 50 (neutral) if not found
+    const score = data.shadowScore || 50;
+    return { score: Math.min(Math.max(score, 0), 100) };
+  } catch (error) {
+    console.error('[v0] Error fetching shadow score:', error);
+    return { score: 50 };
+  }
+}
+
+/**
+ * Get endorsement count for a commitment
+ * Calls get_endorsement_count on shadowid_v5.aleo
+ */
+export async function getEndorsementCount(
+  commitment: string,
+  walletAddress: string
+): Promise<{ count: number; error?: string }> {
+  try {
+    const response = await fetch(`${ALEO_API}/account/${PROGRAM_ID}/${commitment}`);
+    
+    if (!response.ok) {
+      return { count: 0, error: 'Unable to fetch endorsement count' };
+    }
+
+    const data = await response.json();
+    const count = data.endorsementCount || 0;
+    return { count };
+  } catch (error) {
+    console.error('[v0] Error fetching endorsement count:', error);
+    return { count: 0 };
+  }
+}
+
+/**
  * SHADOWID V3 FUNCTIONS
  * Secure Identity Protocol with zero-knowledge proofs
  */
