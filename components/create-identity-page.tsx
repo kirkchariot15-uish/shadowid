@@ -13,7 +13,6 @@ import { addActivityLog } from '@/lib/activity-logger'
 import { STANDARD_ATTRIBUTES } from '@/lib/attribute-schema'
 import { registerAttributesAndGetCommitment, createAttributeHash, signAttributeCommitment } from '@/lib/aleo-sdk-integration'
 import { storeEncryptedCredential } from '@/lib/encrypted-storage'
-import { SecureStorage } from '@/lib/storage-encryption'
 import { validateAttributeValue, validateAllAttributes, hasValidationErrors } from '@/lib/attribute-validator'
 import { getMaxAttributesForUser, getSubscriptionInfo, clearSubscriptionStatus } from '@/lib/subscription-manager'
 import { SubscriptionModal } from '@/components/subscription-modal'
@@ -291,10 +290,6 @@ export function CreateIdentityPage() {
       }
 
       console.log('[v0] Transaction verified on Aleo testnet:', blockchainResult.transactionId)
-
-      // Store commitment using encrypted storage
-      SecureStorage.setCommitment(blockchainResult.commitmentHash, address)
-      SecureStorage.setCredential(JSON.stringify(credential), address)
 
       // Track account creation for sybil prevention
       trackAccountCreation()
