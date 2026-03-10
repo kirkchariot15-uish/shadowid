@@ -261,7 +261,7 @@ export async function generateProof(
 
   console.log('[v0] Proof generated:', generatedProof.proofId)
 
-  // Submit proof to shadowid_v3.aleo contract
+  // Submit proof to shadowid_v5.aleo contract
   try {
     console.log('[v0] Submitting proof to', programId, 'function:', functionName)
     const onChainResult = await executeProofOnChain(

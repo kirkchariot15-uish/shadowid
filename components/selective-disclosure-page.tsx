@@ -50,7 +50,7 @@ export default function SelectiveDisclosurePage() {
     setIsGenerating(true)
     try {
       console.log('[v0] Generating ZK proof for attributes:', selectedAttrs)
-      console.log('[v0] Using shadowid_v2.aleo contract')
+      console.log('[v0] Using shadowid_v5.aleo contract')
 
       // Get encrypted credential
       const commitmentId = localStorage.getItem('shadowid-commitment') || 'unknown'
@@ -65,7 +65,7 @@ export default function SelectiveDisclosurePage() {
         proofType: 'existence'
       }
 
-      // Generate and submit proof on-chain via shadowid_v3 prove_existence function
+      // Generate and submit proof on-chain via shadowid_v5 prove_existence function
       const proof = await generateProof(
         credential,
         proofRequest,

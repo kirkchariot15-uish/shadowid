@@ -13,8 +13,8 @@ const ALEO_API = 'https://api.explorer.provable.com/v1/testnet';
 // Contract Deployment Details - ALWAYS USE THESE CONSTANTS, NEVER HARDCODE CONTRACT NAMES
 export const CONTRACTS = {
   SHADOWID: {
-    name: 'shadowid_v3.aleo',
-    transactionId: 'at1f5smjrgw9nzluhxzpt23pq47ne4nlnjngfal38mkn0x5e5n0wyzq5dycfl',
+    name: 'shadowid_v5.aleo',
+    transactionId: '',
     adminAddress: 'aleo1cmay45pre5evtl72vj8zma9ayj0u2xrdkdv86w2zyz7pnmg7svxq0dzr9c',
   },
   CREDENTIAL_REGISTRY: {
