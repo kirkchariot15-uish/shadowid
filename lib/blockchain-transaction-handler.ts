@@ -31,6 +31,60 @@ function generateTransactionKey(params: TransactionParams): string {
 }
 
 /**
+ * Poll Aleo explorer to confirm transaction is finalized
+ * Waits up to 5 minutes for blockchain confirmation
+ */
+async function pollTransactionConfirmation(
+  transactionId: string,
+  maxWaitMs: number = 5 * 60 * 1000 // 5 minutes
+): Promise<{ confirmed: boolean; status?: string; error?: string }> {
+  const pollIntervalMs = 3000; // Check every 3 seconds
+  const startTime = Date.now();
+  const explorerUrl = 'https://api.explorer.provable.com/v1/testnet';
+
+  console.log('[v0] Polling for transaction confirmation:', transactionId);
+
+  while (Date.now() - startTime < maxWaitMs) {
+    try {
+      const response = await fetch(`${explorerUrl}/transaction/${transactionId}`);
+      
+      if (response.status === 404) {
+        // Transaction not yet indexed, wait and retry
+        console.log('[v0] Transaction not yet indexed, retrying...');
+        await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+        continue;
+      }
+
+      if (!response.ok) {
+        throw new Error(`Explorer returned ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.status === 'Accepted' || data.status === 'Finalized') {
+        console.log('[v0] Transaction confirmed:', data.status);
+        return { confirmed: true, status: data.status };
+      }
+
+      if (data.status === 'Rejected' || data.status === 'Failed') {
+        console.error('[v0] Transaction rejected by blockchain:', data.status);
+        return { confirmed: false, status: data.status, error: `Transaction ${data.status}` };
+      }
+
+      // Still pending
+      console.log('[v0] Transaction pending:', data.status);
+      await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+    } catch (error) {
+      console.warn('[v0] Error polling transaction status:', error);
+      // Continue polling on errors
+      await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+    }
+  }
+
+  return { confirmed: false, error: 'Transaction confirmation timeout after 5 minutes' };
+}
+
+/**
  * Safely execute a wallet transaction with validation, error handling, and retry logic
  * Prevents duplicate transactions and retries on failure
  */
@@ -117,6 +171,20 @@ async function executeTransactionWithRetry(
       }
 
       console.log('[v0] Transaction executed successfully:', transactionId);
+      
+      // CRITICAL: Wait for blockchain confirmation before returning success
+      const confirmationResult = await pollTransactionConfirmation(transactionId);
+      
+      if (!confirmationResult.confirmed) {
+        console.error('[v0] Transaction not confirmed by blockchain:', confirmationResult.error);
+        return {
+          success: false,
+          transactionId, // Still return the ID for reference
+          error: confirmationResult.error || 'Transaction not confirmed by blockchain',
+        };
+      }
+      
+      console.log('[v0] Transaction confirmed on blockchain:', transactionId);
       return {
         success: true,
         transactionId,
