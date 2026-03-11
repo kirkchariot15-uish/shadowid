@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button'
 import { AlertCircle, CheckCircle2, Loader2, Zap } from 'lucide-react'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
-import { setSubscriptionStatus } from '@/lib/subscription-manager'
+import { setSubscriptionStatus, SUBSCRIPTION_TIERS } from '@/lib/subscription-manager'
 import { addActivityLog } from '@/lib/activity-logger'
 
 interface SubscriptionModalProps {
@@ -13,21 +13,25 @@ interface SubscriptionModalProps {
   onClose: () => void
   onSuccess?: () => void
   reason?: 'attribute_limit' | 'upgrade' | 'manual'
+  tier?: 'standard' | 'premium' | 'custom'
 }
 
 export function SubscriptionModal({
   isOpen,
   onClose,
   onSuccess,
-  reason = 'manual'
+  reason = 'manual',
+  tier = 'standard'
 }: SubscriptionModalProps) {
   const { address, isConnected, executeTransaction } = useAleoWallet()
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
-  const SUBSCRIPTION_COST = 5 // testnet tokens
-  const SUBSCRIPTION_DURATION = 365 // days
+  const tierData = SUBSCRIPTION_TIERS[tier.toUpperCase()]
+  const subscriptionCost = tierData.cost
+  const subscriptionToken = tierData.currency
+  const subscriptionDuration = 365 // days
 
   const handleSubscribe = async () => {
     if (!isConnected || !address || !executeTransaction) {
@@ -39,20 +43,19 @@ export function SubscriptionModal({
     setError(null)
 
     try {
-      console.log('[v0] Starting subscription payment of 5 testnet tokens...')
+      console.log(`[v0] Starting ${tier} subscription payment of ${subscriptionCost} ${subscriptionToken}...`)
 
       // Execute real blockchain transaction to pay for subscription
-      // This calls a contract to transfer tokens to the service address
-      const serviceAddress = 'aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq5ll37m' // Placeholder service address
+      const serviceAddress = 'aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq5ll37m'
       
       const transactionId = await executeTransaction({
         transitions: [
           {
-            program: 'token_v0.aleo', // Token transfer contract
+            program: 'token_v0.aleo',
             functionName: 'transfer_public_to_private',
             inputs: [
-              serviceAddress,           // Recipient (service)
-              `${SUBSCRIPTION_COST}u64`  // Amount: 5 tokens
+              serviceAddress,
+              `${subscriptionCost}u64`
             ]
           }
         ],
@@ -66,27 +69,23 @@ export function SubscriptionModal({
 
       console.log('[v0] Subscription payment successful:', transactionId)
 
-      // Store subscription status
-      const expiryDate = new Date()
-      expiryDate.setDate(expiryDate.getDate() + SUBSCRIPTION_DURATION)
-      
-      setSubscriptionStatus({
-        isActive: true,
-        expiryDate: expiryDate.toISOString(),
-        transactionId: transactionId,
-        paidAmount: SUBSCRIPTION_COST
-      })
+      // Store subscription status with proper tier
+      setSubscriptionStatus(
+        tier as 'standard' | 'premium' | 'custom',
+        transactionId,
+        subscriptionToken as 'ALEO' | 'USDx',
+        subscriptionDuration
+      )
 
       addActivityLog(
         'Subscribe',
         'subscription',
-        `Paid ${SUBSCRIPTION_COST} tokens for 1-year unlimited attributes subscription`,
+        `Paid ${subscriptionCost} ${subscriptionToken} for ${tier} tier (${subscriptionDuration} days)`,
         'success'
       )
 
       setSuccess(true)
       
-      // Call onSuccess callback after 2 seconds
       setTimeout(() => {
         onSuccess?.()
         onClose()
@@ -112,12 +111,12 @@ export function SubscriptionModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5 text-accent" />
-            Unlock Unlimited Attributes
+            {tierData.displayName} Subscription
           </DialogTitle>
           <DialogDescription>
             {reason === 'attribute_limit'
-              ? 'You\'ve reached your free attribute limit. Subscribe for unlimited attributes.'
-              : 'Subscribe to unlock unlimited attributes for your ShadowID.'}
+              ? `You've reached your free attribute limit. Upgrade to ${tierData.displayName}.`
+              : `Subscribe to unlock ${tierData.maxAttributes} attributes for your ShadowID.`}
           </DialogDescription>
         </DialogHeader>
 
@@ -126,23 +125,35 @@ export function SubscriptionModal({
           <div className="bg-accent/10 border border-accent/30 rounded-lg p-4 space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Cost:</span>
-              <span className="text-lg font-semibold text-foreground">{SUBSCRIPTION_COST} testnet tokens</span>
+              <span className="text-lg font-semibold text-foreground">{subscriptionCost} {subscriptionToken}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Duration:</span>
-              <span className="text-sm text-foreground">{SUBSCRIPTION_DURATION} days</span>
+              <span className="text-sm text-foreground">{subscriptionDuration} days</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Attributes:</span>
-              <span className="text-sm font-medium text-accent">Unlimited</span>
+              <span className="text-sm text-muted-foreground">Standard Attributes:</span>
+              <span className="text-sm font-medium text-accent">{tierData.maxAttributes}</span>
             </div>
+            {tierData.maxCustomAttributes > 0 && (
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Custom Attributes:</span>
+                <span className="text-sm font-medium text-accent">{tierData.maxCustomAttributes}</span>
+              </div>
+            )}
           </div>
 
           {/* Features */}
           <div className="space-y-2">
             <p className="text-xs font-semibold text-muted-foreground">INCLUDES:</p>
             <ul className="space-y-2 text-sm">
-              {['Unlimited attributes per identity', 'Priority verification', 'Extended credential lifetime', 'Advanced privacy controls'].map(
+              {[
+                `${tierData.maxAttributes} standard attributes`,
+                tierData.customAttributesAllowed ? `${tierData.maxCustomAttributes} custom attributes` : null,
+                'Priority verification',
+                'Extended credential lifetime',
+                'Advanced privacy controls'
+              ].filter(Boolean).map(
                 (feature, i) => (
                   <li key={i} className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-accent flex-shrink-0" />
@@ -180,7 +191,7 @@ export function SubscriptionModal({
               <CheckCircle2 className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-foreground">Subscription Activated!</p>
-                <p className="text-xs text-muted-foreground mt-1">You can now activate unlimited attributes.</p>
+                <p className="text-xs text-muted-foreground mt-1">You can now access all {tierData.displayName} features.</p>
               </div>
             </div>
           )}
@@ -201,7 +212,7 @@ export function SubscriptionModal({
               disabled={!isConnected || isProcessing || success}
             >
               {isProcessing && <Loader2 className="h-4 w-4 animate-spin" />}
-              {success ? 'Done!' : isProcessing ? 'Processing...' : `Subscribe Now`}
+              {success ? 'Done!' : isProcessing ? 'Processing...' : `Subscribe for ${subscriptionCost} ${subscriptionToken}`}
             </Button>
           </div>
 
