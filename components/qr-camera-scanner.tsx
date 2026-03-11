@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { AlertCircle, Camera, Stop, Maximize2 } from 'lucide-react'
+import { AlertCircle, Camera, SquareX, Maximize2 } from 'lucide-react'
 import { useQRCameraScanner } from '@/hooks/use-qr-camera-scanner'
 
 interface QRCameraScannerProps {
@@ -136,8 +136,8 @@ export function QRCameraScanner({ onQRDetected, onClose }: QRCameraScannerProps)
               <Maximize2 className="h-4 w-4" />
             </Button>
             <Button onClick={stopCamera} className="flex-1 gap-2 bg-destructive hover:bg-destructive/90">
-              <Stop className="h-4 w-4" />
-              Stop Scanning
+                <SquareX className="h-4 w-4" />
+                Stop Scanning
             </Button>
           </>
         )}
