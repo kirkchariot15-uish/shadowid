@@ -759,6 +759,50 @@ export async function signAttributeCommitment(
 }
 
 /**
+ * Derive the commitment that blockchain generated for these attributes
+ * Query the blockchain state to extract the commitment that was stored
+ */
+async function deriveCommitmentFromBlockchain(
+  attributeHash: string,
+  walletAddress: string,
+  transactionId: string
+): Promise<string> {
+  try {
+    // Query the transaction to get the output commitment
+    const response = await fetch(`${ALEO_API}/transaction/${transactionId}`);
+    
+    if (!response.ok) {
+      console.error('[v0] Could not fetch transaction details');
+      // Fallback: use the attribute hash as the commitment reference
+      return attributeHash;
+    }
+
+    const txData = await response.json();
+    
+    // The commitment is derived from the transaction outputs
+    // In Aleo, function outputs contain the data returned by the function
+    // For register_commitment, the output would be the commitment hash
+    if (txData.execution && txData.execution.transitions && txData.execution.transitions.length > 0) {
+      const outputs = txData.execution.transitions[0].outputs || [];
+      if (outputs.length > 0) {
+        // First output should be the commitment
+        const commitment = outputs[0].value || attributeHash;
+        console.log('[v0] Extracted commitment from blockchain:', commitment.slice(0, 16) + '...');
+        return commitment;
+      }
+    }
+
+    // If we can't find the commitment in outputs, use the hash as reference
+    console.warn('[v0] Could not extract commitment from transaction, using hash as reference');
+    return attributeHash;
+  } catch (error) {
+    console.error('[v0] Error deriving commitment:', error);
+    // Fallback to attribute hash if blockchain query fails
+    return attributeHash;
+  }
+}
+
+/**
  * Validate attribute signature to prove user authorization
  * Recomputes signature and compares with stored signature
  */

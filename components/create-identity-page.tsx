@@ -191,11 +191,18 @@ export function CreateIdentityPage() {
         attributeMap[attr] = selectedAttributes[attr].value
       })
 
-      console.log('[v0] Sending attributes to blockchain:', {
-        attributes: attributeMap,
-        timestamp,
-        count: enabledAttrIds.length
+      console.log('[v0] Starting identity creation:', {
+        attributes: Object.keys(attributeMap),
+        walletConnected: !!address,
+        executeTransactionAvailable: !!executeTransaction
       })
+
+      // Validate wallet connection and transaction function
+      if (!address || !executeTransaction) {
+        setError('Wallet not connected. Please connect your Aleo wallet first.')
+        setIsCreating(false)
+        return
+      }
 
       // Send directly to blockchain - blockchain generates commitment
       // Pass the actual attributes, not a hash - blockchain will hash them deterministically
