@@ -1,0 +1,192 @@
+import { useState, useCallback, useRef, useEffect } from 'react'
+import { decodeQRFromVideoFrame, QRDecodeResult } from '@/lib/qr-decoder'
+
+export interface UseCameraScannerState {
+  scanning: boolean
+  isInitializing: boolean
+  error: string | null
+  permissionDenied: boolean
+  permissionGranted: boolean
+  qrDetected: QRDecodeResult | null
+  requestCamera: () => Promise<void>
+  stopCamera: () => void
+  videoRef: React.RefObject<HTMLVideoElement>
+}
+
+const FRAME_INTERVAL = 500 // Process frame every 500ms to reduce CPU usage
+
+/**
+ * Hook for real-time QR code scanning from camera
+ * Privacy-first: camera only accessed after explicit user action
+ */
+export function useQRCameraScanner(): UseCameraScannerState {
+  const [scanning, setScanning] = useState(false)
+  const [isInitializing, setIsInitializing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [permissionDenied, setPermissionDenied] = useState(false)
+  const [permissionGranted, setPermissionGranted] = useState(false)
+  const [qrDetected, setQrDetected] = useState<QRDecodeResult | null>(null)
+  
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+  const animationFrameRef = useRef<number | null>(null)
+  const processingRef = useRef(false)
+  const lastProcessTimeRef = useRef(0)
+
+  // Cleanup function
+  const stopCamera = useCallback(() => {
+    console.log('[v0] Stopping camera')
+    
+    // Stop animation frame
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current)
+      animationFrameRef.current = null
+    }
+
+    // Stop all media tracks
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => {
+        track.stop()
+        console.log('[v0] Stopped track:', track.kind)
+      })
+      streamRef.current = null
+    }
+
+    // Clear video source
+    if (videoRef.current) {
+      videoRef.current.srcObject = null
+    }
+
+    setScanning(false)
+    setError(null)
+    processingRef.current = false
+  }, [])
+
+  // Process video frames for QR detection
+  const processVideoFrame = useCallback(() => {
+    if (!scanning || !videoRef.current || processingRef.current) {
+      return
+    }
+
+    // Throttle frame processing to reduce CPU usage
+    const now = Date.now()
+    if (now - lastProcessTimeRef.current < FRAME_INTERVAL) {
+      animationFrameRef.current = requestAnimationFrame(processVideoFrame)
+      return
+    }
+
+    lastProcessTimeRef.current = now
+    processingRef.current = true
+
+    try {
+      const result = decodeQRFromVideoFrame(videoRef.current)
+      
+      if (result && result.success && result.data) {
+        console.log('[v0] QR code detected from camera')
+        setQrDetected(result)
+        stopCamera()
+        return
+      }
+    } catch (err) {
+      console.error('[v0] Frame processing error:', err)
+    } finally {
+      processingRef.current = false
+    }
+
+    // Continue scanning
+    animationFrameRef.current = requestAnimationFrame(processVideoFrame)
+  }, [scanning, stopCamera])
+
+  // Request camera permission and start scanning
+  const requestCamera = useCallback(async () => {
+    console.log('[v0] Requesting camera permission')
+    setIsInitializing(true)
+    setError(null)
+    setPermissionDenied(false)
+    setQrDetected(null)
+
+    try {
+      // Check browser support
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setError('Your browser does not support camera access. Please use a modern browser or upload a QR code image instead.')
+        setIsInitializing(false)
+        return
+      }
+
+      // Request camera permission
+      const constraints: MediaStreamConstraints = {
+        video: {
+          facingMode: 'environment', // Back camera on mobile
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
+        audio: false // No microphone needed
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints)
+      console.log('[v0] Camera permission granted')
+      
+      streamRef.current = stream
+      setPermissionGranted(true)
+
+      // Attach stream to video element
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        
+        // Start processing when video is ready
+        videoRef.current.onloadedmetadata = () => {
+          console.log('[v0] Video stream ready')
+          videoRef.current?.play().catch(err => {
+            console.error('[v0] Error playing video:', err)
+            setError('Failed to play video stream')
+            stopCamera()
+          })
+          
+          setScanning(true)
+          setIsInitializing(false)
+          
+          // Start QR detection loop
+          processVideoFrame()
+        }
+      }
+    } catch (err) {
+      console.error('[v0] Camera access error:', err)
+      setIsInitializing(false)
+      
+      if (err instanceof DOMException) {
+        if (err.name === 'NotAllowedError') {
+          console.log('[v0] Camera permission denied by user')
+          setPermissionDenied(true)
+          setError('Camera access was denied. Please allow camera access in your browser settings or upload a QR code image instead.')
+        } else if (err.name === 'NotFoundError') {
+          setError('No camera found on this device. Please upload a QR code image instead.')
+        } else if (err.name === 'NotReadableError') {
+          setError('Camera is in use by another application. Please close other apps and try again.')
+        } else {
+          setError(`Camera error: ${err.message}`)
+        }
+      } else {
+        setError(`Error accessing camera: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      }
+    }
+  }, [processVideoFrame, stopCamera])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopCamera()
+    }
+  }, [stopCamera])
+
+  return {
+    scanning,
+    isInitializing,
+    error,
+    permissionDenied,
+    permissionGranted,
+    qrDetected,
+    requestCamera,
+    stopCamera,
+    videoRef
+  }
+}
