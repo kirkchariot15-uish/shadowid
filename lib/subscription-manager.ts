@@ -225,12 +225,13 @@ export function getSubscriptionInfo() {
   const isActive = isSubscriptionActive();
 
   if (!status.isSubscribed) {
+    const freeTier = SUBSCRIPTION_TIERS.FREE;
     return {
       status: 'Free Plan',
-      maxAttributes: SUBSCRIPTION_LIMITS.FREE,
-      remaining: SUBSCRIPTION_LIMITS.FREE,
-      cost: SUBSCRIPTION_COST,
-      message: `You can activate up to ${SUBSCRIPTION_LIMITS.FREE} attributes. Subscribe for all 8.`,
+      maxAttributes: freeTier.maxAttributes,
+      remaining: freeTier.maxAttributes,
+      cost: freeTier.cost,
+      message: `You can activate up to ${freeTier.maxAttributes} attributes. Subscribe for all 8.`,
       isActive: false
     };
   }
@@ -242,23 +243,24 @@ export function getSubscriptionInfo() {
     );
 
     return {
-      status: 'Subscribed',
-      maxAttributes: SUBSCRIPTION_LIMITS.SUBSCRIBED,
-      remaining: SUBSCRIPTION_LIMITS.SUBSCRIBED,
-      cost: SUBSCRIPTION_COST,
-      message: `All 8 attributes unlocked. Subscription expires in ${daysRemaining} days.`,
+      status: `${status.tier.charAt(0).toUpperCase()}${status.tier.slice(1)} Plan`,
+      maxAttributes: status.maxAttributes,
+      remaining: status.maxAttributes,
+      cost: SUBSCRIPTION_TIERS[status.tier.toUpperCase()]?.cost || 0,
+      message: `${status.maxAttributes} attributes unlocked. Subscription expires in ${daysRemaining} days.`,
       isActive: true,
       expiresAt: expiresDate.toLocaleDateString()
     };
   }
 
   // Subscription expired
+  const freeTier = SUBSCRIPTION_TIERS.FREE;
   return {
     status: 'Subscription Expired',
-    maxAttributes: SUBSCRIPTION_LIMITS.FREE,
-    remaining: SUBSCRIPTION_LIMITS.FREE,
-    cost: SUBSCRIPTION_COST,
-    message: `Your subscription expired. Subscribe again to activate all 8 attributes.`,
+    maxAttributes: freeTier.maxAttributes,
+    remaining: freeTier.maxAttributes,
+    cost: freeTier.cost,
+    message: `Your subscription expired. Subscribe again to unlock attributes.`,
     isActive: false,
     expiredAt: new Date(status.expiresAt!).toLocaleDateString()
   };
