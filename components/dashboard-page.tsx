@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
+import { useSessionTimeout } from '@/hooks/use-session-timeout'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { Navigation } from '@/components/navigation'
 import { IDCard } from '@/components/id-card'
@@ -18,6 +19,9 @@ export default function DashboardPage() {
   const [credentials, setCredentials] = useState<number>(0)
   const [proofs, setProofs] = useState<number>(0)
   const [showOnboarding, setShowOnboarding] = useState(false)
+
+  // Enforce session timeout on this page
+  useSessionTimeout()
 
   useEffect(() => {
     // Check if first time user
