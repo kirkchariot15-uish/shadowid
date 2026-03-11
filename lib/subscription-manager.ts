@@ -26,7 +26,7 @@ export interface SubscriptionTier {
   description: string;
 }
 
-const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
+export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
   FREE: {
     name: 'free',
     displayName: 'Free',
