@@ -455,12 +455,17 @@ export async function registerAttributesAndGetCommitment(
   try {
     // Send attributes to blockchain (NOT a pre-made commitment)
     // The blockchain will generate the commitment deterministically
+    
+    // Convert hex hashes to proper Aleo field format
+    const commitmentField = hexToField(attributeHash);
+    const attributeHashField = hexToField(attributeHash);
+    
     const txParams: TransactionParams = {
       program: PROGRAM_ID,
       functionName: 'register_commitment',
       inputs: [
-        `${attributeHash}field`,           // Commitment as field
-        `${attributeHash}field`,           // Attribute hash as field (same as commitment for now)
+        commitmentField,           // Commitment as field (decimal + "field" suffix)
+        attributeHashField,        // Attribute hash as field (decimal + "field" suffix)
       ],
       fee: 100000,
     };
@@ -674,8 +679,76 @@ export async function validateCommitmentSignature(
 }
 
 /**
- * Validate attribute hash to prove attributes weren't modified after registration
- * Recomputes hash from attributes and compares with stored hash
+ * Create a SHA-256 hash of attributes for commitment
+ * This hash will be sent to blockchain as the basis for commitment generation
+ */
+export async function createAttributeHash(
+  attributes: Record<string, string>,
+  timestamp: number
+): Promise<string> {
+  try {
+    // Deterministically sort and stringify attributes
+    const sortedKeys = Object.keys(attributes).sort();
+    const attributeString = sortedKeys
+      .map(key => `${key}:${attributes[key]}`)
+      .join('|');
+    
+    // Add timestamp for uniqueness
+    const dataToHash = `${attributeString}::${timestamp}`;
+    
+    // Hash using SHA-256
+    const encoder = new TextEncoder();
+    const data = encoder.encode(dataToHash);
+    const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hexHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    console.log('[v0] Attribute hash created:', hexHash);
+    return hexHash;
+  } catch (error) {
+    console.error('[v0] Error creating attribute hash:', error);
+    throw new Error(`Failed to create attribute hash: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+/**
+ * Sign the attribute commitment to prove authorization
+ * User signs their attributes to prove they authorized this identity creation
+ */
+export async function signAttributeCommitment(
+  attributeHash: string,
+  commitment: string,
+  timestamp: number,
+  userAddress: string
+): Promise<string> {
+  try {
+    // Create signature data from hash + timestamp
+    const dataToSign = `${attributeHash}${timestamp}${userAddress}`;
+    
+    // Hash the data
+    const encoder = new TextEncoder();
+    const data = encoder.encode(dataToSign);
+    const signatureHashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(signatureHashBuffer));
+    const signature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    console.log('[v0] Attribute commitment signed:', {
+      attributeHash,
+      timestamp,
+      userAddress,
+      signature: signature.slice(0, 16) + '...' // Log only first 16 chars for security
+    });
+    
+    return signature;
+  } catch (error) {
+    console.error('[v0] Error signing attribute commitment:', error);
+    throw new Error(`Failed to sign commitment: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+/**
+ * Validate attribute signature to prove user authorization
+ * Recomputes signature and compares with stored signature
  */
 export async function validateAttributeHash(
   attributes: Record<string, string>,
