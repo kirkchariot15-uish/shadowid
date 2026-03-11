@@ -7,10 +7,8 @@ import { Button } from '@/components/ui/button'
 import { ArrowLeft, Zap, CheckCircle, Download } from 'lucide-react'
 import Link from 'next/link'
 import QRCode from 'qrcode'
-import { generateProof, ProofRequest } from '@/lib/proof-generator'
 import { PROGRAM_ID } from '@/lib/aleo-sdk-integration'
 import { addActivityLog } from '@/lib/activity-logger'
-import { getDecryptedCredential } from '@/lib/encrypted-storage'
 import { CONFIG, getQRValidityHours } from '@/lib/config'
 
 export default function SelectiveDisclosurePage() {
