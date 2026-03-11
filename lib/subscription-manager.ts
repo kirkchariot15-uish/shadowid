@@ -73,28 +73,41 @@ export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
   }
 };
 
+import { getWithWalletValidation, storeWithWalletValidation } from './wallet-data-validation'
+
 /**
  * Get user's subscription status from localStorage
+ * Validates that subscription belongs to current wallet
  */
-export function getSubscriptionStatus(): SubscriptionStatus {
-  const stored = localStorage.getItem('shadowid-subscription');
-  
-  if (!stored) {
-    return {
-      isSubscribed: false,
-      tier: 'free',
-      expiresAt: null,
-      maxAttributes: SUBSCRIPTION_TIERS.FREE.maxAttributes,
-      maxCustomAttributes: SUBSCRIPTION_TIERS.FREE.maxCustomAttributes,
-      transactionHash: null,
-      subscribedAt: null,
-      paymentToken: 'ALEO'
-    };
-  }
-
+export function getSubscriptionStatus(walletAddress?: string): SubscriptionStatus {
   try {
-    return JSON.parse(stored);
-  } catch {
+    let stored = null
+    
+    if (walletAddress) {
+      // If wallet provided, validate it belongs to current wallet
+      stored = getWithWalletValidation('shadowid-subscription', walletAddress)
+    } else {
+      // Fallback: direct localStorage access (client-side only)
+      const raw = localStorage.getItem('shadowid-subscription')
+      stored = raw ? JSON.parse(raw) : null
+    }
+    
+    if (!stored) {
+      return {
+        isSubscribed: false,
+        tier: 'free',
+        expiresAt: null,
+        maxAttributes: SUBSCRIPTION_TIERS.FREE.maxAttributes,
+        maxCustomAttributes: SUBSCRIPTION_TIERS.FREE.maxCustomAttributes,
+        transactionHash: null,
+        subscribedAt: null,
+        paymentToken: 'ALEO'
+      }
+    }
+
+    return stored
+  } catch (error) {
+    console.error('[v0] Error reading subscription status:', error)
     return {
       isSubscribed: false,
       tier: 'free',
@@ -104,7 +117,7 @@ export function getSubscriptionStatus(): SubscriptionStatus {
       transactionHash: null,
       subscribedAt: null,
       paymentToken: 'ALEO'
-    };
+    }
   }
 }
 
@@ -115,7 +128,8 @@ export function setSubscriptionStatus(
   tier: 'standard' | 'premium' | 'custom',
   transactionHash: string,
   paymentToken: 'ALEO' | 'USDx' = 'ALEO',
-  durationDays: number = 365
+  durationDays: number = 365,
+  walletAddress?: string
 ): SubscriptionStatus {
   const tierData = SUBSCRIPTION_TIERS[tier.toUpperCase()];
   
@@ -137,7 +151,14 @@ export function setSubscriptionStatus(
     paymentToken
   };
 
-  localStorage.setItem('shadowid-subscription', JSON.stringify(status));
+  if (walletAddress) {
+    // Store with wallet validation if address provided
+    storeWithWalletValidation('shadowid-subscription', status, walletAddress, durationDays * 24)
+  } else {
+    // Fallback: direct storage
+    localStorage.setItem('shadowid-subscription', JSON.stringify(status))
+  }
+  
   return status;
 }
 

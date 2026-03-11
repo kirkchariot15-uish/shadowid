@@ -37,13 +37,30 @@ export default function SettingsPage() {
     setIsDeleting(true)
 
     try {
-      // Clear all local data
-      localStorage.removeItem('shadowid-encrypted-bundle')
-      localStorage.removeItem('shadowid-commitment')
-      localStorage.removeItem('shadowid-created-at')
-      localStorage.removeItem('shadowid-user-info')
-      localStorage.removeItem('shadowid-photo-encrypted')
-      localStorage.removeItem('shadowid-photo-commitment')
+      // Clear ALL local data - complete account wipe
+      const keysToRemove = [
+        'shadowid-encrypted-bundle',
+        'shadowid-commitment',
+        'shadowid-created-at',
+        'shadowid-user-info',
+        'shadowid-photo-encrypted',
+        'shadowid-photo-commitment',
+        'shadowid-credential',
+        'shadowid-credentials-v2',
+        'shadowid-subscription',
+        'shadowid-current-session',
+        'shadowid-session-config',
+        'shadowid-activity-logs',
+        'shadowid-disclosure-proofs',
+        'shadowid-verification-history',
+        'shadowid-endorsements',
+        'shadowid-anti-sybil-tokens'
+      ]
+      
+      keysToRemove.forEach(key => {
+        localStorage.removeItem(key)
+      })
+      
       clearActivityLogs()
 
       setDeleteComplete(true)
