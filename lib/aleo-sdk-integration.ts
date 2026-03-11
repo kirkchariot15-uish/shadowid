@@ -429,13 +429,10 @@ export async function registerAttributesAndGetCommitment(
     const commitmentField = hexToField(attributeHash);
     const attributeHashField = hexToField(attributeHash);
     
-    // Convert attribute count to field format (Leo requires all inputs as fields or properly typed)
-    const attributeCountField = `${attributeCount}field`;
-    
     console.log('[v0] Transaction inputs formatted:', {
       commitmentField: commitmentField.slice(0, 20) + '...',
       attributeHashField: attributeHashField.slice(0, 20) + '...',
-      attributeCountField
+      attributeCount
     });
     
     const txParams: TransactionParams = {
@@ -444,7 +441,6 @@ export async function registerAttributesAndGetCommitment(
       inputs: [
         commitmentField,           // Commitment as field
         attributeHashField,        // Attribute hash as field
-        attributeCountField,       // Attribute count as field (properly typed)
       ],
       fee: 100000,
     };
