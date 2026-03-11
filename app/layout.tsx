@@ -37,7 +37,7 @@ export default function RootLayout({
         {/* Content Security Policy - prevents XSS attacks */}
         <meta
           httpEquiv="Content-Security-Policy"
-          content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.vercel.com https://*.aleo.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.explorer.provable.com https://*.aleo.org wss://*.aleo.org; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
+          content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.vercel.com https://*.aleo.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.explorer.provable.com https://*.aleo.org wss://*.aleo.org; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
         />
         {/* Prevent clickjacking */}
         <meta httpEquiv="X-UA-Compatible" content="ie=edge" />
