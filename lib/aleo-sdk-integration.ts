@@ -459,8 +459,8 @@ export async function registerAttributesAndGetCommitment(
       program: PROGRAM_ID,
       functionName: 'register_commitment',
       inputs: [
-        attributeHash,           // Hash of attributes (not commitment)
-        `${attributeCount}u32`,  // How many attributes
+        `${attributeHash}field`,           // Commitment as field
+        `${attributeHash}field`,           // Attribute hash as field (same as commitment for now)
       ],
       fee: 100000,
     };
@@ -475,6 +475,18 @@ export async function registerAttributesAndGetCommitment(
     );
 
     if (result.success && result.transactionId) {
+      // Query blockchain to verify transaction actually succeeded
+      // A transaction ID alone doesn't mean it was executed - need to verify status
+      const verified = await verifyTransactionExecution(result.transactionId);
+      
+      if (!verified) {
+        console.error('[v0] Transaction was submitted but execution failed on blockchain');
+        return {
+          success: false,
+          error: 'Transaction was rejected on blockchain. Please check Aleo explorer for details.'
+        };
+      }
+
       // Blockchain confirmed the registration
       // Extract the commitment from the blockchain response
       // In real Aleo: parse the transaction output to get the generated commitment
@@ -515,6 +527,41 @@ export async function registerAttributesAndGetCommitment(
       success: false,
       error: errorMsg,
     };
+  }
+}
+
+/**
+ * Verify that a transaction actually executed successfully on blockchain
+ * Not just submitted, but confirmed as executed
+ */
+async function verifyTransactionExecution(transactionId: string): Promise<boolean> {
+  try {
+    // Query Aleo API to check transaction status
+    const response = await fetch(`${ALEO_API}/transaction/${transactionId}`);
+    
+    if (!response.ok) {
+      console.error('[v0] Could not query transaction status:', response.status);
+      return false;
+    }
+
+    const txData = await response.json();
+    
+    // Check if transaction was executed (status should be 'finalized' or 'executed')
+    if (txData.status === 'REJECTED' || txData.status === 'FAILED') {
+      console.error('[v0] Transaction was rejected/failed:', txData.reason);
+      return false;
+    }
+
+    if (txData.status !== 'FINALIZED' && txData.status !== 'EXECUTED') {
+      console.warn('[v0] Transaction still pending:', txData.status);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('[v0] Error verifying transaction:', error);
+    // If we can't verify, assume failed for safety
+    return false;
   }
 }
 
