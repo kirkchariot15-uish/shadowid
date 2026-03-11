@@ -445,7 +445,7 @@ export async function signAttributeCommitment(
  * This prevents users from tampering with their identity after creation
  */
 export async function registerAttributesAndGetCommitment(
-  attributeHash: string,
+  attributesJson: string,  // JSON string of attributes to hash
   signature: string,
   timestamp: number,
   walletAddress: string,
@@ -453,10 +453,22 @@ export async function registerAttributesAndGetCommitment(
   executeTransactionFn?: (params: any) => Promise<string>
 ): Promise<OnChainExecutionResult> {
   try {
-    // Send attributes to blockchain (NOT a pre-made commitment)
-    // The blockchain will generate the commitment deterministically
+    // Hash the attributes deterministically on the backend
+    const dataToHash = `${attributesJson}::${timestamp}::${walletAddress}`;
+    const encoder = new TextEncoder();
+    const data = encoder.encode(dataToHash);
+    const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const attributeHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     
-    // Convert hex hashes to proper Aleo field format
+    console.log('[v0] Computed attribute hash:', {
+      attributeHash: attributeHash.slice(0, 16) + '...',
+      fromAttributes: attributesJson,
+      timestamp
+    });
+
+    // Convert hex hash to proper Aleo field format
+    // THIS is what we send to blockchain - the hash of attributes
     const commitmentField = hexToField(attributeHash);
     const attributeHashField = hexToField(attributeHash);
     
@@ -464,8 +476,8 @@ export async function registerAttributesAndGetCommitment(
       program: PROGRAM_ID,
       functionName: 'register_commitment',
       inputs: [
-        commitmentField,           // Commitment as field (decimal + "field" suffix)
-        attributeHashField,        // Attribute hash as field (decimal + "field" suffix)
+        commitmentField,           // Commitment as field
+        attributeHashField,        // Attribute hash as field
       ],
       fee: 100000,
     };
@@ -514,7 +526,7 @@ export async function registerAttributesAndGetCommitment(
         success: true,
         transactionId: result.transactionId,
         commitmentHash: blockchainCommitment, // FROM BLOCKCHAIN
-        attributeHash: attributeHash,
+        attributeHash: attributeHash,  // Use the hash we computed from attributes
         signature: signature,
         timestamp: timestamp,
         ownerAddress: walletAddress,

@@ -198,10 +198,10 @@ export function CreateIdentityPage() {
       })
 
       // Send directly to blockchain - blockchain generates commitment
-      // DO NOT create hash/signature locally - blockchain is source of truth
+      // Pass the actual attributes, not a hash - blockchain will hash them deterministically
       const blockchainResult = await registerAttributesAndGetCommitment(
-        '', // Empty hash - blockchain will generate from attributes
-        '', // Empty signature - blockchain will validate
+        JSON.stringify(attributeMap), // Actual attributes as JSON string
+        '', // Empty signature
         timestamp,
         address,
         enabledAttrIds.length,
