@@ -387,50 +387,6 @@ export async function getProgramInfo(): Promise<{
  */
 
 /**
- * Create attribute hash that will be stored on-chain
- * Hash = SHA256(attribute1||attribute2||...||timestamp)
- * This proves attributes haven't been tampered with after registration
- */
-export async function createAttributeHash(attributes: Record<string, string>, timestamp: number): Promise<string> {
-  const attrString = Object.entries(attributes)
-    .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
-    .map(([key, value]) => `${key}:${value}`)
-    .join('|')
-    .concat(`|${timestamp}`);
-  
-  const encoder = new TextEncoder();
-  const data = encoder.encode(attrString);
-  const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hexString = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  
-  // Convert to Aleo field format
-  return hexToField(hexString);
-}
-
-/**
- * Sign attribute commitment with user's wallet
- * Signature proves only the user could have created this
- * Format: sign(commitment || attributeHash || timestamp)
- */
-export async function signAttributeCommitment(
-  commitment: string,
-  attributeHash: string,
-  timestamp: number,
-  walletAddress: string
-): Promise<string> {
-  // In production, this would use actual Ed25519 signing
-  // For now, return a placeholder that will be validated by blockchain
-  const dataToSign = `${commitment}${attributeHash}${timestamp}`;
-  const encoder = new TextEncoder();
-  const data = encoder.encode(dataToSign);
-  const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-/**
  * Register attributes on blockchain - blockchain generates the commitment
  * The blockchain is the source of truth for the commitment hash
  * 
