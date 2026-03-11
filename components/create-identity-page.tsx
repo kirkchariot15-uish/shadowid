@@ -11,7 +11,7 @@ import { Lock, Sparkles, CheckCircle2, ArrowLeft, Plus, AlertCircle } from 'luci
 import Link from 'next/link'
 import { addActivityLog } from '@/lib/activity-logger'
 import { STANDARD_ATTRIBUTES } from '@/lib/attribute-schema'
-import { registerAttributesAndGetCommitment, createAttributeHash, signAttributeCommitment } from '@/lib/aleo-sdk-integration'
+import { registerAttributesAndGetCommitment } from '@/lib/aleo-sdk-integration'
 import { storeEncryptedCredential } from '@/lib/encrypted-storage'
 import { validateAttributeValue, validateAllAttributes, hasValidationErrors } from '@/lib/attribute-validator'
 import { getMaxAttributesForUser, getSubscriptionInfo, clearSubscriptionStatus } from '@/lib/subscription-manager'
@@ -185,33 +185,23 @@ export function CreateIdentityPage() {
 
       const timestamp = Math.floor(Date.now() / 1000);
       
-      // Step 1: Create attribute hash (local - will be sent to blockchain)
+      // Prepare attributes to send to blockchain
       const attributeMap: Record<string, string> = {}
       enabledAttrIds.forEach(attr => {
         attributeMap[attr] = selectedAttributes[attr].value
       })
-      const attributeHash = await createAttributeHash(attributeMap, timestamp)
 
-      // Step 2: Sign the attributes (proves user authorized this)
-      const signature = await signAttributeCommitment(
-        attributeHash, // Sign the attributes, not a commitment (commitment comes from blockchain)
-        attributeHash,
+      console.log('[v0] Sending attributes to blockchain:', {
+        attributes: attributeMap,
         timestamp,
-        address
-      )
-
-      console.log('[v0] Sending attributes to blockchain for commitment generation:', {
-        attributeHash,
-        signature,
-        timestamp,
-        attributes: attributeMap
+        count: enabledAttrIds.length
       })
 
-      // Step 3: Send ONLY attributes to blockchain - blockchain generates commitment
-      // CRITICAL: We do NOT send a pre-made commitment. Blockchain generates it from attributes.
+      // Send directly to blockchain - blockchain generates commitment
+      // DO NOT create hash/signature locally - blockchain is source of truth
       const blockchainResult = await registerAttributesAndGetCommitment(
-        attributeHash,
-        signature,
+        '', // Empty hash - blockchain will generate from attributes
+        '', // Empty signature - blockchain will validate
         timestamp,
         address,
         enabledAttrIds.length,
