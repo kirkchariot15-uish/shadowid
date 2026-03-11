@@ -1,19 +1,25 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Check, X } from 'lucide-react'
 import { getAllSubscriptionTiers, getSubscriptionStatus } from '@/lib/subscription-manager'
 import { SubscriptionCheckout } from '@/components/subscription-checkout'
-import type { SubscriptionTier } from '@/lib/subscription-manager'
+import type { SubscriptionTier, SubscriptionStatus } from '@/lib/subscription-manager'
 
 export default function PricingPage() {
   const [selectedTierForCheckout, setSelectedTierForCheckout] = useState<SubscriptionTier | null>(null)
   const [showCheckout, setShowCheckout] = useState(false)
+  const [currentSubscription, setCurrentSubscription] = useState<SubscriptionStatus | null>(null)
   const tiers = getAllSubscriptionTiers()
-  const currentSubscription = getSubscriptionStatus()
+
+  // Load subscription status only on client side
+  useEffect(() => {
+    const subscription = getSubscriptionStatus()
+    setCurrentSubscription(subscription)
+  }, [])
 
   return (
     <main className="min-h-screen bg-background">
@@ -50,9 +56,9 @@ export default function PricingPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {tiers.map((tier) => (
                 <Card key={tier.name} className={`p-8 flex flex-col ${
-                  currentSubscription.tier === tier.name ? 'border-accent border-2 bg-accent/5' : 'border-border'
+                  currentSubscription?.tier === tier.name ? 'border-accent border-2 bg-accent/5' : 'border-border'
                 }`}>
-                  {currentSubscription.tier === tier.name && (
+                  {currentSubscription?.tier === tier.name && (
                     <div className="mb-4 inline-block bg-accent/20 text-accent text-xs font-semibold px-3 py-1 rounded-full w-fit">
                       Current Plan
                     </div>
@@ -113,10 +119,10 @@ export default function PricingPage() {
                       setSelectedTierForCheckout(tier)
                       setShowCheckout(true)
                     }}
-                    disabled={currentSubscription.tier === tier.name || tier.cost === 0}
+                    disabled={currentSubscription?.tier === tier.name || tier.cost === 0}
                     className="w-full"
                   >
-                    {currentSubscription.tier === tier.name ? 'Current Plan' : tier.cost === 0 ? 'You\'re on Free' : 'Upgrade Now'}
+                    {currentSubscription?.tier === tier.name ? 'Current Plan' : tier.cost === 0 ? 'You\'re on Free' : 'Upgrade Now'}
                   </Button>
                 </Card>
               ))}
