@@ -35,6 +35,17 @@ export function CreateIdentityPage() {
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
   const [subscriptionInfo, setSubscriptionInfo] = useState(getSubscriptionInfo())
 
+  // When commitment hash is generated, show completion after brief pause
+  useEffect(() => {
+    if (commitmentHash && isConfirming) {
+      console.log('[v0] Commitment hash generated, showing completion screen')
+      setTimeout(() => {
+        setIsConfirming(false)
+        setCreationComplete(true)
+      }, 500) // Brief pause to show hash is ready
+    }
+  }, [commitmentHash, isConfirming])
+
   // Ensure component only renders on client with crypto available
   useEffect(() => {
     if (typeof window !== 'undefined' && window.crypto) {
@@ -229,7 +240,7 @@ export function CreateIdentityPage() {
         return
       }
 
-      // Show loading screen while confirming transaction
+      // Show loading screen while generating commitment hash
       setIsConfirming(true)
 
       console.log('[v0] Blockchain confirmed:', {
@@ -239,17 +250,25 @@ export function CreateIdentityPage() {
       })
       addActivityLog('Register on-chain', 'blockchain', `Commitment registered: ${blockchainResult.transactionId}`, 'success')
 
-      // Generate personal commitment hash for the user (not from blockchain, but derived from their data)
-      const personalHash = await generateCommitmentHash({
-        userAddress: address,
-        attributes: enabledAttrIds,
-        timestamp,
-        transactionId: blockchainResult.transactionId,
-      })
-      
-      // Store the personal commitment hash (scoped to wallet)
-      storeCommitmentHash(personalHash, address)
-      setCommitmentHash(personalHash.substring(0, 16).toUpperCase())
+      // Wait 10 seconds, then generate personal commitment hash for the user
+      const hashGenerationTimer = setTimeout(async () => {
+        try {
+          const personalHash = await generateCommitmentHash({
+            userAddress: address,
+            attributes: enabledAttrIds,
+            timestamp,
+            transactionId: blockchainResult.transactionId,
+          })
+          
+          // Store the personal commitment hash (scoped to wallet)
+          storeCommitmentHash(personalHash, address)
+          setCommitmentHash(personalHash.substring(0, 16).toUpperCase())
+
+          console.log('[v0] Commitment hash generated after 10 seconds:', personalHash.substring(0, 16))
+        } catch (hashError) {
+          console.error('[v0] Error generating commitment hash:', hashError)
+        }
+      }, 10000)
 
       // Step 5: ONLY NOW create credential with blockchain-verified data
       const credential = {
@@ -311,8 +330,9 @@ export function CreateIdentityPage() {
 
       setCommitment(blockchainResult.commitmentHash)
       addActivityLog('Create ShadowID', 'identity', `Created ZK identity with ${enabledAttrIds.length} attributes on Aleo testnet`, 'success')
-      setIsConfirming(false)
-      setCreationComplete(true)
+      
+      // Hide loading after hash is generated (11 seconds total)
+      // Loading will automatically hide when hash is set
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to create identity'
       console.error('[v0] Identity creation error:', err)
