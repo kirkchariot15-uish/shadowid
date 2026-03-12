@@ -251,8 +251,10 @@ export function CreateIdentityPage() {
       addActivityLog('Register on-chain', 'blockchain', `Commitment registered: ${blockchainResult.transactionId}`, 'success')
 
       // Wait 10 seconds, then generate personal commitment hash for the user
+      console.log('[v0] Transaction successful, starting 10-second timer for hash generation')
       const hashGenerationTimer = setTimeout(async () => {
         try {
+          console.log('[v0] 10 seconds elapsed, generating commitment hash now')
           const personalHash = await generateCommitmentHash({
             userAddress: address,
             attributes: enabledAttrIds,
@@ -260,11 +262,12 @@ export function CreateIdentityPage() {
             transactionId: blockchainResult.transactionId,
           })
           
+          console.log('[v0] Commitment hash generated:', personalHash.substring(0, 16))
           // Store the personal commitment hash (scoped to wallet)
           storeCommitmentHash(personalHash, address)
           setCommitmentHash(personalHash.substring(0, 16).toUpperCase())
 
-          console.log('[v0] Commitment hash generated after 10 seconds:', personalHash.substring(0, 16))
+          console.log('[v0] Commitment hash state updated:', personalHash.substring(0, 16).toUpperCase())
         } catch (hashError) {
           console.error('[v0] Error generating commitment hash:', hashError)
         }
