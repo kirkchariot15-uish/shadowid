@@ -32,13 +32,13 @@ function generateTransactionKey(params: TransactionParams): string {
 
 /**
  * Poll Aleo explorer to confirm transaction is finalized
- * Waits up to 1 minute for blockchain confirmation
+ * Waits up to 3 minutes for blockchain confirmation
  */
 async function pollTransactionConfirmation(
   transactionId: string,
-  maxWaitMs: number = 60 * 1000 // 1 minute
+  maxWaitMs: number = 3 * 60 * 1000 // 3 minutes
 ): Promise<{ confirmed: boolean; status?: string; error?: string }> {
-  const pollIntervalMs = 3000; // Check every 3 seconds
+  const pollIntervalMs = 2000; // Check every 2 seconds
   const startTime = Date.now();
   const explorerUrl = 'https://api.explorer.provable.com/v1/testnet';
 
@@ -81,7 +81,7 @@ async function pollTransactionConfirmation(
     }
   }
 
-  return { confirmed: false, error: 'Transaction confirmation timeout after 1 minute' };
+  return { confirmed: false, error: 'Transaction confirmation timeout after 3 minutes' };
 }
 
 /**
