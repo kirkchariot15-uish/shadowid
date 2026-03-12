@@ -32,11 +32,11 @@ function generateTransactionKey(params: TransactionParams): string {
 
 /**
  * Poll Aleo explorer to confirm transaction is finalized
- * Waits up to 5 minutes for blockchain confirmation
+ * Waits up to 1 minute for blockchain confirmation
  */
 async function pollTransactionConfirmation(
   transactionId: string,
-  maxWaitMs: number = 5 * 60 * 1000 // 5 minutes
+  maxWaitMs: number = 60 * 1000 // 1 minute
 ): Promise<{ confirmed: boolean; status?: string; error?: string }> {
   const pollIntervalMs = 3000; // Check every 3 seconds
   const startTime = Date.now();
@@ -81,7 +81,7 @@ async function pollTransactionConfirmation(
     }
   }
 
-  return { confirmed: false, error: 'Transaction confirmation timeout after 5 minutes' };
+  return { confirmed: false, error: 'Transaction confirmation timeout after 1 minute' };
 }
 
 /**

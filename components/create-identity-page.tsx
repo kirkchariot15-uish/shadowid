@@ -6,8 +6,9 @@ import { debugWalletState } from '@/lib/blockchain-transaction-handler'
 import { Navigation } from '@/components/navigation'
 import { ProgressIndicator } from '@/components/progress-indicator'
 import { LoadingSpinner } from '@/components/loading-spinner'
+import { ShadowIDLoading } from '@/components/shadowid-loading'
 import { Button } from '@/components/ui/button'
-import { Lock, Sparkles, CheckCircle2, ArrowLeft, Plus, AlertCircle } from 'lucide-react'
+import { Lock, Sparkles, CheckCircle2, ArrowLeft, Plus, AlertCircle, Copy } from 'lucide-react'
 import Link from 'next/link'
 import { addActivityLog } from '@/lib/activity-logger'
 import { STANDARD_ATTRIBUTES } from '@/lib/attribute-schema'
@@ -16,6 +17,7 @@ import { validateAttributeValue, validateAllAttributes, hasValidationErrors } fr
 import { getMaxAttributesForUser, getSubscriptionInfo } from '@/lib/subscription-manager'
 import { SubscriptionModal } from '@/components/subscription-modal'
 import { checkAccountCreationRateLimit, trackAccountCreation } from '@/lib/anti-sybil'
+import { generateCommitmentHash, storeCommitmentHash } from '@/lib/commitment-hash-generator'
 
 export function CreateIdentityPage() {
   const { address, executeTransaction } = useAleoWallet()
@@ -23,8 +25,10 @@ export function CreateIdentityPage() {
   const [mounted, setMounted] = useState(false)
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, { value: string; enabled: boolean }>>({})
   const [isCreating, setIsCreating] = useState(false)
+  const [isConfirming, setIsConfirming] = useState(false)
   const [creationComplete, setCreationComplete] = useState(false)
   const [commitment, setCommitment] = useState<string>('')
+  const [commitmentHash, setCommitmentHash] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const [retryCount, setRetryCount] = useState(0)
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
@@ -225,12 +229,27 @@ export function CreateIdentityPage() {
         return
       }
 
+      // Show loading screen while confirming transaction
+      setIsConfirming(true)
+
       console.log('[v0] Blockchain confirmed:', {
         transactionId: blockchainResult.transactionId,
         commitment: blockchainResult.commitmentHash,
         attributeHash: blockchainResult.attributeHash
       })
       addActivityLog('Register on-chain', 'blockchain', `Commitment registered: ${blockchainResult.transactionId}`, 'success')
+
+      // Generate personal commitment hash for the user (not from blockchain, but derived from their data)
+      const personalHash = await generateCommitmentHash({
+        userAddress: address,
+        attributes: enabledAttrIds,
+        timestamp,
+        transactionId: blockchainResult.transactionId,
+      })
+      
+      // Store the personal commitment hash (scoped to wallet)
+      storeCommitmentHash(personalHash, address)
+      setCommitmentHash(personalHash.substring(0, 16).toUpperCase())
 
       // Step 5: ONLY NOW create credential with blockchain-verified data
       const credential = {
@@ -292,6 +311,7 @@ export function CreateIdentityPage() {
 
       setCommitment(blockchainResult.commitmentHash)
       addActivityLog('Create ShadowID', 'identity', `Created ZK identity with ${enabledAttrIds.length} attributes on Aleo testnet`, 'success')
+      setIsConfirming(false)
       setCreationComplete(true)
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to create identity'
@@ -300,6 +320,7 @@ export function CreateIdentityPage() {
       addActivityLog('Create ShadowID', 'identity', `Failed to create identity: ${errorMsg}`, 'error')
     } finally {
       setIsCreating(false)
+      setIsConfirming(false)
     }
   }
 
@@ -340,10 +361,30 @@ export function CreateIdentityPage() {
               <CheckCircle2 className="h-16 w-16 text-accent mx-auto mb-6" />
               <h1 className="text-3xl font-bold mb-3">ShadowID Created</h1>
               <p className="text-muted-foreground mb-4">Your zero-knowledge identity is ready.</p>
+              
+              {/* Blockchain Commitment */}
               <div className="bg-card/50 border border-accent/20 rounded-lg p-6 mb-6">
-                <p className="text-xs uppercase tracking-widest text-accent mb-2">Identity Commitment</p>
-                <p className="text-xl font-mono font-bold break-all">{commitment}</p>
+                <p className="text-xs uppercase tracking-widest text-accent mb-2">Blockchain Commitment</p>
+                <p className="text-sm font-mono font-bold break-all mb-3">{commitment}</p>
               </div>
+
+              {/* Personal Identity Hash */}
+              {commitmentHash && (
+                <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-6 mb-6">
+                  <p className="text-xs uppercase tracking-widest text-blue-400 mb-2">Your Identity Hash</p>
+                  <p className="text-2xl font-mono font-bold text-blue-300 mb-3">{commitmentHash}</p>
+                  <p className="text-xs text-blue-300/70 mb-4">Share this hash with verifiers to prove your identity</p>
+                  <Button
+                    onClick={() => navigator.clipboard.writeText(commitmentHash)}
+                    variant="outline"
+                    className="gap-2 text-xs"
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copy Identity Hash
+                  </Button>
+                </div>
+              )}
+
               <p className="text-sm text-muted-foreground mb-8">
                 Activated attributes: {Object.keys(selectedAttributes).filter(k => selectedAttributes[k].enabled).map(k => selectedAttributes[k].value || k).join(', ')}
               </p>
@@ -367,6 +408,7 @@ export function CreateIdentityPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <ShadowIDLoading isVisible={isConfirming} />
       <Navigation />
       <div className="pt-24 pb-32 px-4">
         <div className="mx-auto max-w-2xl">
