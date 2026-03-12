@@ -9,7 +9,7 @@ import Link from 'next/link'
 import { clearActivityLogs } from '@/lib/activity-logger'
 
 export default function SettingsPage() {
-  const { address } = useAleoWallet()
+  const { address, disconnect } = useAleoWallet()
   const isConnected = !!address
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleteInput, setDeleteInput] = useState('')
@@ -66,6 +66,9 @@ export default function SettingsPage() {
       setDeleteComplete(true)
       setDeleteConfirm(false)
       setDeleteInput('')
+
+      // Disconnect wallet and clear all session state
+      disconnect()
 
       // Redirect after 2 seconds
       setTimeout(() => {

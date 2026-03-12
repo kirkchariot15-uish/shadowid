@@ -246,5 +246,11 @@ export function useAleoWallet() {
     decrypt,
     getTransactionStatus,
     getActualTxHash,
+    disconnect: () => {
+      // Disconnect from the wallet adapter
+      console.log('[v0] Wallet disconnecting...')
+      // This will trigger reconnection logic to reset the wallet state
+      window.location.href = '/'
+    },
   };
 }
