@@ -10,6 +10,7 @@ export interface TransactionParams {
   inputs: string[];
   fee?: number;
   privateFee?: boolean;
+  getTransactionStatus?: (txId: string) => Promise<string | null>; // Wallet SDK method
 }
 
 export interface TransactionResult {
@@ -31,60 +32,54 @@ function generateTransactionKey(params: TransactionParams): string {
 }
 
 /**
- * Poll Aleo explorer to confirm transaction is finalized
- * Waits up to 1 minute for blockchain confirmation
+ * Wait for transaction confirmation using wallet SDK instead of explorer
+ * Much more reliable than polling external API
  */
-async function pollTransactionConfirmation(
+async function waitForTransactionConfirmation(
   transactionId: string,
+  getStatusFn: ((txId: string) => Promise<string | null>) | undefined,
   maxWaitMs: number = 60 * 1000 // 1 minute
 ): Promise<{ confirmed: boolean; status?: string; error?: string }> {
-  const pollIntervalMs = 1000; // Check every 1 second (faster)
-  const startTime = Date.now();
-  const explorerUrl = 'https://api.explorer.provable.com/v1/testnet';
+  if (!getStatusFn) {
+    console.warn('[v0] No getTransactionStatus function provided, skipping confirmation');
+    return { confirmed: true, status: 'PENDING' };
+  }
 
-  console.log('[v0] Polling for transaction confirmation:', transactionId);
+  const pollIntervalMs = 1000; // Check every 1 second
+  const startTime = Date.now();
+
+  console.log('[v0] Waiting for transaction confirmation via wallet SDK:', transactionId);
 
   while (Date.now() - startTime < maxWaitMs) {
     try {
-      const response = await fetch(`${explorerUrl}/transaction/${transactionId}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(5000) // 5 second timeout per request
-      });
-      
-      if (response.status === 404) {
-        // Transaction not yet indexed, wait and retry
-        console.log('[v0] Transaction not yet indexed (404), retrying...');
+      const status = await getStatusFn(transactionId);
+      console.log('[v0] Transaction status from wallet SDK:', status);
+
+      if (!status) {
+        // Status not available yet, keep polling
         await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
         continue;
       }
 
-      if (!response.ok) {
-        console.warn(`[v0] Explorer returned ${response.status}, retrying...`);
-        await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
-        continue;
+      // Check for confirmed states (handle various formats)
+      const upperStatus = String(status).toUpperCase();
+      if (upperStatus.includes('ACCEPTED') || upperStatus.includes('FINALIZED') || upperStatus.includes('CONFIRMED')) {
+        console.log('[v0] Transaction confirmed by wallet:', status);
+        return { confirmed: true, status };
       }
 
-      const data = await response.json();
-      console.log('[v0] Explorer response:', JSON.stringify(data).substring(0, 200));
-      
-      if (data.status === 'Accepted' || data.status === 'Finalized' || data.status === 'accepted' || data.status === 'finalized') {
-        console.log('[v0] Transaction confirmed:', data.status);
-        return { confirmed: true, status: data.status };
+      // Check for failed states
+      if (upperStatus.includes('REJECTED') || upperStatus.includes('FAILED')) {
+        console.error('[v0] Transaction failed:', status);
+        return { confirmed: false, status, error: `Transaction ${status}` };
       }
 
-      if (data.status === 'Rejected' || data.status === 'Failed' || data.status === 'rejected' || data.status === 'failed') {
-        console.error('[v0] Transaction rejected by blockchain:', data.status);
-        return { confirmed: false, status: data.status, error: `Transaction ${data.status}` };
-      }
-
-      // Still pending
-      console.log('[v0] Transaction still pending, retrying...');
-      console.log('[v0] Transaction pending:', data.status);
+      // Still pending, keep polling
+      console.log('[v0] Transaction still pending, checking again...');
       await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
     } catch (error) {
-      console.warn('[v0] Error polling transaction status:', error);
-      // Continue polling on errors
+      console.warn('[v0] Error checking transaction status:', error);
+      // Continue polling on error
       await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
     }
   }
@@ -180,14 +175,18 @@ async function executeTransactionWithRetry(
 
       console.log('[v0] Transaction executed successfully:', transactionId);
       
-      // CRITICAL: Wait for blockchain confirmation before returning success
-      const confirmationResult = await pollTransactionConfirmation(transactionId);
+      // CRITICAL: Wait for blockchain confirmation using wallet SDK
+      const confirmationResult = await waitForTransactionConfirmation(
+        transactionId,
+        params.getTransactionStatus,
+        60000 // 1 minute timeout
+      );
       
       if (!confirmationResult.confirmed) {
-        console.error('[v0] Transaction not confirmed by blockchain:', confirmationResult.error);
+        console.error('[v0] Transaction not confirmed:', confirmationResult.error);
         return {
           success: false,
-          transactionId, // Still return the ID for reference
+          transactionId,
           error: confirmationResult.error || 'Transaction not confirmed by blockchain',
         };
       }

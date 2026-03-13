@@ -406,7 +406,8 @@ export async function registerAttributesAndGetCommitment(
   timestamp: number,
   walletAddress: string,
   attributeCount: number,
-  executeTransactionFn?: (params: any) => Promise<string>
+  executeTransactionFn?: (params: any) => Promise<string>,
+  getTransactionStatusFn?: (txId: string) => Promise<string | null>
 ): Promise<OnChainExecutionResult> {
   try {
     // Hash the attributes deterministically on the backend
@@ -443,6 +444,7 @@ export async function registerAttributesAndGetCommitment(
         attributeHashField,        // Attribute hash as field
       ],
       fee: 100000,
+      getTransactionStatus: getTransactionStatusFn,  // Pass wallet SDK method
     };
 
     // Execute with duplicate prevention and retry logic

@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Lock, CheckCircle2, Shield, Clock, Hash } from 'lucide-react'
+import { ArrowLeft, Lock, CheckCircle2, Shield, Clock, Hash, Copy, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { STANDARD_ATTRIBUTES } from '@/lib/attribute-schema'
+import { verifyCommitmentHashFormat } from '@/lib/commitment-hash-generator'
 
 interface IdentityProfile {
   commitment: string
@@ -27,11 +28,23 @@ export default function PublicIdentityProfile({ commitment }: PublicIdentityProf
   const [profile, setProfile] = useState<IdentityProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [hashValid, setHashValid] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     const loadProfile = async () => {
       if (!commitment) {
         setError('No commitment hash provided')
+        setLoading(false)
+        return
+      }
+
+      // Validate commitment hash format
+      const isValid = verifyCommitmentHashFormat(commitment)
+      setHashValid(isValid)
+
+      if (!isValid) {
+        setError('Invalid commitment hash format. Expected: XX-XXXXXXXX... (checksum-hash)')
         setLoading(false)
         return
       }
@@ -154,12 +167,24 @@ export default function PublicIdentityProfile({ commitment }: PublicIdentityProf
               <div className="flex items-center gap-2">
                 <Hash className="h-4 w-4 text-accent" />
                 <label className="text-sm font-semibold text-foreground">Commitment Hash</label>
+                {hashValid && <CheckCircle2 className="h-4 w-4 text-green-500" />}
               </div>
               <div className="flex items-center justify-between bg-background/50 rounded-lg p-4 border border-border">
                 <span className="font-mono text-sm text-foreground break-all">{profile.commitment}</span>
-                <Shield className="h-5 w-5 text-accent flex-shrink-0" />
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(profile.commitment)
+                    setCopied(true)
+                    setTimeout(() => setCopied(false), 2000)
+                  }}
+                  className="text-accent hover:text-accent/80 flex-shrink-0 ml-2"
+                  title="Copy commitment hash"
+                >
+                  <Copy className="h-5 w-5" />
+                </button>
               </div>
-              <p className="text-xs text-muted-foreground">Blockchain-verified commitment hash for this identity</p>
+              {copied && <p className="text-xs text-green-500">Copied to clipboard!</p>}
+              <p className="text-xs text-muted-foreground">Format: CHECKSUM-HASH (verified: {hashValid ? 'valid' : 'invalid'})</p>
             </div>
 
             {/* Creation Date */}

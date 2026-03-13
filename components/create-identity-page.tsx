@@ -20,7 +20,7 @@ import { checkAccountCreationRateLimit, trackAccountCreation } from '@/lib/anti-
 import { generateCommitmentHash, storeCommitmentHash } from '@/lib/commitment-hash-generator'
 
 export function CreateIdentityPage() {
-  const { address, executeTransaction } = useAleoWallet()
+  const { address, executeTransaction, getTransactionStatus, disconnect } = useAleoWallet()
   const isConnected = !!address
   const [mounted, setMounted] = useState(false)
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, { value: string; enabled: boolean }>>({})
@@ -221,15 +221,15 @@ export function CreateIdentityPage() {
         return
       }
 
-      // Send directly to blockchain - blockchain generates commitment
-      // Pass the actual attributes, not a hash - blockchain will hash them deterministically
+      // Send directly to blockchain with wallet SDK status function
       const blockchainResult = await registerAttributesAndGetCommitment(
         JSON.stringify(attributeMap), // Actual attributes as JSON string
         '', // Empty signature
         timestamp,
         address,
         enabledAttrIds.length,
-        executeTransaction
+        executeTransaction,
+        getTransactionStatus // Pass wallet SDK method for confirmation
       )
       
       // Extract the BLOCKCHAIN-GENERATED commitment
