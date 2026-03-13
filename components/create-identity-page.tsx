@@ -266,12 +266,12 @@ export function CreateIdentityPage() {
             transactionId: blockchainResult.transactionId,
           })
           
-          console.log('[v0] Commitment hash generated:', personalHash.substring(0, 16))
+          console.log('[v0] Commitment hash generated:', personalHash)
           // Store the personal commitment hash (scoped to wallet)
           storeCommitmentHash(personalHash, address)
-          setCommitmentHash(personalHash.substring(0, 16).toUpperCase())
+          setCommitmentHash(personalHash)
 
-          console.log('[v0] Commitment hash state updated:', personalHash.substring(0, 16).toUpperCase())
+          console.log('[v0] Commitment hash state updated:', personalHash)
         } catch (hashError) {
           console.error('[v0] Error generating commitment hash:', hashError)
         }
