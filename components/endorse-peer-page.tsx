@@ -13,6 +13,7 @@ import { hexToField } from '@/lib/aleo-field-formatter'
 import { executeTransactionWithWallet, CONTRACTS } from '@/lib/aleo-sdk-integration'
 import { addActivityLog } from '@/lib/activity-logger'
 import { validateEndorsementAttempt, checkRateLimit, trackEndorsement } from '@/lib/anti-sybil'
+import { getCommitmentHash, verifyCommitmentHashFormat } from '@/lib/commitment-hash-generator'
 
 interface EndorsementRequest {
   targetCommitment: string
@@ -40,6 +41,20 @@ export function EndorsePeerPage() {
     description: attr.description
   }))
 
+  // Helper function to load user's own commitment hash for testing
+  const loadMyCommitmentHash = () => {
+    if (address) {
+      const myHash = localStorage.getItem('shadowid-commitment');
+      if (myHash) {
+        console.log('[v0] Loaded my commitment hash:', myHash);
+        setTargetCommitment(myHash);
+        setError('');
+      } else {
+        setError('No commitment hash found in your profile');
+      }
+    }
+  }
+
   const handleEndorse = async () => {
     if (!targetCommitment?.trim() || !selectedAttribute || !address || !executeTransaction) {
       setError('Please fill in all fields and ensure wallet is connected')
@@ -49,21 +64,42 @@ export function EndorsePeerPage() {
     // Sanitize commitment hash
     const sanitizedCommitment = targetCommitment.trim();
     
-    // Accept both formats:
-    // 1. New format with checksum: "XX-XXXXXXXX..." (from commitment-hash-generator)
-    // 2. Legacy hex format: "0x..." or pure hex
-    const newFormatPattern = /^[0-9A-Fa-f]{2,4}-[0-9A-Fa-f]{16,}$/;
-    const hexFormatPattern = /^(0x)?[0-9a-f]{32,}$/i;
+    console.log('[v0] Input commitment hash:', sanitizedCommitment);
+    console.log('[v0] Input length:', sanitizedCommitment.length);
     
-    if (!newFormatPattern.test(sanitizedCommitment) && !hexFormatPattern.test(sanitizedCommitment)) {
-      setError('Invalid commitment hash format. Provide: checksum-hash (e.g., AB12-CAFE...) or hex (0x...)')
+    // Accept both formats:
+    // 1. New format with checksum: "XXXX-XXXXXXXX..." (4-char checksum + 16+ char hash)
+    // 2. Legacy hex format: "0x..." or pure hex
+    const isNewFormat = verifyCommitmentHashFormat(sanitizedCommitment);
+    const hexFormatPattern = /^(0x)?[0-9a-f]{32,}$/i;
+    const isHexFormat = hexFormatPattern.test(sanitizedCommitment);
+    
+    console.log('[v0] Format validation:', { 
+      isNewFormat, 
+      isHexFormat,
+      formatChecksum: sanitizedCommitment.split('-')[0],
+      formatHash: sanitizedCommitment.split('-')[1]
+    });
+    
+    if (!isNewFormat && !isHexFormat) {
+      console.error('[v0] Invalid format - neither new format nor hex');
+      console.error('[v0] Format details:');
+      console.error('  - Input:', sanitizedCommitment);
+      console.error('  - Length:', sanitizedCommitment.length);
+      console.error('  - Has dash:', sanitizedCommitment.includes('-'));
+      if (sanitizedCommitment.includes('-')) {
+        const [checksum, hash] = sanitizedCommitment.split('-');
+        console.error('  - Checksum length:', checksum.length);
+        console.error('  - Hash length:', hash?.length);
+      }
+      setError('Invalid commitment hash format. Expected: AB12-CAFEA1B2C3D4E5F6 (checksum-hash) or 0xHEX')
       return
     }
 
     // Extract the actual hash part (remove checksum prefix if present)
     let hashForBlockchain = sanitizedCommitment;
-    if (newFormatPattern.test(sanitizedCommitment)) {
-      // Extract hash part after the checksum (format: "XX-HASH")
+    if (isNewFormat && sanitizedCommitment.includes('-')) {
+      // Extract hash part after the checksum (format: "XXXX-HASH")
       const parts = sanitizedCommitment.split('-');
       if (parts.length === 2) {
         hashForBlockchain = parts[1]; // Use just the hash part
@@ -75,7 +111,7 @@ export function EndorsePeerPage() {
     const userCommitment = localStorage.getItem('shadowid-commitment')
     // For comparison, extract hash if it's in new format
     let userHashForComparison = userCommitment;
-    if (userCommitment && newFormatPattern.test(userCommitment)) {
+    if (userCommitment && userCommitment.includes('-')) {
       const parts = userCommitment.split('-');
       userHashForComparison = parts[1] || userCommitment;
     }
@@ -216,13 +252,25 @@ export function EndorsePeerPage() {
                   <label className="block text-sm font-semibold mb-3 text-foreground">
                     Peer's Commitment Hash
                   </label>
-                  <Input
-                    placeholder="Enter commitment hash (e.g., AB12-CAFE1234... or 0xABC...)"
-                    value={targetCommitment}
-                    onChange={(e) => setTargetCommitment(e.target.value)}
-                    className="bg-background/50 border-border text-foreground placeholder:text-muted-foreground font-mono text-sm"
-                    disabled={!isConnected}
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Enter commitment hash (e.g., AB12-CAFE1234... or 0xABC...)"
+                      value={targetCommitment}
+                      onChange={(e) => setTargetCommitment(e.target.value)}
+                      className="bg-background/50 border-border text-foreground placeholder:text-muted-foreground font-mono text-sm flex-1"
+                      disabled={!isConnected}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={loadMyCommitmentHash}
+                      disabled={!isConnected}
+                      className="whitespace-nowrap"
+                    >
+                      Use My Hash
+                    </Button>
+                  </div>
                   <p className="text-xs text-muted-foreground mt-2">
                     Format: Checksum-Hash (e.g., AB12-CAFE...) from ShadowID profile or hex format (0x...)
                   </p>
