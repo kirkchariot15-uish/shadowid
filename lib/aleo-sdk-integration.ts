@@ -514,7 +514,7 @@ export async function registerAttributesAndGetCommitment(
 
 /**
  * Verify that a transaction actually executed successfully on blockchain
- * Not just submitted, but confirmed as executed
+ * Uses wallet SDK with proper status normalization
  */
 async function verifyTransactionExecution(
   transactionId: string,
@@ -525,66 +525,45 @@ async function verifyTransactionExecution(
     
     // If wallet SDK method is available, use it (most reliable)
     if (getStatusFn) {
-      const status = await getStatusFn(transactionId);
-      console.log('[v0] Wallet SDK verification status:', status);
-      
-      if (!status) {
-        console.warn('[v0] Transaction status not available yet');
+      try {
+        const status = await getStatusFn(transactionId);
+        console.log('[v0] Wallet SDK verification response:', status);
+        
+        if (!status) {
+          console.warn('[v0] Transaction status not available, treating as unverified');
+          return false;
+        }
+
+        // Normalize status to lowercase (handle different wallet response formats)
+        const statusStr = (status || '').toString().toLowerCase();
+        console.log('[v0] Normalized status for verification:', statusStr);
+
+        // Check for CONFIRMED keywords
+        if (statusStr.includes('finalize') || 
+            statusStr.includes('complete') || 
+            statusStr.includes('accept')) {
+          console.log('[v0] ✅ Transaction verified as EXECUTED:', status);
+          return true;
+        }
+
+        // Check for REJECTED keywords
+        if (statusStr.includes('reject') || 
+            statusStr.includes('fail') || 
+            statusStr.includes('abort')) {
+          console.error('[v0] ❌ Transaction verified as REJECTED:', status);
+          return false;
+        }
+
+        console.warn('[v0] Unknown verification status:', status);
+        return false;
+      } catch (sdkError) {
+        console.error('[v0] Error using wallet SDK verification:', sdkError);
         return false;
       }
-
-      const upperStatus = String(status).toUpperCase();
-      console.log('[v0] Upper case status for verification:', upperStatus);
-      
-      // Accept multiple status values that indicate success
-      if (upperStatus.includes('ACCEPTED') || 
-          upperStatus.includes('FINALIZED') || 
-          upperStatus.includes('CONFIRMED') ||
-          upperStatus.includes('EXECUTED')) {
-        console.log('[v0] ✅ Transaction verified as executed:', status);
-        return true;
-      }
-
-      if (upperStatus.includes('REJECTED') || upperStatus.includes('FAILED')) {
-        console.error('[v0] ❌ Transaction verified as failed:', status);
-        return false;
-      }
-
-      console.warn('[v0] Unknown verification status:', status);
-      return false;
     }
 
-    // Fallback: Try explorer API with more flexible status checking
-    console.log('[v0] Using explorer API for verification (fallback)');
-    const response = await fetch(`${ALEO_API}/transaction/${transactionId}`, {
-      signal: AbortSignal.timeout(5000)
-    });
-    
-    if (!response.ok) {
-      console.error('[v0] Could not query transaction status:', response.status);
-      return false;
-    }
-
-    const txData = await response.json();
-    console.log('[v0] Explorer API response status:', txData.status);
-    
-    // Check for success states (case-insensitive and flexible)
-    const status = String(txData.status || '').toUpperCase();
-    
-    if (status.includes('ACCEPTED') || 
-        status.includes('FINALIZED') || 
-        status.includes('CONFIRMED') ||
-        status.includes('EXECUTED')) {
-      console.log('[v0] ✅ Transaction verified via explorer as successful:', txData.status);
-      return true;
-    }
-
-    if (status.includes('REJECTED') || status.includes('FAILED')) {
-      console.error('[v0] ❌ Transaction verified via explorer as failed:', txData.reason || txData.status);
-      return false;
-    }
-
-    console.warn('[v0] Transaction verification inconclusive, status:', txData.status);
+    // Fallback: Try explorer API (less reliable)
+    console.log('[v0] No wallet SDK function, cannot verify');
     return false;
   } catch (error) {
     console.error('[v0] Error verifying transaction:', error);

@@ -32,72 +32,91 @@ function generateTransactionKey(params: TransactionParams): string {
 }
 
 /**
- * Wait for transaction confirmation using wallet SDK instead of explorer
- * Much more reliable than polling external API
+ * Wait for transaction confirmation using wallet SDK with proper status normalization
+ * Handles different wallet response formats by normalizing to lowercase
  */
 async function waitForTransactionConfirmation(
   transactionId: string,
   getStatusFn: ((txId: string) => Promise<string | null>) | undefined,
-  maxWaitMs: number = 60 * 1000 // 1 minute
+  maxWaitMs: number = 120 * 1000 // 2 minutes max
 ): Promise<{ confirmed: boolean; status?: string; error?: string }> {
   if (!getStatusFn) {
-    console.warn('[v0] No getTransactionStatus function provided, skipping confirmation');
+    console.warn('[v0] No getTransactionStatus function provided, assuming confirmed');
     return { confirmed: true, status: 'PENDING' };
   }
 
-  const pollIntervalMs = 1000; // Check every 1 second
+  console.log('[v0] Starting transaction confirmation polling:', transactionId);
+  
+  // Check immediately first
+  try {
+    const initialStatus = await getStatusFn(transactionId);
+    if (initialStatus) {
+      const normalized = (initialStatus || '').toString().toLowerCase();
+      console.log('[v0] Initial status check:', { raw: initialStatus, normalized });
+      
+      if (normalized.includes('finalize') || normalized.includes('complete') || normalized.includes('accept')) {
+        console.log('[v0] ✅ Transaction CONFIRMED immediately:', initialStatus);
+        return { confirmed: true, status: initialStatus };
+      }
+      
+      if (normalized.includes('reject') || normalized.includes('fail') || normalized.includes('abort')) {
+        console.error('[v0] ❌ Transaction REJECTED:', initialStatus);
+        return { confirmed: false, status: initialStatus, error: `Transaction rejected: ${initialStatus}` };
+      }
+    }
+  } catch (err) {
+    console.log('[v0] Initial status check failed, will retry:', err);
+  }
+
+  // Poll every 2 seconds for up to 2 minutes (60 attempts)
+  let pollCount = 0;
+  const pollInterval = setInterval(() => {
+    pollCount++;
+  }, 1);
+
   const startTime = Date.now();
-
-  console.log('[v0] Waiting for transaction confirmation via wallet SDK:', transactionId);
-
+  
   while (Date.now() - startTime < maxWaitMs) {
+    await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds between polls
+
     try {
       const status = await getStatusFn(transactionId);
-      console.log('[v0] Transaction status from wallet SDK:', status);
-      console.log('[v0] Status type:', typeof status);
-      console.log('[v0] Status stringified:', String(status));
-      console.log('[v0] Status uppercase:', String(status).toUpperCase());
+      
+      // Normalize response to handle different wallet formats
+      const statusStr = (status || '').toString().toLowerCase();
+      console.log('[v0] Poll attempt status:', { raw: status, normalized: statusStr, elapsed: Date.now() - startTime });
 
       if (!status) {
-        // Status not available yet, keep polling
-        console.log('[v0] Status is null/undefined, retrying...');
-        await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+        console.log('[v0] Status not available yet, continuing poll...');
         continue;
       }
 
-      // Check for confirmed states (handle various formats)
-      const upperStatus = String(status).toUpperCase();
-      console.log('[v0] Checking upper status:', upperStatus);
-      
-      if (upperStatus.includes('ACCEPTED') || upperStatus.includes('FINALIZED') || upperStatus.includes('CONFIRMED')) {
-        console.log('[v0] ✅ Transaction CONFIRMED by wallet:', status);
+      // Check for CONFIRMED states
+      if (statusStr.includes('finalize') || statusStr.includes('complete') || statusStr.includes('accept')) {
+        console.log('[v0] ✅ Transaction CONFIRMED after polling:', status);
+        clearInterval(pollInterval);
         return { confirmed: true, status };
       }
 
-      // Check for failed states
-      if (upperStatus.includes('REJECTED') || upperStatus.includes('FAILED')) {
-        console.error('[v0] ❌ Transaction FAILED:', status);
-        return { confirmed: false, status, error: `Transaction ${status}` };
+      // Check for REJECTED states
+      if (statusStr.includes('reject') || statusStr.includes('fail') || statusStr.includes('abort')) {
+        console.error('[v0] ❌ Transaction REJECTED during polling:', status);
+        clearInterval(pollInterval);
+        return { confirmed: false, status, error: `Transaction rejected: ${status}` };
       }
 
-      // Check for pending/submitted states
-      if (upperStatus.includes('PENDING') || upperStatus.includes('SUBMITTED') || upperStatus.includes('PROCESSING')) {
-        console.log('[v0] ⏳ Transaction still pending:', status);
-        await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
-        continue;
-      }
-
-      // Unknown status - log and keep trying
-      console.log('[v0] ⚠️ Unknown status, continuing to poll:', status);
-      await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+      // Still pending, continue polling
+      console.log('[v0] ⏳ Still pending, continuing to poll...');
     } catch (error) {
-      console.warn('[v0] Error checking transaction status:', error);
+      console.warn('[v0] Error during polling:', error);
       // Continue polling on error
-      await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+      continue;
     }
   }
 
-  return { confirmed: false, error: 'Transaction confirmation timeout after 1 minute' };
+  clearInterval(pollInterval);
+  console.error('[v0] ⏱️  Transaction confirmation timeout after 2 minutes');
+  return { confirmed: false, error: 'Transaction confirmation timeout after 2 minutes' };
 }
 
 /**
