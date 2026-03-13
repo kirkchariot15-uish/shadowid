@@ -18,6 +18,7 @@ import { getMaxAttributesForUser, getSubscriptionInfo } from '@/lib/subscription
 import { SubscriptionModal } from '@/components/subscription-modal'
 import { checkAccountCreationRateLimit, trackAccountCreation } from '@/lib/anti-sybil'
 import { generateCommitmentHash, storeCommitmentHash } from '@/lib/commitment-hash-generator'
+import { storeEncryptedCredential } from '@/lib/credential-store'
 
 export function CreateIdentityPage() {
   const { address, executeTransaction, getTransactionStatus, disconnect } = useAleoWallet()
