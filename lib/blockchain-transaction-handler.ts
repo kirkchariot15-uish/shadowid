@@ -54,28 +54,41 @@ async function waitForTransactionConfirmation(
     try {
       const status = await getStatusFn(transactionId);
       console.log('[v0] Transaction status from wallet SDK:', status);
+      console.log('[v0] Status type:', typeof status);
+      console.log('[v0] Status stringified:', String(status));
+      console.log('[v0] Status uppercase:', String(status).toUpperCase());
 
       if (!status) {
         // Status not available yet, keep polling
+        console.log('[v0] Status is null/undefined, retrying...');
         await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
         continue;
       }
 
       // Check for confirmed states (handle various formats)
       const upperStatus = String(status).toUpperCase();
+      console.log('[v0] Checking upper status:', upperStatus);
+      
       if (upperStatus.includes('ACCEPTED') || upperStatus.includes('FINALIZED') || upperStatus.includes('CONFIRMED')) {
-        console.log('[v0] Transaction confirmed by wallet:', status);
+        console.log('[v0] ✅ Transaction CONFIRMED by wallet:', status);
         return { confirmed: true, status };
       }
 
       // Check for failed states
       if (upperStatus.includes('REJECTED') || upperStatus.includes('FAILED')) {
-        console.error('[v0] Transaction failed:', status);
+        console.error('[v0] ❌ Transaction FAILED:', status);
         return { confirmed: false, status, error: `Transaction ${status}` };
       }
 
-      // Still pending, keep polling
-      console.log('[v0] Transaction still pending, checking again...');
+      // Check for pending/submitted states
+      if (upperStatus.includes('PENDING') || upperStatus.includes('SUBMITTED') || upperStatus.includes('PROCESSING')) {
+        console.log('[v0] ⏳ Transaction still pending:', status);
+        await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+        continue;
+      }
+
+      // Unknown status - log and keep trying
+      console.log('[v0] ⚠️ Unknown status, continuing to poll:', status);
       await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
     } catch (error) {
       console.warn('[v0] Error checking transaction status:', error);
