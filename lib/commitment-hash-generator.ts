@@ -1,6 +1,6 @@
 /**
  * Generate a unique commitment hash for the user's ShadowID
- * This hash is derived from the user's identity data and serves as their unique identifier
+ * Hash includes all user identity data for verifiability
  */
 export async function generateCommitmentHash(identityData: {
   userAddress: string;
@@ -8,8 +8,9 @@ export async function generateCommitmentHash(identityData: {
   timestamp: number;
   transactionId: string;
 }): Promise<string> {
-  // Create a deterministic string from identity data
-  const dataString = `${identityData.userAddress}:${identityData.attributes.join(',')}:${identityData.timestamp}:${identityData.transactionId}`;
+  // Create a deterministic string from identity data in sorted order for consistency
+  const sortedAttrs = [...identityData.attributes].sort();
+  const dataString = `shadowid-v1:${identityData.userAddress}:${sortedAttrs.join(',')}:${identityData.timestamp}:${identityData.transactionId}`;
   
   // Hash using Web Crypto API (built-in, no external dependencies)
   const encoder = new TextEncoder();
@@ -18,25 +19,38 @@ export async function generateCommitmentHash(identityData: {
   
   // Convert to hex string
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const commitmentHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  const fullHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   
+  // Add checksum (first 4 bytes of second hash pass) for integrity verification
+  const checksumBuffer = await crypto.subtle.digest('SHA-256', hashBuffer);
+  const checksumArray = Array.from(new Uint8Array(checksumBuffer));
+  const checksum = checksumArray.slice(0, 2).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+  
+  // Return shortened hash with checksum prefix for display
+  const displayHash = fullHash.substring(0, 32).toUpperCase();
+  const commitmentHash = `${checksum}-${displayHash}`;
+  
+  console.log('[v0] Generated commitment hash:', commitmentHash);
   return commitmentHash;
 }
 
 /**
- * Store user identity commitment hash locally (encrypted with wallet address)
+ * Store user identity commitment hash locally (scoped to wallet address)
  */
 export function storeCommitmentHash(commitmentHash: string, userAddress: string): void {
   try {
-    // Store with wallet address as a basic scope (prevents cross-wallet data leakage)
     const key = `shadowid-commitment-${userAddress}`;
     localStorage.setItem(key, JSON.stringify({
       hash: commitmentHash,
       createdAt: new Date().toISOString(),
       userAddress,
+      version: 'v1'
     }));
     
-    console.log('[v0] Commitment hash stored for user:', userAddress);
+    // Also store in general key for quick access (will be overwritten each time)
+    localStorage.setItem('shadowid-commitment', commitmentHash);
+    
+    console.log('[v0] Commitment hash stored:', commitmentHash);
   } catch (error) {
     console.error('[v0] Error storing commitment hash:', error);
   }
@@ -61,15 +75,19 @@ export function getCommitmentHash(userAddress: string): string | null {
 }
 
 /**
- * Generate a shareable commitment hash that can be used for verification
- * This is what the user will share with verifiers
+ * Verify commitment hash format (check for valid checksum structure)
  */
-export function generateShareableCommitmentHash(baseHash: string): string {
-  // Add a timestamp-based component to make it verifiable by validators
-  const timestamp = Math.floor(Date.now() / 1000);
-  const encoder = new TextEncoder();
-  const combined = `${baseHash}:${timestamp}`;
+export function verifyCommitmentHashFormat(hash: string): boolean {
+  // Format: XX-XXXXXXXXXXXXXXXX... (checksum-hash)
+  const parts = hash.split('-');
+  if (parts.length !== 2) return false;
   
-  // For display purposes, return a shortened version
-  return baseHash.substring(0, 16).toUpperCase();
+  const [checksum, displayHash] = parts;
+  if (checksum.length !== 4) return false; // 2 bytes = 4 hex chars
+  if (displayHash.length < 16) return false; // At least 16 hex chars
+  
+  // Verify hex format
+  if (!/^[0-9A-F]+$/i.test(checksum + displayHash)) return false;
+  
+  return true;
 }

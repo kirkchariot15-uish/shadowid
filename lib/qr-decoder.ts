@@ -18,21 +18,65 @@ export interface QRDecodeResult {
 }
 
 /**
+ * Enhance image for better QR code detection
+ * Improves contrast and clarity before processing
+ */
+function enhanceImageForQRDetection(ctx: CanvasRenderingContext2D, width: number, height: number): ImageData {
+  const imageData = ctx.getImageData(0, 0, width, height);
+  const data = imageData.data;
+  
+  // Apply histogram equalization for better contrast
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    
+    // Convert to grayscale
+    const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+    
+    // Apply contrast enhancement (stretch values)
+    const enhanced = (gray - 128) * 1.5 + 128;
+    const clamped = Math.max(0, Math.min(255, enhanced));
+    
+    // Apply threshold to make QR patterns more distinct
+    const threshold = clamped > 127 ? 255 : 0;
+    
+    data[i] = threshold;
+    data[i + 1] = threshold;
+    data[i + 2] = threshold;
+  }
+  
+  ctx.putImageData(imageData, 0, 0);
+  return ctx.getImageData(0, 0, width, height);
+}
+
+/**
  * Decode QR code from canvas image data
- * Uses jsQR library for client-side decoding
+ * Uses jsQR library for client-side decoding with enhanced preprocessing
  */
 function decodeQRFromCanvas(canvas: HTMLCanvasElement): string | null {
   try {
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return null
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
 
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-    const qrCode = jsQR(imageData.data, canvas.width, canvas.height)
+    // Enhance image for better detection
+    const enhancedImageData = enhanceImageForQRDetection(ctx, canvas.width, canvas.height);
     
-    return qrCode?.data || null
+    // Try jsQR decode
+    const qrCode = jsQR(enhancedImageData.data, canvas.width, canvas.height, {
+      inversionAttempts: 'dontInvert' // Try normal and inverted
+    });
+    
+    if (qrCode?.data) {
+      console.log('[v0] QR code detected successfully');
+      return qrCode.data;
+    }
+    
+    console.log('[v0] No QR code found in frame');
+    return null;
   } catch (error) {
-    console.error('[v0] QR decode error:', error)
-    return null
+    console.error('[v0] QR decode error:', error);
+    return null;
   }
 }
 

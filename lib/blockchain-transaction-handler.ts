@@ -66,13 +66,14 @@ async function pollTransactionConfirmation(
       }
 
       const data = await response.json();
+      console.log('[v0] Explorer response:', JSON.stringify(data).substring(0, 200));
       
-      if (data.status === 'Accepted' || data.status === 'Finalized') {
+      if (data.status === 'Accepted' || data.status === 'Finalized' || data.status === 'accepted' || data.status === 'finalized') {
         console.log('[v0] Transaction confirmed:', data.status);
         return { confirmed: true, status: data.status };
       }
 
-      if (data.status === 'Rejected' || data.status === 'Failed') {
+      if (data.status === 'Rejected' || data.status === 'Failed' || data.status === 'rejected' || data.status === 'failed') {
         console.error('[v0] Transaction rejected by blockchain:', data.status);
         return { confirmed: false, status: data.status, error: `Transaction ${data.status}` };
       }
