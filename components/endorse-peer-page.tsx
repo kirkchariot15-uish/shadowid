@@ -46,24 +46,45 @@ export function EndorsePeerPage() {
       return
     }
 
-    // Sanitize and validate commitment hash
-    const sanitizedCommitment = targetCommitment.trim().toLowerCase();
+    // Sanitize commitment hash
+    const sanitizedCommitment = targetCommitment.trim();
     
-    // Validate hex format and length (32 chars = 16 bytes for field)
-    const hexPattern = /^(0x)?[0-9a-f]{32,}$/;
-    if (!hexPattern.test(sanitizedCommitment)) {
-      setError('Invalid commitment hash format. Must be a valid hex string.')
+    // Accept both formats:
+    // 1. New format with checksum: "XX-XXXXXXXX..." (from commitment-hash-generator)
+    // 2. Legacy hex format: "0x..." or pure hex
+    const newFormatPattern = /^[0-9A-Fa-f]{2,4}-[0-9A-Fa-f]{16,}$/;
+    const hexFormatPattern = /^(0x)?[0-9a-f]{32,}$/i;
+    
+    if (!newFormatPattern.test(sanitizedCommitment) && !hexFormatPattern.test(sanitizedCommitment)) {
+      setError('Invalid commitment hash format. Provide: checksum-hash (e.g., AB12-CAFE...) or hex (0x...)')
       return
+    }
+
+    // Extract the actual hash part (remove checksum prefix if present)
+    let hashForBlockchain = sanitizedCommitment;
+    if (newFormatPattern.test(sanitizedCommitment)) {
+      // Extract hash part after the checksum (format: "XX-HASH")
+      const parts = sanitizedCommitment.split('-');
+      if (parts.length === 2) {
+        hashForBlockchain = parts[1]; // Use just the hash part
+        console.log('[v0] Extracted hash from checksum format:', hashForBlockchain);
+      }
     }
 
     // Get user's own commitment
     const userCommitment = localStorage.getItem('shadowid-commitment')
+    // For comparison, extract hash if it's in new format
+    let userHashForComparison = userCommitment;
+    if (userCommitment && newFormatPattern.test(userCommitment)) {
+      const parts = userCommitment.split('-');
+      userHashForComparison = parts[1] || userCommitment;
+    }
 
     // Validate against self-endorsement and sybil attacks
     const validationError = validateEndorsementAttempt(
       address,
-      sanitizedCommitment,
-      userCommitment
+      hashForBlockchain,
+      userHashForComparison
     )
 
     if (validationError) {
@@ -72,7 +93,7 @@ export function EndorsePeerPage() {
     }
 
     // Check rate limiting
-    if (!checkRateLimit(targetCommitment)) {
+    if (!checkRateLimit(hashForBlockchain)) {
       setError('Too many endorsements for this commitment today. Try again tomorrow.')
       return
     }
@@ -82,15 +103,16 @@ export function EndorsePeerPage() {
 
     try {
       console.log('[v0] Endorsing attribute:', {
-        targetCommitment: sanitizedCommitment,
+        targetCommitment: hashForBlockchain,
+        originalInput: sanitizedCommitment,
         attributeId: selectedAttribute,
         endorser: address
       })
 
       // Convert commitment string to field format
-      const targetField = sanitizedCommitment.startsWith('0x') 
-        ? hexToField(sanitizedCommitment) 
-        : sanitizedCommitment
+      const targetField = hashForBlockchain.startsWith('0x') 
+        ? hexToField(hashForBlockchain) 
+        : hashForBlockchain
 
       // Parse attribute ID to u32
       const attrIdMatch = selectedAttribute.match(/\d+/)
@@ -195,14 +217,14 @@ export function EndorsePeerPage() {
                     Peer's Commitment Hash
                   </label>
                   <Input
-                    placeholder="Enter commitment hash (0x...)"
+                    placeholder="Enter commitment hash (e.g., AB12-CAFE1234... or 0xABC...)"
                     value={targetCommitment}
                     onChange={(e) => setTargetCommitment(e.target.value)}
-                    className="bg-background/50 border-border text-foreground placeholder:text-muted-foreground"
+                    className="bg-background/50 border-border text-foreground placeholder:text-muted-foreground font-mono text-sm"
                     disabled={!isConnected}
                   />
                   <p className="text-xs text-muted-foreground mt-2">
-                    The blockchain commitment hash of the peer you want to endorse
+                    Format: Checksum-Hash (e.g., AB12-CAFE...) from ShadowID profile or hex format (0x...)
                   </p>
                 </div>
 
