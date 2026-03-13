@@ -247,6 +247,27 @@ export function EndorsePeerPage() {
           {/* Input Step */}
           {step === 'input' && (
             <Card className="bg-card/50 border-accent/20 p-8">
+              {/* Display user's own commitment hash for reference */}
+              {isConnected && (
+                <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mb-6">
+                  <p className="text-xs font-semibold text-blue-600 mb-2">Your Commitment Hash</p>
+                  {(() => {
+                    const myHash = localStorage.getItem('shadowid-commitment');
+                    return (
+                      <div className="space-y-2">
+                        <p className="font-mono text-sm text-foreground break-all bg-background/50 p-2 rounded">
+                          {myHash || 'No hash stored. Create an identity first.'}
+                        </p>
+                        {myHash && (
+                          <p className="text-xs text-muted-foreground">
+                            Format: {verifyCommitmentHashFormat(myHash) ? '✓ Valid' : '✗ Invalid'} | Length: {myHash.length}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-semibold mb-3 text-foreground">
