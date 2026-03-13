@@ -38,7 +38,7 @@ async function pollTransactionConfirmation(
   transactionId: string,
   maxWaitMs: number = 60 * 1000 // 1 minute
 ): Promise<{ confirmed: boolean; status?: string; error?: string }> {
-  const pollIntervalMs = 2000; // Check every 2 seconds
+  const pollIntervalMs = 1000; // Check every 1 second (faster)
   const startTime = Date.now();
   const explorerUrl = 'https://api.explorer.provable.com/v1/testnet';
 
@@ -46,17 +46,23 @@ async function pollTransactionConfirmation(
 
   while (Date.now() - startTime < maxWaitMs) {
     try {
-      const response = await fetch(`${explorerUrl}/transaction/${transactionId}`);
+      const response = await fetch(`${explorerUrl}/transaction/${transactionId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(5000) // 5 second timeout per request
+      });
       
       if (response.status === 404) {
         // Transaction not yet indexed, wait and retry
-        console.log('[v0] Transaction not yet indexed, retrying...');
+        console.log('[v0] Transaction not yet indexed (404), retrying...');
         await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
         continue;
       }
 
       if (!response.ok) {
-        throw new Error(`Explorer returned ${response.status}`);
+        console.warn(`[v0] Explorer returned ${response.status}, retrying...`);
+        await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+        continue;
       }
 
       const data = await response.json();
@@ -72,6 +78,7 @@ async function pollTransactionConfirmation(
       }
 
       // Still pending
+      console.log('[v0] Transaction still pending, retrying...');
       console.log('[v0] Transaction pending:', data.status);
       await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
     } catch (error) {

@@ -13,7 +13,7 @@ export interface UseCameraScannerState {
   videoRef: React.RefObject<HTMLVideoElement>
 }
 
-const FRAME_INTERVAL = 500 // Process frame every 500ms to reduce CPU usage
+const FRAME_INTERVAL = 200 // Process frame every 200ms for better detection speed
 
 /**
  * Hook for real-time QR code scanning from camera
@@ -82,13 +82,19 @@ export function useQRCameraScanner(): UseCameraScannerState {
       const result = decodeQRFromVideoFrame(videoRef.current)
       
       if (result && result.success && result.data) {
-        console.log('[v0] QR code detected from camera')
+        console.log('[v0] QR code detected from camera successfully')
         setQrDetected(result)
         stopCamera()
         return
       }
+      
+      // Handle decode errors gracefully
+      if (result && !result.success && result.error) {
+        console.log('[v0] QR decode attempt - no valid code found:', result.error)
+      }
     } catch (err) {
       console.error('[v0] Frame processing error:', err)
+      // Don't stop on error, continue trying to detect
     } finally {
       processingRef.current = false
     }
@@ -113,17 +119,34 @@ export function useQRCameraScanner(): UseCameraScannerState {
         return
       }
 
-      // Request camera permission
-      const constraints: MediaStreamConstraints = {
-        video: {
-          facingMode: 'environment', // Back camera on mobile
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        },
-        audio: false // No microphone needed
-      }
+      // Add timeout for camera permission request (10 seconds)
+      const cameraPromise = new Promise<MediaStream>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Camera permission request timed out'))
+        }, 10000)
 
-      const stream = await navigator.mediaDevices.getUserMedia(constraints)
+        // Request camera permission
+        const constraints: MediaStreamConstraints = {
+          video: {
+            facingMode: 'environment', // Back camera on mobile
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false // No microphone needed
+        }
+
+        navigator.mediaDevices.getUserMedia(constraints)
+          .then(stream => {
+            clearTimeout(timeout)
+            resolve(stream)
+          })
+          .catch(err => {
+            clearTimeout(timeout)
+            reject(err)
+          })
+      })
+
+      const stream = await cameraPromise
       console.log('[v0] Camera permission granted')
       
       streamRef.current = stream
@@ -133,21 +156,33 @@ export function useQRCameraScanner(): UseCameraScannerState {
       if (videoRef.current) {
         videoRef.current.srcObject = stream
         
-        // Start processing when video is ready
-        videoRef.current.onloadedmetadata = () => {
-          console.log('[v0] Video stream ready')
-          videoRef.current?.play().catch(err => {
-            console.error('[v0] Error playing video:', err)
-            setError('Failed to play video stream')
-            stopCamera()
-          })
-          
-          setScanning(true)
-          setIsInitializing(false)
-          
-          // Start QR detection loop
-          processVideoFrame()
-        }
+        // Add timeout for video playback
+        const playPromise = new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Video playback timed out'))
+          }, 5000)
+
+          videoRef.current!.onloadedmetadata = () => {
+            console.log('[v0] Video stream ready')
+            videoRef.current!.play()
+              .then(() => {
+                clearTimeout(timeout)
+                resolve()
+              })
+              .catch(err => {
+                clearTimeout(timeout)
+                reject(err)
+              })
+          }
+        })
+
+        await playPromise
+        
+        setScanning(true)
+        setIsInitializing(false)
+        
+        // Start QR detection loop
+        processVideoFrame()
       }
     } catch (err) {
       console.error('[v0] Camera access error:', err)
