@@ -176,9 +176,12 @@ export function CreateIdentityPage() {
       return
     }
 
-    // Check if user already has an identity
+    // Check if user already has a valid, completed identity
     const existingCommitment = localStorage.getItem('shadowid-commitment')
-    if (existingCommitment) {
+    const identityCreationComplete = localStorage.getItem('identity-created')
+    
+    // Only block if identity was actually created (not just a leftover key)
+    if (existingCommitment && identityCreationComplete === 'true') {
       setError('You already have a ShadowID. Redirecting to your identity management...')
       setTimeout(() => {
         window.location.href = '/identity'
@@ -318,6 +321,7 @@ export function CreateIdentityPage() {
       localStorage.setItem('shadowid-attribute-hash', blockchainResult.attributeHash)
       localStorage.setItem('shadowid-signature', blockchainResult.signature)
       localStorage.setItem('shadowid-tx-id', blockchainResult.transactionId)
+      localStorage.setItem('identity-created', 'true') // Flag to indicate identity creation is complete
 
       await storeEncryptedCredential(blockchainResult.commitmentHash, credential, address)
 

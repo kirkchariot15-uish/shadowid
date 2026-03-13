@@ -61,6 +61,9 @@ export default function SettingsPage() {
         localStorage.removeItem(key)
       })
       
+      // Clear the identity creation flag
+      localStorage.removeItem('identity-created')
+      
       clearActivityLogs()
 
       setDeleteComplete(true)
