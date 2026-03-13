@@ -78,16 +78,42 @@ export function getCommitmentHash(userAddress: string): string | null {
  * Verify commitment hash format (check for valid checksum structure)
  */
 export function verifyCommitmentHashFormat(hash: string): boolean {
-  // Format: XX-XXXXXXXXXXXXXXXX... (checksum-hash)
+  if (!hash || typeof hash !== 'string') {
+    console.log('[v0] Hash is not a string:', typeof hash);
+    return false;
+  }
+
+  // Format: XXXX-XXXXXXXXXXXXXXXX (4-hex checksum + dash + 32-hex hash)
+  // Also accept XX-XXXXXXXXXXXXXXXX for backwards compatibility
   const parts = hash.split('-');
-  if (parts.length !== 2) return false;
+  if (parts.length !== 2) {
+    console.log('[v0] Hash does not have exactly one dash. Parts:', parts.length);
+    return false;
+  }
   
   const [checksum, displayHash] = parts;
-  if (checksum.length !== 4) return false; // 2 bytes = 4 hex chars
-  if (displayHash.length < 16) return false; // At least 16 hex chars
+  
+  console.log('[v0] Validating - Checksum:', checksum, '(len:', checksum.length + ')', 'Hash:', displayHash, '(len:', displayHash?.length + ')');
+  
+  // Accept either 2 or 4 hex chars for checksum (for backwards compatibility)
+  if (checksum.length !== 2 && checksum.length !== 4) {
+    console.log('[v0] ✗ Checksum length mismatch:', checksum.length, 'expected 2 or 4');
+    return false;
+  }
+  
+  // Hash should be exactly 32 hex chars
+  if (!displayHash || displayHash.length !== 32) {
+    console.log('[v0] ✗ Hash length mismatch:', displayHash?.length, 'expected 32');
+    return false;
+  }
   
   // Verify hex format
-  if (!/^[0-9A-F]+$/i.test(checksum + displayHash)) return false;
+  const isValidHex = /^[0-9A-F]+$/i.test(checksum + displayHash);
+  if (!isValidHex) {
+    console.log('[v0] ✗ Invalid hex characters detected');
+    return false;
+  }
   
+  console.log('[v0] ✅ Commitment hash format is valid:', hash);
   return true;
 }

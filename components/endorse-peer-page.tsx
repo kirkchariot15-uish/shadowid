@@ -68,33 +68,33 @@ export function EndorsePeerPage() {
     console.log('[v0] Input length:', sanitizedCommitment.length);
     
     // Accept both formats:
-    // 1. New format with checksum: "XXXX-XXXXXXXX..." (4-char checksum + 16+ char hash)
+    // 1. New format with checksum: "XXXX-XXXXXXXXXXXXXXXX" (4-char checksum + 32 char hash)
     // 2. Legacy hex format: "0x..." or pure hex
     const isNewFormat = verifyCommitmentHashFormat(sanitizedCommitment);
     const hexFormatPattern = /^(0x)?[0-9a-f]{32,}$/i;
     const isHexFormat = hexFormatPattern.test(sanitizedCommitment);
     
-    console.log('[v0] Format validation:', { 
-      isNewFormat, 
-      isHexFormat,
-      formatChecksum: sanitizedCommitment.split('-')[0],
-      formatHash: sanitizedCommitment.split('-')[1]
-    });
+    console.log('[v0] ===== COMMITMENT HASH VALIDATION =====');
+    console.log('[v0] Input:', sanitizedCommitment);
+    console.log('[v0] Input length:', sanitizedCommitment.length);
+    console.log('[v0] Has dash:', sanitizedCommitment.includes('-'));
+    
+    if (sanitizedCommitment.includes('-')) {
+      const parts = sanitizedCommitment.split('-');
+      console.log('[v0] Checksum part:', parts[0], '(length:', parts[0].length + ')');
+      console.log('[v0] Hash part:', parts[1], '(length:', parts[1]?.length + ')');
+      console.log('[v0] Checksum valid hex:', /^[0-9A-Fa-f]+$/.test(parts[0]));
+      console.log('[v0] Hash valid hex:', /^[0-9A-Fa-f]+$/.test(parts[1] || ''));
+    }
+    
+    console.log('[v0] Format check result:', { isNewFormat, isHexFormat });
     
     if (!isNewFormat && !isHexFormat) {
-      console.error('[v0] Invalid format - neither new format nor hex');
-      console.error('[v0] Format details:');
-      console.error('  - Input:', sanitizedCommitment);
-      console.error('  - Length:', sanitizedCommitment.length);
-      console.error('  - Has dash:', sanitizedCommitment.includes('-'));
-      if (sanitizedCommitment.includes('-')) {
-        const [checksum, hash] = sanitizedCommitment.split('-');
-        console.error('  - Checksum length:', checksum.length);
-        console.error('  - Hash length:', hash?.length);
-      }
-      setError('Invalid commitment hash format. Expected: AB12-CAFEA1B2C3D4E5F6 (checksum-hash) or 0xHEX')
+      console.error('[v0] ❌ VALIDATION FAILED - Invalid format');
+      setError('Invalid commitment hash format. Expected: ABCD-CAFEA1B2C3D4E5F6ABCDEF0123456789 (checksum-hash) or 0xHEX')
       return
     }
+    console.log('[v0] ✅ Format validation passed');
 
     // Extract the actual hash part (remove checksum prefix if present)
     let hashForBlockchain = sanitizedCommitment;
@@ -275,7 +275,7 @@ export function EndorsePeerPage() {
                   </label>
                   <div className="flex gap-2">
                     <Input
-                      placeholder="Enter commitment hash (e.g., AB12-CAFE1234... or 0xABC...)"
+                      placeholder="e.g., ABCD-CAFEA1B2C3D4E5F6ABCDEF0123456789"
                       value={targetCommitment}
                       onChange={(e) => setTargetCommitment(e.target.value)}
                       className="bg-background/50 border-border text-foreground placeholder:text-muted-foreground font-mono text-sm flex-1"
@@ -293,7 +293,7 @@ export function EndorsePeerPage() {
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
-                    Format: Checksum-Hash (e.g., AB12-CAFE...) from ShadowID profile or hex format (0x...)
+                    Format: 4-char checksum + dash + 32-char hash (e.g., ABCD-CAFEA1B2C3D4E5F6ABCDEF0123456789)
                   </p>
                 </div>
 
