@@ -8,7 +8,7 @@
 
 import { AttributeSchema } from './attribute-schema'
 import { CredentialIssuer } from './credential-issuers'
-import { storeEncryptedCredential, getDecryptedCredential, clearAllEncryptedData } from './encrypted-storage'
+import { storeEncryptedData, getDecryptedData, clearEncryptedData } from './storage-encryption'
 
 /**
  * W3C Verifiable Credential v2.0 Structure
@@ -85,7 +85,7 @@ class CredentialStoreManager {
    */
   clear(): void {
     localStorage.removeItem(this.storageKey)
-    clearAllEncryptedData()
+    clearEncryptedData(this.storageKey)
     console.log('[v0] All credentials cleared')
   }
 
@@ -140,7 +140,7 @@ class CredentialStoreManager {
     localStorage.setItem(this.storageKey, JSON.stringify(all))
     
     // Encrypt and store actual credential data separately
-    await storeEncryptedCredential(credential.id, credential, walletPrivateKey)
+    await storeEncryptedData(credential.id, JSON.stringify(credential), walletPrivateKey)
     console.log('[v0] Credential added and encrypted:', credential.id)
   }
 

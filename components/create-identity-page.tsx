@@ -18,7 +18,7 @@ import { getMaxAttributesForUser, getSubscriptionInfo } from '@/lib/subscription
 import { SubscriptionModal } from '@/components/subscription-modal'
 import { checkAccountCreationRateLimit, trackAccountCreation } from '@/lib/anti-sybil'
 import { generateCommitmentHash, storeCommitmentHash } from '@/lib/commitment-hash-generator'
-import { storeEncryptedCredential } from '@/lib/credential-store'
+import { storeEncryptedData } from '@/lib/storage-encryption'
 
 export function CreateIdentityPage() {
   const { address, executeTransaction, getTransactionStatus, disconnect } = useAleoWallet()
@@ -324,7 +324,7 @@ export function CreateIdentityPage() {
       localStorage.setItem('shadowid-tx-id', blockchainResult.transactionId)
       localStorage.setItem('identity-created', 'true') // Flag to indicate identity creation is complete
 
-      await storeEncryptedCredential(blockchainResult.commitmentHash, credential, address)
+      await storeEncryptedData(blockchainResult.commitmentHash, JSON.stringify(credential), address)
 
       // Verify transaction succeeded on blockchain
       if (!blockchainResult.transactionId) {
