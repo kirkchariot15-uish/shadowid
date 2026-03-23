@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { debugWalletState } from '@/lib/blockchain-transaction-handler'
 import { Navigation } from '@/components/navigation'
@@ -40,6 +41,10 @@ export function CreateIdentityPage() {
   useEffect(() => {
     if (commitmentHash && isConfirming) {
       console.log('[v0] Commitment hash generated, showing completion screen')
+      toast.success('ShadowID Created Successfully! 🎉', {
+        description: 'Your zero-knowledge identity is ready to use.',
+        duration: 5000,
+      })
       setTimeout(() => {
         setIsConfirming(false)
         setCreationComplete(true)

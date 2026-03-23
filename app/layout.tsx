@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { WalletProviderComponent } from '@/lib/wallet-provider'
 import { Navigation } from '@/components/navigation'
+import { Toaster } from '@/components/ui/sonner'
 
 import './globals.css'
 
@@ -52,6 +53,7 @@ export default function RootLayout({
           <main className="flex-1">
             {children}
           </main>
+          <Toaster />
         </WalletProviderComponent>
       </body>
     </html>
