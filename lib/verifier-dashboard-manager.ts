@@ -47,6 +47,10 @@ class VerifierDashboardManager {
    */
   getOrCreateProfile(verifierId: string): VerifierProfile {
     try {
+      if (typeof window === 'undefined') {
+        throw new Error('localStorage not available on server')
+      }
+      
       const stored = localStorage.getItem(this.profileKey)
       const profiles: VerifierProfile[] = stored ? JSON.parse(stored) : []
       

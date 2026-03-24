@@ -11,16 +11,40 @@ import { STANDARD_ATTRIBUTES } from '@/lib/attribute-schema'
 
 export function VerifierDashboardPage() {
   const [verifierId] = useState('verifier:demo')
-  const [profile, setProfile] = useState(() => verifierDashboardManager.getOrCreateProfile('verifier:demo'))
+  const [profile, setProfile] = useState<any>(null)
   const [sessions, setSessions] = useState<VerificationSession[]>([])
-  const [stats, setStats] = useState(() => verifierDashboardManager.getStatistics('verifier:demo'))
+  const [stats, setStats] = useState<any>(null)
   const [selectedTab, setSelectedTab] = useState<'all' | 'pending' | 'verified'>('all')
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const allSessions = verifierDashboardManager.getSessions(verifierId)
-    setSessions(allSessions)
-    setStats(verifierDashboardManager.getStatistics(verifierId))
-  }, [verifierId])
+    setMounted(true)
+    try {
+      const profileData = verifierDashboardManager.getOrCreateProfile('verifier:demo')
+      setProfile(profileData)
+      
+      const allSessions = verifierDashboardManager.getSessions('verifier:demo')
+      setSessions(allSessions)
+      
+      const statsData = verifierDashboardManager.getStatistics('verifier:demo')
+      setStats(statsData)
+    } catch (error) {
+      console.error('[v0] Error loading verifier data:', error)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+    
+    try {
+      const allSessions = verifierDashboardManager.getSessions(verifierId)
+      setSessions(allSessions)
+      const statsData = verifierDashboardManager.getStatistics(verifierId)
+      setStats(statsData)
+    } catch (error) {
+      console.error('[v0] Error loading sessions:', error)
+    }
+  }, [verifierId, mounted])
 
   const getFilteredSessions = () => {
     switch (selectedTab) {
@@ -56,43 +80,50 @@ export function VerifierDashboardPage() {
 
       <main className="pt-24 md:pt-20 pb-32 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Verification Dashboard</h1>
-              <p className="text-muted-foreground mt-2">Track proof requests and verifications</p>
+          {!mounted || !profile ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-accent"></div>
+              <p className="text-muted-foreground mt-4">Loading dashboard...</p>
             </div>
-            <Link href="/dashboard">
-              <Button variant="outline" className="border-accent/40 text-accent hover:bg-accent/10 gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back
-              </Button>
-            </Link>
-          </div>
-
-          {/* Verifier Info Card */}
-          <Card className="border-border/40 bg-background/50 backdrop-blur-sm p-6 mb-8">
-            <div className="grid md:grid-cols-3 gap-6">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Verifier Name</p>
-                <h3 className="text-lg font-semibold">{profile.name}</h3>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Status</p>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-success rounded-full"></div>
-                  <span className="text-lg font-semibold">Active</span>
+          ) : (
+            <>
+              {/* Header */}
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h1 className="text-3xl font-bold tracking-tight">Verification Dashboard</h1>
+                  <p className="text-muted-foreground mt-2">Track proof requests and verifications</p>
                 </div>
+                <Link href="/dashboard">
+                  <Button variant="outline" className="border-accent/40 text-accent hover:bg-accent/10 gap-2">
+                    <ArrowLeft className="h-4 w-4" />
+                    Back
+                  </Button>
+                </Link>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">API Key</p>
-                <code className="font-mono text-xs bg-muted px-2 py-1 rounded">{profile.apiKey.slice(0, 20)}...</code>
-              </div>
-            </div>
-          </Card>
 
-          {/* Statistics Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+              {/* Verifier Info Card */}
+              <Card className="border-border/40 bg-background/50 backdrop-blur-sm p-6 mb-8">
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Verifier Name</p>
+                    <h3 className="text-lg font-semibold">{profile.name}</h3>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Status</p>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-success rounded-full"></div>
+                      <span className="text-lg font-semibold">Active</span>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">API Key</p>
+                    <code className="font-mono text-xs bg-muted px-2 py-1 rounded">{profile.apiKey.slice(0, 20)}...</code>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Statistics Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
             <Card className="border-border/40 bg-background/50 backdrop-blur-sm p-4">
               <div className="text-sm text-muted-foreground mb-1">Total Requests</div>
               <div className="text-2xl font-bold">{stats.totalRequests}</div>
@@ -240,6 +271,8 @@ export function VerifierDashboardPage() {
               Provide your API key in the Authorization header for secure requests.
             </p>
           </Card>
+            </>
+          )}
         </div>
       </main>
     </div>

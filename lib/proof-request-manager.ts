@@ -189,6 +189,10 @@ class ProofRequestManager {
    */
   getInbox(): ReceivedProofRequest[] {
     try {
+      if (typeof window === 'undefined') {
+        return []
+      }
+      
       const stored = localStorage.getItem(this.storageKey)
       if (!stored) return []
       return JSON.parse(stored)
@@ -286,6 +290,10 @@ class ProofRequestManager {
    */
   getAllResponses(): ProofResponse[] {
     try {
+      if (typeof window === 'undefined') {
+        return []
+      }
+      
       const stored = localStorage.getItem(this.responseStorageKey)
       return stored ? JSON.parse(stored) : []
     } catch (err) {
