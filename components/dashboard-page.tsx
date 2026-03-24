@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Lock, Wallet, Award, Plus, FileText, Activity, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { addActivityLog } from '@/lib/activity-logger'
+import { initializeProofRequestSystem } from '@/lib/proof-request-integration'
 
 export default function DashboardPage() {
   const { address } = useAleoWallet()
@@ -35,7 +36,13 @@ export default function DashboardPage() {
     if (attrs) {
       setCredentials(JSON.parse(attrs).length)
     }
-  }, [])
+
+    // Initialize proof request system when user connects
+    const userCommitment = localStorage.getItem('shadowid-commitment')
+    if (address && userCommitment) {
+      initializeProofRequestSystem(userCommitment, address)
+    }
+  }, [address])
 
   const handleCopyID = () => {
     navigator.clipboard.writeText(address || '')
