@@ -100,17 +100,156 @@ export default function PublicIdentityProfile({ commitment }: PublicIdentityProf
   }, [commitment])
 
   if (loading) {
-    return (
-      <main className="min-h-screen bg-background">
-        <Navigation />
-        <div className="max-w-2xl mx-auto px-4 py-12 flex items-center justify-center">
-          <div className="text-center">
-            <div className="h-12 w-12 rounded-full border-2 border-accent border-t-transparent animate-spin mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading identity...</p>
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <Navigation />
+
+      <main className="pt-24 md:pt-20 pb-32 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl">
+          {/* Header */}
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Identity Verification</h1>
+              <p className="text-muted-foreground mt-2">View and verify ShadowID identity credentials</p>
+            </div>
+            <Link href="/dashboard">
+              <Button variant="outline" className="gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </Button>
+            </Link>
           </div>
+
+          {loading && (
+            <div className="rounded-xl border border-border bg-card p-8">
+              <div className="animate-pulse space-y-4">
+                <div className="h-8 bg-border rounded" />
+                <div className="h-12 bg-border rounded" />
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6">
+              <div className="flex gap-3">
+                <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-foreground">{error}</p>
+              </div>
+            </div>
+          )}
+
+          {profile && !loading && (
+            <div className="space-y-6">
+              {/* Verification Status Card */}
+              <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-6">
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex items-start gap-3">
+                    {profile.verificationStatus === 'verified' ? (
+                      <CheckCircle2 className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
+                    ) : (
+                      <AlertCircle className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                    )}
+                    <div>
+                      <h2 className="text-lg font-semibold">
+                        {profile.verificationStatus === 'verified' ? 'Verified Identity' : 'Unverified Identity'}
+                      </h2>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {profile.verificationStatus === 'verified'
+                          ? 'This identity has been cryptographically verified on the blockchain'
+                          : 'This identity has not been verified yet'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Commitment Hash */}
+                  <div className="flex items-start justify-between p-4 rounded-lg bg-background border border-border">
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Identity Commitment</p>
+                      <p className="font-mono text-sm text-accent break-all">{profile.commitment}</p>
+                      {!hashValid && (
+                        <p className="text-xs text-destructive mt-2">Invalid commitment hash format</p>
+                      )}
+                    </div>
+                    <Button
+                      onClick={() => {
+                        navigator.clipboard.writeText(profile.commitment)
+                        setCopied(true)
+                        setTimeout(() => setCopied(false), 2000)
+                      }}
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground hover:text-foreground ml-2"
+                    >
+                      {copied ? <CheckCircle className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+
+                  {/* User Address - Only for owner */}
+                  {profile.userAddress !== 'Anonymous' && (
+                    <div className="p-4 rounded-lg bg-background border border-border">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Owner Wallet Address</p>
+                      <p className="font-mono text-sm text-foreground break-all">{profile.userAddress}</p>
+                    </div>
+                  )}
+
+                  {/* Creation Date */}
+                  <div className="p-4 rounded-lg bg-background border border-border">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Created</p>
+                    <p className="text-sm text-foreground">{new Date(profile.createdAt).toLocaleString()}</p>
+                  </div>
+
+                  {/* Attributes - Only for owner */}
+                  {Object.keys(profile.attributes).length > 0 && profile.userAddress !== 'Anonymous' && (
+                    <div className="p-4 rounded-lg bg-background border border-border">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3">Disclosed Attributes</p>
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(profile.attributes).map(([key, value]) => (
+                          <div key={key} className="px-3 py-2 text-xs bg-accent/10 text-accent rounded font-medium border border-accent/20">
+                            <p className="font-semibold">{key}</p>
+                            <p className="text-xs text-accent/70">{String(value)}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Blockchain Details - If available */}
+                  {(profile.attributeHash || profile.transactionId) && (
+                    <div className="p-4 rounded-lg bg-background border border-border">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3">Blockchain Details</p>
+                      <div className="space-y-2">
+                        {profile.attributeHash && (
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Attribute Hash</p>
+                            <p className="font-mono text-xs text-foreground break-all">{profile.attributeHash}</p>
+                          </div>
+                        )}
+                        {profile.transactionId && (
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Transaction ID</p>
+                            <p className="font-mono text-xs text-foreground break-all">{profile.transactionId}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Information Notice */}
+              <div className="rounded-xl border border-border bg-muted/30 p-4">
+                <p className="text-xs text-muted-foreground">
+                  <strong>Privacy Notice:</strong> This page displays public identity information. Attribute values and personal details are only visible to the identity owner or when explicitly shared through selective disclosure proofs.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </main>
-    )
+    </div>
+  )
   }
 
   if (error || !profile) {

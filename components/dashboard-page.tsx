@@ -5,11 +5,10 @@ import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { useSessionTimeout } from '@/hooks/use-session-timeout'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { Navigation } from '@/components/navigation'
-import { IDCard } from '@/components/id-card'
 import { BlockchainStatus } from '@/components/blockchain-status'
 import { OnboardingModal } from '@/components/onboarding-modal'
 import { Button } from '@/components/ui/button'
-import { Lock, Wallet, Award, Plus, FileText, Activity, Sparkles } from 'lucide-react'
+import { Lock, Award, Plus, FileText, Activity, Shield, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 import { addActivityLog } from '@/lib/activity-logger'
 import { initializeProofRequestSystem } from '@/lib/proof-request-integration'
@@ -129,84 +128,139 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Primary Actions */}
-          <div className="mb-16">
-            <h2 className="text-lg font-semibold mb-6 uppercase tracking-widest">Actions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Link href="/create-identity" className="group">
-                <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-8 hover:border-accent/40 transition-all cursor-pointer">
-                  <Plus className="h-8 w-8 text-accent mb-4" />
-                  <h3 className="font-semibold text-lg mb-2">Create ShadowID</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Start a zero-knowledge identity with verifiable credentials.
-                  </p>
-                </div>
-              </Link>
+          {/* Action Sections */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            {/* Left Column - Main Actions */}
+            <div className="lg:col-span-2 space-y-12">
+              {/* Primary Actions */}
+              <div>
+                <h2 className="text-lg font-semibold mb-6 uppercase tracking-widest">Quick Actions</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Link href="/create-identity" className="group">
+                    <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-8 hover:border-accent/40 transition-all cursor-pointer">
+                      <Plus className="h-8 w-8 text-accent mb-4" />
+                      <h3 className="font-semibold text-lg mb-2">Create ShadowID</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Start a zero-knowledge identity with verifiable credentials.
+                      </p>
+                    </div>
+                  </Link>
 
-              <Link href="/request-attestation" className="group">
-                <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-8 hover:border-accent/40 transition-all cursor-pointer">
-                  <Award className="h-8 w-8 text-accent mb-4" />
-                  <h3 className="font-semibold text-lg mb-2">Request Attestations</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Get trusted issuers to verify your attributes.
-                  </p>
+                  <Link href="/proof-requests" className="group">
+                    <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-8 hover:border-accent/40 transition-all cursor-pointer">
+                      <Award className="h-8 w-8 text-accent mb-4" />
+                      <h3 className="font-semibold text-lg mb-2">Proof Requests</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        View and respond to incoming proof requests from services.
+                      </p>
+                    </div>
+                  </Link>
                 </div>
-              </Link>
+              </div>
 
-              {localStorage.getItem('shadowid-commitment') && (
-                <Link href="/identity" className="group">
-                  <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-8 hover:border-accent/40 transition-all cursor-pointer">
-                    <Sparkles className="h-8 w-8 text-accent mb-4" />
-                    <h3 className="font-semibold text-lg mb-2">View My ShadowID</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      Manage your identity, shadow score, and endorsements.
-                    </p>
+              {/* Secondary Actions */}
+              <div>
+                <h2 className="text-lg font-semibold mb-6 uppercase tracking-widest">Verification & Sharing</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Link href="/selective-disclosure" className="group">
+                    <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-8 hover:border-accent/40 transition-all cursor-pointer">
+                      <FileText className="h-8 w-8 text-accent mb-4" />
+                      <h3 className="font-semibold text-lg mb-2">Generate Proofs</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Create selective disclosure proofs to share specific attributes.
+                      </p>
+                    </div>
+                  </Link>
+
+                  <Link href="/verify-qr" className="group">
+                    <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-8 hover:border-accent/40 transition-all cursor-pointer">
+                      <CheckCircle className="h-8 w-8 text-accent mb-4" />
+                      <h3 className="font-semibold text-lg mb-2">Verify Proofs</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Scan and verify zero-knowledge proofs from other users.
+                      </p>
+                    </div>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Engagement */}
+              <div>
+                <h2 className="text-lg font-semibold mb-6 uppercase tracking-widest">Community</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Link href="/endorse-peer" className="group">
+                    <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-8 hover:border-accent/40 transition-all cursor-pointer">
+                      <Award className="h-8 w-8 text-accent mb-4" />
+                      <h3 className="font-semibold text-lg mb-2">Endorse Peers</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Strengthen peers' credibility by endorsing their attributes.
+                      </p>
+                    </div>
+                  </Link>
+
+                  <Link href="/logs" className="group">
+                    <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-8 hover:border-accent/40 transition-all cursor-pointer">
+                      <Activity className="h-8 w-8 text-accent mb-4" />
+                      <h3 className="font-semibold text-lg mb-2">Activity Logs</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Review all security events and account activity history.
+                      </p>
+                    </div>
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column - Identity Overview */}
+            <div className="space-y-6">
+              <h2 className="text-lg font-semibold uppercase tracking-widest">Identity Overview</h2>
+              
+              {localStorage.getItem('shadowid-commitment') ? (
+                <>
+                  {/* Quick Info */}
+                  <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-6 space-y-4">
+                    <div>
+                      <p className="text-xs uppercase tracking-widest font-semibold text-accent mb-2">Status</p>
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 bg-success rounded-full"></div>
+                        <p className="text-sm font-medium">Identity Created</p>
+                      </div>
+                    </div>
+                    <div className="border-t border-border pt-4">
+                      <p className="text-xs uppercase tracking-widest font-semibold text-accent mb-2">Credentials</p>
+                      <p className="text-2xl font-bold">{credentials}</p>
+                    </div>
+                    <div className="border-t border-border pt-4">
+                      <p className="text-xs uppercase tracking-widest font-semibold text-accent mb-2">Wallet</p>
+                      <p className="text-xs font-mono text-muted-foreground truncate">{address?.slice(0, 12)}...</p>
+                    </div>
                   </div>
-                </Link>
+
+                  {/* View Full Profile Link */}
+                  <Link href="/identity" className="w-full">
+                    <Button className="w-full gap-2 bg-accent/10 hover:bg-accent/20 text-accent">
+                      <Shield className="h-4 w-4" />
+                      View My ShadowID
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-6 text-center space-y-4">
+                  <Lock className="h-8 w-8 text-muted-foreground/40 mx-auto" />
+                  <div>
+                    <p className="text-sm font-medium mb-2">No Identity Yet</p>
+                    <p className="text-xs text-muted-foreground">Create your first ShadowID to get started</p>
+                  </div>
+                  <Link href="/create-identity" className="w-full">
+                    <Button className="w-full gap-2" size="sm">
+                      <Plus className="h-4 w-4" />
+                      Create Now
+                    </Button>
+                  </Link>
+                </div>
               )}
-
-              <Link href="/endorse-peer" className="group">
-                <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-8 hover:border-accent/40 transition-all cursor-pointer">
-                  <Award className="h-8 w-8 text-accent mb-4" />
-                  <h3 className="font-semibold text-lg mb-2">Endorse Peers</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Strengthen peers' credibility by endorsing their attributes.
-                  </p>
-                </div>
-              </Link>
-
-              <Link href="/logs" className="group">
-                <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-8 hover:border-accent/40 transition-all cursor-pointer">
-                  <Activity className="h-8 w-8 text-accent mb-4" />
-                  <h3 className="font-semibold text-lg mb-2">Activity Logs</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    View your identity events and proof history.
-                  </p>
-                </div>
-              </Link>
             </div>
           </div>
-
-          {/* Your ID Card */}
-          {localStorage.getItem('shadowid-commitment') && (() => {
-            const commitment = localStorage.getItem('shadowid-commitment')!
-            const createdAt = localStorage.getItem('shadowid-created-at')!
-            const userInfoStr = localStorage.getItem('shadowid-user-info')
-            const userInfo = userInfoStr ? JSON.parse(userInfoStr) : { hasPhoto: false, documentCount: 0, notesCount: 0 }
-
-            return (
-              <div className="mt-24 pt-16 border-t border-border">
-                <h2 className="text-lg font-semibold mb-8 uppercase tracking-widest">Your Identity Card</h2>
-                <IDCard
-                  commitment={commitment}
-                  walletAddress={address}
-                  createdAt={createdAt}
-                  userInfo={userInfo}
-                  showActions={true}
-                />
-              </div>
-            )
-          })()}
         </div>
       </div>
     </div>

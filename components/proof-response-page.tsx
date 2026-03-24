@@ -307,6 +307,13 @@ export function ProofResponsePage() {
                   </Card>
 
                   <Card className="border-border/40 bg-background/50 p-4">
+                    <p className="text-sm text-muted-foreground mb-1">Your Commitment</p>
+                    <p className="font-mono text-xs text-accent break-all">
+                      {localStorage.getItem('shadowid-commitment') || 'Not available'}
+                    </p>
+                  </Card>
+
+                  <Card className="border-border/40 bg-background/50 p-4">
                     <p className="text-sm text-muted-foreground mb-2">Attributes Provided</p>
                     <div className="flex flex-wrap gap-2">
                       {selectedAttributes.map(attrId => {
@@ -359,7 +366,7 @@ export function ProofResponsePage() {
             <>
               {/* Request Summary */}
               <Card className="border-border/40 bg-background/50 backdrop-blur-sm p-6 mb-8">
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid md:grid-cols-3 gap-6 mb-6">
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Requested By</p>
                     <h3 className="text-lg font-semibold">{request.requesterName}</h3>
@@ -368,8 +375,16 @@ export function ProofResponsePage() {
                     <p className="text-sm text-muted-foreground mb-1">Purpose</p>
                     <p className="text-lg font-semibold">{request.purpose}</p>
                   </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Expires</p>
+                    <p className="text-lg font-semibold">
+                      {new Date(request.expiresAt).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
-                <p className="mt-4 text-foreground">{request.description}</p>
+                <div className="border-t border-border pt-4">
+                  <p className="text-sm text-foreground">{request.description}</p>
+                </div>
               </Card>
 
               {/* Attribute Selection */}

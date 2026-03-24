@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { ArrowLeft, Upload, Copy, Camera, AlertCircle, CheckCircle2, Clock, Smartphone } from 'lucide-react'
+import { ArrowLeft, Upload, Copy, Camera, AlertCircle, CheckCircle2, Clock, Smartphone, Hash, Calendar } from 'lucide-react'
 import Link from 'next/link'
 import { QRCameraScanner } from '@/components/qr-camera-scanner'
 import { CameraPermissionDialog } from '@/components/camera-permission-dialog'
@@ -249,7 +249,10 @@ export default function VerifyQRPage() {
                     {/* Commitment */}
                     <div className="flex items-start justify-between p-4 rounded-lg bg-background border border-border">
                       <div className="flex-1">
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Commitment Hash</p>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Hash className="h-4 w-4 text-muted-foreground" />
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide">Commitment Hash</p>
+                        </div>
                         <p className="font-mono text-sm text-accent break-all">{qrData.commitment}</p>
                       </div>
                       <Button
@@ -278,15 +281,47 @@ export default function VerifyQRPage() {
 
                     {/* Proof Details */}
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="p-3 rounded-lg bg-background border border-border">
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Created</p>
-                        <p className="text-xs text-foreground">{new Date(qrData.timestamp * 1000).toLocaleString()}</p>
+                      <div className="p-4 rounded-lg bg-background border border-border">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide">Created</p>
+                        </div>
+                        <p className="text-sm text-foreground font-medium">{new Date(qrData.timestamp * 1000).toLocaleString()}</p>
                       </div>
-                      <div className="p-3 rounded-lg bg-background border border-border">
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Expires</p>
-                        <p className="text-xs text-foreground">{new Date(qrData.expiresAt).toLocaleString()}</p>
+                      <div className="p-4 rounded-lg bg-background border border-border">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide">Expires</p>
+                        </div>
+                        <p className="text-sm text-foreground font-medium">{new Date(qrData.expiresAt).toLocaleString()}</p>
                       </div>
                     </div>
+
+                    {/* Request Link Info - if available */}
+                    {qrData.requestLinkId && (
+                      <div className="p-4 rounded-lg bg-background border border-border">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Hash className="h-4 w-4 text-accent" />
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide">Request Link ID</p>
+                        </div>
+                        <p className="font-mono text-xs text-accent break-all mb-3">{qrData.requestLinkId}</p>
+                        <p className="text-xs text-muted-foreground">
+                          This proof is linked to a specific verification request and cannot be reused elsewhere.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Nullifier Info - if available */}
+                    {qrData.nullifier && (
+                      <div className="p-3 rounded-lg bg-accent/5 border border-accent/20">
+                        <p className="text-xs text-accent font-medium">
+                          Replay Protection Active
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          This proof includes nullifier protection to prevent reuse.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </Card>

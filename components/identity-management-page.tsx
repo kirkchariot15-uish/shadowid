@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
+import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
 import {
@@ -34,6 +35,7 @@ interface Identity {
 }
 
 export function IdentityManagementPage() {
+  const { address } = useAleoWallet()
   const { address } = useAleoWallet()
   const [identity, setIdentity] = useState<Identity | null>(null)
   const [isEditing, setIsEditing] = useState(false)
@@ -412,6 +414,12 @@ export function IdentityManagementPage() {
                   Zero-Knowledge
                 </p>
               </div>
+              {address && (
+                <div className="border-t border-border pt-4">
+                  <p className="text-xs text-muted-foreground mb-1">Wallet Address</p>
+                  <p className="text-xs font-mono text-accent truncate">{address}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
