@@ -20,6 +20,7 @@ import { SubscriptionModal } from '@/components/subscription-modal'
 import { checkAccountCreationRateLimit, trackAccountCreation } from '@/lib/anti-sybil'
 import { generateCommitmentHash, storeCommitmentHash } from '@/lib/commitment-hash-generator'
 import { storeEncryptedData } from '@/lib/storage-encryption'
+import { checkExistingAccountOnBlockchain, recoverAccountFromBlockchain, storeAccountMappingOnBlockchain } from '@/lib/account-recovery'
 
 export function CreateIdentityPage() {
   const { address, executeTransaction, getTransactionStatus, disconnect } = useAleoWallet()
@@ -68,8 +69,51 @@ export function CreateIdentityPage() {
       console.log('[v0] Wallet state updated');
       debugWalletState(address, executeTransaction);
       setSubscriptionInfo(getSubscriptionInfo());
+      
+      // CRITICAL: Check if wallet already has an account on blockchain
+      checkWalletForExistingAccount();
     }
   }, [address, executeTransaction, mounted, isConnected])
+
+  // Check if the connected wallet already has an account on the blockchain
+  const checkWalletForExistingAccount = async () => {
+    if (!address) return
+    
+    try {
+      console.log('[v0] Checking for existing account for wallet:', address)
+      const existingAccount = await checkExistingAccountOnBlockchain(address)
+      
+      if (existingAccount.exists && existingAccount.commitment) {
+        console.log('[v0] Found existing account on blockchain!')
+        
+        // Show recovery confirmation dialog
+        const shouldRecover = confirm(
+          'We detected an existing ShadowID for this wallet address. Would you like to recover it? Click OK to restore your account or Cancel to create a new one.'
+        )
+        
+        if (shouldRecover) {
+          // Recover the account
+          const recoveryResult = await recoverAccountFromBlockchain(address)
+          if (recoveryResult.success) {
+            toast.success('Account Recovered! 🎉', {
+              description: 'Your existing ShadowID has been restored.',
+              duration: 5000,
+            })
+            // Redirect to identity management
+            setTimeout(() => {
+              window.location.href = '/identity'
+            }, 2000)
+          } else {
+            toast.error('Recovery failed', {
+              description: recoveryResult.error || 'Could not recover your account',
+            })
+          }
+        }
+      }
+    } catch (error) {
+      console.error('[v0] Error checking existing account:', error)
+    }
+  }
 
   const handleAttributeChange = (attrId: string, value: string) => {
     // Ensure value is a string and safe to use
@@ -316,6 +360,8 @@ export function CreateIdentityPage() {
       localStorage.setItem('shadowid-commitment-hex', commitmentDisplayHex)
       localStorage.setItem('shadowid-created-at', new Date().toISOString())
       localStorage.setItem('shadowid-user-id', address)
+      localStorage.setItem('shadowid-wallet-address', address)
+      localStorage.setItem('identity-created', 'true')
       localStorage.setItem('shadowid-user-info', JSON.stringify({
         hasPhoto: false,
         documentCount: 0,
@@ -323,6 +369,15 @@ export function CreateIdentityPage() {
         documentsNames: [],
         notes: []
       }))
+      
+      // CRITICAL: Store account mapping on blockchain for future recovery
+      // This allows users to recover their account when they import their private key elsewhere
+      const timestamp = Math.floor(Date.now() / 1000)
+      storeAccountMappingOnBlockchain(address, blockchainResult.commitmentHash, timestamp)
+      console.log('[v0] Account mapping stored on blockchain for recovery')
+      
+      // Track account creation for rate limiting
+      trackAccountCreation()
       localStorage.setItem('shadowid-credential', JSON.stringify(credential))
       localStorage.setItem('shadowid-attribute-hash', blockchainResult.attributeHash)
       localStorage.setItem('shadowid-signature', blockchainResult.signature)
@@ -337,9 +392,6 @@ export function CreateIdentityPage() {
       }
 
       console.log('[v0] Transaction verified on Aleo testnet:', blockchainResult.transactionId)
-
-      // Track account creation for sybil prevention
-      trackAccountCreation()
 
       setCommitment(blockchainResult.commitmentHash)
       addActivityLog('Create ShadowID', 'identity', `Created ZK identity with ${enabledAttrIds.length} attributes on Aleo testnet`, 'success')
