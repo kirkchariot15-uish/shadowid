@@ -372,8 +372,8 @@ export function CreateIdentityPage() {
       
       // CRITICAL: Store account mapping on blockchain for future recovery
       // This allows users to recover their account when they import their private key elsewhere
-      const timestamp = Math.floor(Date.now() / 1000)
-      storeAccountMappingOnBlockchain(address, blockchainResult.commitmentHash, timestamp)
+      const recoveryTimestamp = Math.floor(Date.now() / 1000)
+      storeAccountMappingOnBlockchain(address, blockchainResult.commitmentHash, recoveryTimestamp)
       console.log('[v0] Account mapping stored on blockchain for recovery')
       
       // Track account creation for rate limiting
