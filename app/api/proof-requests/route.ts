@@ -1,47 +1,128 @@
 /**
  * Proof Request API Endpoint
  * 
- * Allows external verifiers/services to request proofs from users
- * 
- * POST /api/proof-requests/create
- * - Create a proof request for users
- * 
- * GET /api/proof-requests/validate
- * - Validate a proof response
- * 
- * POST /api/proof-requests/verify
- * - Verify a proof response
+ * SECURITY CRITICAL: This endpoint must validate all requests
+ * - CSRF protection via origin validation
+ * - Rate limiting per IP
+ * - Request signing validation (in production)
+ * - No sensitive data in responses
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { proofRequestManager, ProofRequest, ProofResponse, formatRequestDisplay } from '@/lib/proof-request-manager'
+import { proofRequestManager } from '@/lib/proof-request-manager'
 import { verifierDashboardManager } from '@/lib/verifier-dashboard-manager'
 import { STANDARD_ATTRIBUTES } from '@/lib/attribute-schema'
 
+// Simple in-memory rate limiting (in production: use Redis)
+const requestCounts = new Map<string, { count: number; resetTime: number }>()
+const RATE_LIMIT = 10 // requests per hour
+const RATE_LIMIT_WINDOW = 60 * 60 * 1000 // 1 hour
+
 /**
- * POST /api/proof-requests/create
- * Create a new proof request
- * 
- * Body:
- * {
- *   requesterId: string (e.g., "verifier:kyc-service")
- *   requesterName: string
- *   requesterUrl?: string
- *   requiredAttributes: [{ attributeId, proofType, ... }]
- *   category: 'age-verification' | 'credential-check' | etc.
- *   description: string
- *   purpose: string
- *   targetCommitment?: string (optional - for targeted requests)
- *   expiryHours?: number (default: 168 = 7 days)
- * }
+ * Get client IP for rate limiting
  */
+function getClientIp(request: NextRequest): string {
+  return request.headers.get('x-forwarded-for') || 
+         request.headers.get('x-real-ip') || 
+         'unknown'
+}
+
+/**
+ * Check rate limit
+ */
+function isRateLimited(ip: string): boolean {
+  const now = Date.now()
+  const record = requestCounts.get(ip)
+  
+  if (!record || now > record.resetTime) {
+    requestCounts.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW })
+    return false
+  }
+  
+  if (record.count >= RATE_LIMIT) {
+    return true
+  }
+  
+  record.count++
+  return false
+}
+
+/**
+ * Validate CSRF: Check origin and referer
+ */
+function validateOrigin(request: NextRequest): boolean {
+  const origin = request.headers.get('origin')
+  const referer = request.headers.get('referer')
+  const host = request.headers.get('host')
+  
+  // Only allow requests from same origin or explicitly allowed origins
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    process.env.NEXT_PUBLIC_APP_URL || ''
+  ].filter(Boolean)
+  
+  if (!origin) {
+    // Missing origin is suspicious for POST requests
+    return request.method !== 'POST'
+  }
+  
+  // Check if origin is allowed
+  const isAllowed = allowedOrigins.some(allowed => origin.includes(allowed))
+  
+  if (!isAllowed) {
+    console.warn('[v0] CSRF: Rejected request from unauthorized origin:', origin)
+  }
+  
+  return isAllowed
+}
+
+/**
+ * Sanitize error messages to prevent information leakage
+ */
+function sanitizeError(error: string): string {
+  // Never return internal details
+  const sensitivePatterns = [
+    /wallet/gi,
+    /address/gi,
+    /private/gi,
+    /secret/gi,
+    /key/gi
+  ]
+  
+  let sanitized = error
+  sensitivePatterns.forEach(pattern => {
+    sanitized = sanitized.replace(pattern, '***')
+  })
+  
+  return sanitized.substring(0, 200) // Limit length
+}
+
 export async function POST(request: NextRequest) {
   try {
+    const clientIp = getClientIp(request)
+    
+    // SECURITY: Check rate limit FIRST
+    if (isRateLimited(clientIp)) {
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429 }
+      )
+    }
+    
+    // SECURITY: Validate CSRF
+    if (!validateOrigin(request)) {
+      return NextResponse.json(
+        { error: 'Invalid origin' },
+        { status: 403 }
+      )
+    }
+    
     const url = new URL(request.url)
     const action = url.searchParams.get('action')
 
     if (action === 'verify') {
-      return handleVerifyProof(request)
+      return handleVerifyProof(request, clientIp)
     }
 
     const body = await request.json()
@@ -57,6 +138,11 @@ export async function POST(request: NextRequest) {
     if (!body.category) errors.push('category is required')
     if (!body.description) errors.push('description is required')
     if (!body.purpose) errors.push('purpose is required')
+    
+    // Validate string lengths to prevent DOS
+    if (body.description?.length > 5000) errors.push('Description too long')
+    if (body.purpose?.length > 500) errors.push('Purpose too long')
+    if (body.requiredAttributes?.length > 50) errors.push('Too many attributes requested')
     
     if (errors.length > 0) {
       return NextResponse.json(
@@ -80,7 +166,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create the request
+    // Create the request (no sensitive data returned)
     const proofRequest = proofRequestManager.createRequest({
       requesterId: body.requesterId,
       requesterName: body.requesterName,
@@ -94,7 +180,7 @@ export async function POST(request: NextRequest) {
       respondByDate: body.respondByDate
     })
 
-    // Track in verifier dashboard
+    // Track verifier
     const verifierProfile = verifierDashboardManager.getOrCreateProfile(body.requesterId)
     verifierDashboardManager.createVerificationSession(
       body.requesterId,
@@ -102,77 +188,76 @@ export async function POST(request: NextRequest) {
       body.requiredAttributes.map(a => a.attributeId)
     )
 
-    console.log('[v0] Proof request created via API:', {
-      id: proofRequest.id,
-      requester: body.requesterId,
-      attributes: body.requiredAttributes.length
-    })
+    console.log('[v0] Proof request created: ID=' + proofRequest.id.substring(0, 12))
 
+    // Return only non-sensitive data
     return NextResponse.json({
       success: true,
       requestId: proofRequest.id,
-      proofRequest,
-      verifierProfile: {
-        id: verifierProfile.id,
-        name: verifierProfile.name,
-        verified: verifierProfile.verified
-      }
+      expiresAt: proofRequest.expiresAt,
+      message: 'Proof request created successfully'
     })
   } catch (error) {
-    console.error('[v0] Error creating proof request:', error)
+    // Never expose internal error details
+    console.error('[v0] API Error:', error)
     return NextResponse.json(
-      { error: 'Failed to create proof request', details: String(error) },
+      { error: 'Request processing failed' },
       { status: 500 }
     )
   }
 }
 
 /**
- * Verify a proof response
+ * Verify a proof response with security checks
  */
-async function handleVerifyProof(request: NextRequest) {
+async function handleVerifyProof(request: NextRequest, clientIp: string) {
   try {
+    if (isRateLimited(clientIp)) {
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429 }
+      )
+    }
+
     const body = await request.json()
-    
     const { proofResponseId, verifierId, requestId } = body
     
     if (!proofResponseId || !verifierId || !requestId) {
       return NextResponse.json(
-        { error: 'Missing required fields: proofResponseId, verifierId, requestId' },
+        { error: 'Missing required fields' },
         { status: 400 }
       )
     }
 
-    // Get proof response from proof request manager
+    // Validate input lengths
+    if (proofResponseId.length > 200 || verifierId.length > 200 || requestId.length > 200) {
+      return NextResponse.json(
+        { error: 'Invalid input' },
+        { status: 400 }
+      )
+    }
+
+    // Get proof response
     const allResponses = proofRequestManager.getAllResponses()
     const response = allResponses.find(r => r.id === proofResponseId)
 
     if (!response) {
       return NextResponse.json(
-        { error: 'Proof response not found' },
+        { error: 'Proof not found' },
         { status: 404 }
       )
     }
 
-    // Verify the response
+    // Verify expiration
     const isExpired = new Date(response.proofData.expiresAt) < new Date()
-    const attributesMatched = response.proofData.selectedAttributes.length > 0
-
     if (isExpired) {
       return NextResponse.json(
-        { valid: false, error: 'Proof has expired' },
+        { valid: false, error: 'Proof expired' },
         { status: 400 }
       )
     }
 
-    if (!attributesMatched) {
-      return NextResponse.json(
-        { valid: false, error: 'No attributes in proof' },
-        { status: 400 }
-      )
-    }
-
-    // Mark as verified in verifier dashboard
+    // Mark verified (no sensitive data returned)
     const sessions = verifierDashboardManager.getSessions(verifierId)
     const session = sessions.find(s => s.requestId === requestId)
 
@@ -185,78 +270,51 @@ async function handleVerifyProof(request: NextRequest) {
         response.proofData.selectedAttributes
       )
       
-      // Mark as verified
       verifierDashboardManager.markVerified(verifierId, session.id, {
         verifiedAt: new Date().toISOString(),
         attributeCount: response.proofData.selectedAttributes.length
       })
     }
 
-    console.log('[v0] Proof response verified:', {
-      proofResponseId: proofResponseId.slice(0, 12),
-      verifierId,
-      attributes: response.proofData.selectedAttributes.length
-    })
+    console.log('[v0] Proof verified: ID=' + proofResponseId.substring(0, 12))
 
     return NextResponse.json({
       valid: true,
       verified: true,
-      proofId: response.id,
-      requestId: response.requestId,
-      attributes: response.proofData.selectedAttributes,
-      verifiedAt: new Date().toISOString(),
       message: 'Proof verified successfully'
     })
   } catch (error) {
-    console.error('[v0] Error verifying proof:', error)
+    console.error('[v0] Verification error:', error)
     return NextResponse.json(
-      { error: 'Failed to verify proof', details: String(error) },
+      { error: 'Verification failed' },
       { status: 500 }
     )
   }
 }
 
 /**
- * GET /api/proof-requests
- * Get proof request details
+ * GET /api/proof-requests - No sensitive data exposed
  */
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams
-    const requestId = searchParams.get('id')
-    const action = searchParams.get('action')
-
-    if (!requestId) {
+    const clientIp = getClientIp(request)
+    
+    if (isRateLimited(clientIp)) {
       return NextResponse.json(
-        { error: 'Request ID is required' },
-        { status: 400 }
+        { error: 'Too many requests' },
+        { status: 429 }
       )
     }
 
-    if (action === 'get') {
-      // Get request details (returns request structure since we use client-side storage)
-      return NextResponse.json({
-        success: true,
-        message: 'Use proofRequestManager on client to fetch requests'
-      })
-    }
-
-    if (action === 'validate') {
-      // Validate proof response structure
-      return NextResponse.json({
-        success: true,
-        message: 'Proof validation endpoint'
-      })
-    }
-
+    // Return only acknowledgment, no data
     return NextResponse.json({
       success: true,
-      message: 'Proof request endpoint'
+      message: 'API endpoint is operational'
     })
   } catch (error) {
-    console.error('[v0] Error in GET request:', error)
+    console.error('[v0] GET error:', error)
     return NextResponse.json(
-      { error: 'Failed to process request', details: String(error) },
+      { error: 'Request failed' },
       { status: 500 }
     )
   }

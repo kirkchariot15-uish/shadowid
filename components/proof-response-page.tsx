@@ -18,6 +18,55 @@ import {
 import { STANDARD_ATTRIBUTES, AttributeSchema } from '@/lib/attribute-schema'
 import { addActivityLog } from '@/lib/activity-logger'
 
+// Rate limiting for proof generation
+const PROOF_RATE_LIMIT = {
+  maxPerHour: 10,
+  maxPerDay: 50,
+  storageKey: 'proof-generation-timestamps'
+}
+
+function checkProofRateLimit(): { allowed: boolean; reason?: string } {
+  if (typeof window === 'undefined') return { allowed: true }
+  
+  try {
+    const stored = localStorage.getItem(PROOF_RATE_LIMIT.storageKey)
+    const timestamps: number[] = stored ? JSON.parse(stored) : []
+    const now = Date.now()
+    const oneHourAgo = now - 60 * 60 * 1000
+    const oneDayAgo = now - 24 * 60 * 60 * 1000
+    
+    // Remove old timestamps
+    const recentTimestamps = timestamps.filter(t => t > oneDayAgo)
+    
+    // Check hourly limit
+    const recentHour = recentTimestamps.filter(t => t > oneHourAgo)
+    if (recentHour.length >= PROOF_RATE_LIMIT.maxPerHour) {
+      const nextAllowedTime = new Date(recentHour[0] + 60 * 60 * 1000)
+      return { 
+        allowed: false, 
+        reason: `Too many proofs generated. Try again after ${nextAllowedTime.toLocaleTimeString()}` 
+      }
+    }
+    
+    // Check daily limit
+    if (recentTimestamps.length >= PROOF_RATE_LIMIT.maxPerDay) {
+      return { 
+        allowed: false, 
+        reason: 'Daily proof generation limit reached. Try again tomorrow.' 
+      }
+    }
+    
+    // Add current timestamp
+    recentTimestamps.push(now)
+    localStorage.setItem(PROOF_RATE_LIMIT.storageKey, JSON.stringify(recentTimestamps))
+    
+    return { allowed: true }
+  } catch (error) {
+    console.error('[v0] Rate limit check failed:', error)
+    return { allowed: true } // Allow on error
+  }
+}
+
 export function ProofResponsePage() {
   const router = useRouter()
   const params = useParams()
@@ -102,6 +151,14 @@ export function ProofResponsePage() {
       return
     }
 
+    // SECURITY: Check rate limit
+    const rateCheck = checkProofRateLimit()
+    if (!rateCheck.allowed) {
+      setError(rateCheck.reason || 'Too many proofs generated. Please try again later.')
+      addActivityLog('Generate Proof', 'security', 'Rate limit exceeded', 'warning')
+      return
+    }
+
     setIsGenerating(true)
     setError('')
 
@@ -127,10 +184,9 @@ export function ProofResponsePage() {
       const nullifier = proofRequestManager.createNullifier(proofData, requestLinkId)
 
       console.log('[v0] Generating proof response for request:', {
-        requestId: request.id,
+        requestId: request.id.substring(0, 12),
         requester: request.requesterName,
-        attributes: selectedAttributes.length,
-        linkId: requestLinkId.slice(0, 16) + '...'
+        attributes: selectedAttributes.length
       })
 
       // Create QR code with request link

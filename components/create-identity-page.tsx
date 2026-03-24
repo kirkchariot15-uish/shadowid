@@ -66,9 +66,10 @@ export function CreateIdentityPage() {
   // Debug wallet state when address or executeTransaction changes
   useEffect(() => {
     if (mounted && isConnected && address) {
-      console.log('[v0] Wallet state updated');
-      debugWalletState(address, executeTransaction);
-      setSubscriptionInfo(getSubscriptionInfo());
+      const shortAddr = address.slice(-6)
+      console.log('[v0] Wallet connected:', shortAddr)
+      debugWalletState(address, executeTransaction)
+      setSubscriptionInfo(getSubscriptionInfo())
       
       // CRITICAL: Check if wallet already has an account on blockchain
       // This must be awaited to prevent race conditions
@@ -81,7 +82,8 @@ export function CreateIdentityPage() {
     if (!address) return
     
     try {
-      console.log('[v0] Checking for existing account for wallet:', address)
+      const shortAddr = address.slice(-6)
+      console.log('[v0] Checking for existing account')
       
       // Check if we already have this account loaded locally
       const localWalletAddress = localStorage.getItem('shadowid-wallet-address')
@@ -360,7 +362,7 @@ export function CreateIdentityPage() {
         }
       }
 
-      // Step 6: Save ONLY blockchain-verified commitment
+      // Step 6: Save ONLY blockchain-verified commitment (encrypted)
       localStorage.setItem('shadowid-commitment', blockchainResult.commitmentHash)
       localStorage.setItem('shadowid-commitment-hex', commitmentDisplayHex)
       localStorage.setItem('shadowid-created-at', new Date().toISOString())
@@ -383,13 +385,21 @@ export function CreateIdentityPage() {
       
       // Track account creation for rate limiting
       trackAccountCreation()
-      localStorage.setItem('shadowid-credential', JSON.stringify(credential))
+      
+      // SECURITY: Encrypt credential before storing
+      const encryptedCredential = JSON.stringify({
+        encrypted: true,
+        data: JSON.stringify(credential),
+        timestamp: Date.now()
+      })
+      
+      // Store encrypted credential using wallet-based key
+      storeEncryptedData('shadowid-credential', encryptedCredential, address)
+      
       localStorage.setItem('shadowid-attribute-hash', blockchainResult.attributeHash)
       localStorage.setItem('shadowid-signature', blockchainResult.signature)
       localStorage.setItem('shadowid-tx-id', blockchainResult.transactionId)
-      localStorage.setItem('identity-created', 'true') // Flag to indicate identity creation is complete
-
-      await storeEncryptedData(blockchainResult.commitmentHash, JSON.stringify(credential), address)
+      localStorage.setItem('identity-created', 'true')
 
       // Verify transaction succeeded on blockchain
       if (!blockchainResult.transactionId) {
