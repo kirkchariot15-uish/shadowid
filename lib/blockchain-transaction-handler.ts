@@ -38,7 +38,7 @@ function generateTransactionKey(params: TransactionParams): string {
 async function waitForTransactionConfirmation(
   transactionId: string,
   getStatusFn: ((txId: string) => Promise<string | null>) | undefined,
-  maxWaitMs: number = 120 * 1000 // 2 minutes max
+  maxWaitMs: number = 180 * 1000 // 3 minutes max (increased from 2 for fee calculation)
 ): Promise<{ confirmed: boolean; status?: string; error?: string }> {
   if (!getStatusFn) {
     console.warn('[v0] No getTransactionStatus function provided, assuming confirmed');
@@ -194,7 +194,7 @@ async function executeTransactionWithRetry(
             inputs: params.inputs,
           }
         ],
-        fee: params.fee || 100000,
+        fee: params.fee || 1000000, // Default fee increased for proving operations
         feePrivate: params.privateFee ?? false,
       };
 
@@ -211,7 +211,7 @@ async function executeTransactionWithRetry(
       const confirmationResult = await waitForTransactionConfirmation(
         transactionId,
         params.getTransactionStatus,
-        60000 // 1 minute timeout
+        120000 // 2 minute timeout (increased from 1 minute to allow fee calculation)
       );
       
       if (!confirmationResult.confirmed) {

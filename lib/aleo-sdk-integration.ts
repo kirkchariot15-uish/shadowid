@@ -88,7 +88,7 @@ export async function executeTransactionWithWallet(
       program: programId,
       functionName: request.functionName,
       inputs: request.inputs,
-      fee: request.fee || 100000,
+      fee: request.fee || 1000000, // Increased default fee from 100000 to 1000000 for testnet proving
     });
 
     if (!result.success) {
@@ -443,7 +443,7 @@ export async function registerAttributesAndGetCommitment(
         commitmentField,           // Commitment as field
         attributeHashField,        // Attribute hash as field
       ],
-      fee: 100000,
+      fee: 1000000, // Increased fee for proving operations
       getTransactionStatus: getTransactionStatusFn,  // Pass wallet SDK method
     };
 
