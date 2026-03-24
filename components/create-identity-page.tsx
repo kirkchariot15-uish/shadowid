@@ -40,7 +40,7 @@ export function CreateIdentityPage() {
 
   // When commitment hash is generated, show completion after brief pause
   useEffect(() => {
-    if (commitmentHash && isConfirming) {
+    if (commitmentHash) {
       console.log('[v0] Commitment hash generated, showing completion screen')
       toast.success('ShadowID Created Successfully! 🎉', {
         description: 'Your zero-knowledge identity is ready to use.',
@@ -51,7 +51,7 @@ export function CreateIdentityPage() {
         setCreationComplete(true)
       }, 500) // Brief pause to show hash is ready
     }
-  }, [commitmentHash, isConfirming])
+  }, [commitmentHash])
 
   // Ensure component only renders on client with crypto available
   useEffect(() => {
