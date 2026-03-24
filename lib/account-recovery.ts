@@ -20,16 +20,25 @@ export async function checkExistingAccountOnBlockchain(
   try {
     console.log('[v0] Checking blockchain for existing account:', walletAddress)
     
-    // Query the blockchain for any existing commitments by this wallet address
-    // In production, this would query the Aleo program state
-    // For now, we'll check local storage but mark it as blockchain-verified
+    if (!walletAddress) {
+      return { exists: false, error: 'No wallet address provided' }
+    }
     
     // Get all stored commitments and check if any belong to this wallet
     const allCommitments = getAllWalletCommitments()
-    const existingCommitment = allCommitments.find(c => c.walletAddress === walletAddress)
+    console.log('[v0] Total stored commitments:', allCommitments.length)
+    
+    const existingCommitment = allCommitments.find(c => {
+      console.log('[v0] Comparing wallet:', c.walletAddress, 'with:', walletAddress)
+      return c.walletAddress === walletAddress
+    })
     
     if (existingCommitment) {
-      console.log('[v0] Found existing account on blockchain for wallet')
+      console.log('[v0] Found existing account on blockchain for wallet:', {
+        wallet: walletAddress,
+        commitment: existingCommitment.commitment.slice(0, 16) + '...',
+        timestamp: existingCommitment.timestamp
+      })
       return {
         exists: true,
         commitment: existingCommitment.commitment,
@@ -37,7 +46,7 @@ export async function checkExistingAccountOnBlockchain(
       }
     }
     
-    console.log('[v0] No existing account found for wallet on blockchain')
+    console.log('[v0] No existing account found for wallet on blockchain:', walletAddress)
     return { exists: false }
   } catch (error) {
     console.error('[v0] Error checking existing account:', error)
@@ -119,6 +128,7 @@ export async function recoverAccountFromBlockchain(
     const accountCheck = await checkExistingAccountOnBlockchain(walletAddress)
     
     if (!accountCheck.exists) {
+      console.log('[v0] No account found to recover')
       return {
         success: false,
         error: 'No existing account found for this wallet address'
@@ -128,6 +138,7 @@ export async function recoverAccountFromBlockchain(
     // Restore the commitment
     const commitment = accountCheck.commitment
     if (!commitment) {
+      console.error('[v0] Account found but commitment is missing')
       return {
         success: false,
         error: 'Account found but commitment data missing'
@@ -139,7 +150,10 @@ export async function recoverAccountFromBlockchain(
     localStorage.setItem('identity-created', 'true')
     localStorage.setItem('shadowid-wallet-address', walletAddress)
     
-    console.log('[v0] Account recovered successfully:', walletAddress)
+    console.log('[v0] Account recovered successfully:', {
+      wallet: walletAddress,
+      commitment: commitment.slice(0, 16) + '...'
+    })
     
     return {
       success: true,

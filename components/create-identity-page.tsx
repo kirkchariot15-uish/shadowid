@@ -65,12 +65,13 @@ export function CreateIdentityPage() {
 
   // Debug wallet state when address or executeTransaction changes
   useEffect(() => {
-    if (mounted && isConnected) {
+    if (mounted && isConnected && address) {
       console.log('[v0] Wallet state updated');
       debugWalletState(address, executeTransaction);
       setSubscriptionInfo(getSubscriptionInfo());
       
       // CRITICAL: Check if wallet already has an account on blockchain
+      // This must be awaited to prevent race conditions
       checkWalletForExistingAccount();
     }
   }, [address, executeTransaction, mounted, isConnected])
@@ -81,33 +82,37 @@ export function CreateIdentityPage() {
     
     try {
       console.log('[v0] Checking for existing account for wallet:', address)
+      
+      // Check if we already have this account loaded locally
+      const localWalletAddress = localStorage.getItem('shadowid-wallet-address')
+      const localCommitment = localStorage.getItem('shadowid-commitment')
+      
+      if (localWalletAddress === address && localCommitment) {
+        console.log('[v0] Account already loaded locally for this wallet')
+        return
+      }
+      
+      // Check blockchain for existing account
       const existingAccount = await checkExistingAccountOnBlockchain(address)
       
       if (existingAccount.exists && existingAccount.commitment) {
-        console.log('[v0] Found existing account on blockchain!')
+        console.log('[v0] Found existing account on blockchain, auto-recovering...')
         
-        // Show recovery confirmation dialog
-        const shouldRecover = confirm(
-          'We detected an existing ShadowID for this wallet address. Would you like to recover it? Click OK to restore your account or Cancel to create a new one.'
-        )
-        
-        if (shouldRecover) {
-          // Recover the account
-          const recoveryResult = await recoverAccountFromBlockchain(address)
-          if (recoveryResult.success) {
-            toast.success('Account Recovered! 🎉', {
-              description: 'Your existing ShadowID has been restored.',
-              duration: 5000,
-            })
-            // Redirect to identity management
-            setTimeout(() => {
-              window.location.href = '/identity'
-            }, 2000)
-          } else {
-            toast.error('Recovery failed', {
-              description: recoveryResult.error || 'Could not recover your account',
-            })
-          }
+        // Automatically recover the account without asking
+        const recoveryResult = await recoverAccountFromBlockchain(address)
+        if (recoveryResult.success) {
+          toast.success('Account Recovered! 🎉', {
+            description: 'Your existing ShadowID has been restored.',
+            duration: 5000,
+          })
+          // Redirect to identity management after showing recovery message
+          setTimeout(() => {
+            window.location.href = '/identity'
+          }, 2000)
+        } else {
+          toast.error('Recovery failed', {
+            description: recoveryResult.error || 'Could not recover your account',
+          })
         }
       }
     } catch (error) {
