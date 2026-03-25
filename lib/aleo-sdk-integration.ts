@@ -443,7 +443,7 @@ export async function registerAttributesAndGetCommitment(
         commitmentField,           // Commitment as field
         attributeHashField,        // Attribute hash as field
       ],
-      fee: 1000000, // Increased fee for proving operations
+      fee: 5000000, // 5 ALEO tokens (pricing standard) = 5,000,000 micro-ALEO
       getTransactionStatus: getTransactionStatusFn,  // Pass wallet SDK method
     };
 

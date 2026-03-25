@@ -38,7 +38,7 @@ function generateTransactionKey(params: TransactionParams): string {
 async function waitForTransactionConfirmation(
   transactionId: string,
   getStatusFn: ((txId: string) => Promise<string | null>) | undefined,
-  maxWaitMs: number = 180 * 1000 // 3 minutes max (increased from 2 for fee calculation)
+  maxWaitMs: number = 300 * 1000 // 5 minutes max (increased from 3 for fee calculation timeout)
 ): Promise<{ confirmed: boolean; status?: string; error?: string }> {
   if (!getStatusFn) {
     console.warn('[v0] No getTransactionStatus function provided, assuming confirmed');
@@ -194,7 +194,7 @@ async function executeTransactionWithRetry(
             inputs: params.inputs,
           }
         ],
-        fee: params.fee || 1000000, // Default fee increased for proving operations
+        fee: params.fee || 5000000, // Default fee: 5 ALEO tokens = 5,000,000 micro-ALEO
         feePrivate: params.privateFee ?? false,
       };
 
@@ -211,7 +211,7 @@ async function executeTransactionWithRetry(
       const confirmationResult = await waitForTransactionConfirmation(
         transactionId,
         params.getTransactionStatus,
-        120000 // 2 minute timeout (increased from 1 minute to allow fee calculation)
+        300000 // 5 minute timeout (increased to allow wallet time for fee record calculation)
       );
       
       if (!confirmationResult.confirmed) {
