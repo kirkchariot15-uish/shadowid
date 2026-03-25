@@ -36,10 +36,20 @@ export default function DashboardPage() {
       setCredentials(JSON.parse(attrs).length)
     }
 
-    // Initialize proof request system when user connects
+    // CRITICAL: Verify wallet matches the ShadowID owner before initializing
+    const storedWallet = localStorage.getItem('shadowid-wallet-address')
     const userCommitment = localStorage.getItem('shadowid-commitment')
+    
+    // Only initialize proof request system if:
+    // 1. User has an address connected
+    // 2. User has a ShadowID created
+    // 3. The ShadowID belongs to this wallet (or no wallet was stored - first user)
     if (address && userCommitment) {
-      initializeProofRequestSystem(userCommitment, address)
+      if (storedWallet === undefined || storedWallet === address) {
+        initializeProofRequestSystem(userCommitment, address)
+      } else if (storedWallet !== address) {
+        console.warn('[v0] Wallet mismatch: cannot access ShadowID from different wallet')
+      }
     }
   }, [address])
 

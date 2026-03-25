@@ -54,6 +54,16 @@ export function IdentityManagementPage() {
 
   const loadIdentity = () => {
     try {
+      // CRITICAL: Verify wallet address matches the one who created the ShadowID
+      const storedWallet = localStorage.getItem('shadowid-wallet-address')
+      
+      // Only load identity if wallet matches
+      if (storedWallet && storedWallet !== address) {
+        console.warn('[v0] Wallet mismatch: stored address does not match current wallet')
+        setLoading(false)
+        return
+      }
+
       const storedCommitment = localStorage.getItem('shadowid-commitment')
       const storedCommitmentHex = localStorage.getItem('shadowid-commitment-hex')
       const storedCreatedAt = localStorage.getItem('shadowid-created-at')
