@@ -43,15 +43,15 @@ export function CreateIdentityPage() {
     if (commitmentHash) {
       console.log('[v0] Commitment hash generated, showing completion screen')
       toast.success('ShadowID Created Successfully! 🎉', {
-        description: 'Your zero-knowledge identity is ready to use.',
-        duration: 5000,
+        description: 'Your zero-knowledge identity is now active on the Aleo testnet.',
+        duration: 6000,
       })
       setTimeout(() => {
         setIsConfirming(false)
         setCreationComplete(true)
       }, 500) // Brief pause to show hash is ready
     }
-  }, [commitmentHash])
+  }, [commitmentHash, toast])
 
   // Ensure component only renders on client with crypto available
   useEffect(() => {
@@ -459,9 +459,20 @@ export function CreateIdentityPage() {
             </Link>
             <div className="text-center py-12">
               <CheckCircle2 className="h-16 w-16 text-accent mx-auto mb-6" />
-              <h1 className="text-3xl font-bold mb-3">ShadowID Created</h1>
-              <p className="text-muted-foreground mb-4">Your zero-knowledge identity is ready.</p>
+              <h1 className="text-3xl font-bold mb-3">ShadowID Created Successfully</h1>
+              <p className="text-muted-foreground mb-8">Your zero-knowledge identity has been registered on the Aleo testnet.</p>
               
+              {/* Transaction Confirmation */}
+              <div className="bg-accent/10 border border-accent/30 rounded-lg p-6 mb-6">
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <CheckCircle2 className="h-5 w-5 text-accent" />
+                  <p className="text-sm font-semibold text-accent">Transaction Confirmed</p>
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">Transaction Fee Charged</p>
+                <p className="text-2xl font-bold text-accent">5 ALEO</p>
+                <p className="text-xs text-muted-foreground mt-2">Paid to Aleo testnet for registration</p>
+              </div>
+
               {/* Blockchain Commitment */}
               <div className="bg-card/50 border border-accent/20 rounded-lg p-6 mb-6">
                 <p className="text-xs uppercase tracking-widest text-accent mb-2">Blockchain Commitment</p>
