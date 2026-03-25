@@ -62,23 +62,23 @@ export function LandingHero() {
               <Shield className="w-8 h-8 text-accent mb-4" />
               <h3 className="font-semibold text-lg mb-2">Cryptographic Privacy</h3>
               <p className="text-sm text-muted-foreground">
-                Your data stays encrypted. Only commitments are verified on-chain.
+                Personal data remains encrypted locally. Blockchain verification operates exclusively on cryptographic commitments, not raw attributes.
               </p>
             </div>
 
             <div className="flex flex-col items-start">
               <Zap className="w-8 h-8 text-accent mb-4" />
-              <h3 className="font-semibold text-lg mb-2">Selective Disclosure</h3>
+              <h3 className="font-semibold text-lg mb-2">Selective Attribute Disclosure</h3>
               <p className="text-sm text-muted-foreground">
-                Share specific attributes without revealing your complete identity.
+                Prove specific claims without exposing complete identity. Share only the information required for verification.
               </p>
             </div>
 
             <div className="flex flex-col items-start">
               <Lock className="w-8 h-8 text-accent mb-4" />
-              <h3 className="font-semibold text-lg mb-2">Verifiable On-Chain</h3>
+              <h3 className="font-semibold text-lg mb-2">Blockchain Attestation</h3>
               <p className="text-sm text-muted-foreground">
-                Proofs are registered on Aleo blockchain for permanent verification.
+                All identity commitments are recorded on the Aleo blockchain for immutable, transparent verification.
               </p>
             </div>
           </div>
@@ -87,9 +87,9 @@ export function LandingHero() {
 
       <section className="py-20 px-4">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl font-bold mb-4 text-center">How It Works</h2>
+          <h2 className="text-3xl font-bold mb-4 text-center">Core Process</h2>
           <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
-            Build verifiable credibility on the blockchain through peer attestation and selective disclosure.
+            Establish verifiable identity credentials through decentralized peer verification and zero-knowledge cryptography.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -97,9 +97,9 @@ export function LandingHero() {
               <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-accent/10 mb-4">
                 <span className="text-xl font-bold text-accent">1</span>
               </div>
-              <h3 className="font-semibold text-lg mb-3">Create Identity</h3>
+              <h3 className="font-semibold text-lg mb-3">Initialize Identity</h3>
               <p className="text-sm text-muted-foreground">
-                Select attributes you want to claim (Age Range, Country, Job Title, etc.) and register your commitment on the Aleo blockchain.
+                Select and activate verifiable attributes (Age Range, Jurisdiction, Professional Title, etc.). Register cryptographic commitment on Aleo blockchain.
               </p>
             </div>
 
@@ -107,9 +107,9 @@ export function LandingHero() {
               <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-accent/10 mb-4">
                 <span className="text-xl font-bold text-accent">2</span>
               </div>
-              <h3 className="font-semibold text-lg mb-3">Get Endorsed</h3>
+              <h3 className="font-semibold text-lg mb-3">Accrue Endorsements</h3>
               <p className="text-sm text-muted-foreground">
-                Peers endorse your attributes. Each endorsement increases your Shadow Score (0-100). Build community-verified credibility.
+                Collect peer attestations for claimed attributes. Shadow Score increases with verified endorsements, reflecting community-validated credibility.
               </p>
             </div>
 
@@ -117,9 +117,9 @@ export function LandingHero() {
               <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-accent/10 mb-4">
                 <span className="text-xl font-bold text-accent">3</span>
               </div>
-              <h3 className="font-semibold text-lg mb-3">Prove Selectively</h3>
+              <h3 className="font-semibold text-lg mb-3">Generate Proofs</h3>
               <p className="text-sm text-muted-foreground">
-                Generate cryptographic proofs as QR codes proving specific attributes without revealing your identity or other data.
+                Create selective disclosure proofs encoded as QR codes. Verify targeted claims without exposing identity or extraneous information.
               </p>
             </div>
           </div>
@@ -128,37 +128,37 @@ export function LandingHero() {
 
       <section className="py-20 px-4 bg-card/30">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl font-bold mb-4 text-center">Built For Real Privacy</h2>
+          <h2 className="text-3xl font-bold mb-4 text-center">Privacy by Design</h2>
           <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
-            ShadowID gives you control over your identity data. Prove what matters without exposing everything.
+            Full user control over identity data. Verify credibility without comprehensive data exposure.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="border border-border rounded-lg p-8 bg-background/50 hover:border-accent/50 transition-colors">
-              <h3 className="font-semibold text-lg mb-3">Zero-Knowledge Proofs</h3>
+              <h3 className="font-semibold text-lg mb-3">Zero-Knowledge Cryptography</h3>
               <p className="text-sm text-muted-foreground">
-                Verify claims about yourself without revealing the underlying data. Your attributes stay encrypted locally.
+                Authenticate claims without disclosing underlying data. Attributes remain encrypted on device, inaccessible to external parties.
               </p>
             </div>
 
             <div className="border border-border rounded-lg p-8 bg-background/50 hover:border-accent/50 transition-colors">
-              <h3 className="font-semibold text-lg mb-3">Peer-Verified Credibility</h3>
+              <h3 className="font-semibold text-lg mb-3">Decentralized Reputation</h3>
               <p className="text-sm text-muted-foreground">
-                Build trust through community endorsements. Shadow Score reflects your verified credibility on-chain.
+                Community-validated credibility independent of centralized systems. Shadow Score represents peer-verified attribute claims.
               </p>
             </div>
 
             <div className="border border-border rounded-lg p-8 bg-background/50 hover:border-accent/50 transition-colors">
-              <h3 className="font-semibold text-lg mb-3">Selective Disclosure</h3>
+              <h3 className="font-semibold text-lg mb-3">Granular Disclosure Control</h3>
               <p className="text-sm text-muted-foreground">
-                Share specific attributes without revealing your full identity. Perfect for age verification or employment checks.
+                Expose only necessary attributes for specific verification scenarios. Age confirmation, professional status, or jurisdictional claims independently.
               </p>
             </div>
 
             <div className="border border-border rounded-lg p-8 bg-background/50 hover:border-accent/50 transition-colors">
-              <h3 className="font-semibold text-lg mb-3">Blockchain Verified</h3>
+              <h3 className="font-semibold text-lg mb-3">Immutable Verification Layer</h3>
               <p className="text-sm text-muted-foreground">
-                All identities and endorsements are registered on the Aleo blockchain for permanent, transparent verification.
+                All identity commitments and endorsements recorded on Aleo blockchain. Permanent audit trail without centralized intermediary.
               </p>
             </div>
           </div>
