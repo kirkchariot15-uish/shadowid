@@ -164,6 +164,24 @@ export function IdentityManagementPage() {
     }
   }
 
+  // Initialize edited attributes when entering edit mode
+  const handleStartEditing = () => {
+    if (identity) {
+      // Pre-populate with current enabled states
+      const currentStates: Record<string, boolean> = {}
+      Object.entries(identity.activatedAttributes).forEach(([attrId, data]) => {
+        currentStates[attrId] = data.enabled || false
+      })
+      setEditedAttributes(currentStates)
+    }
+    setIsEditing(true)
+  }
+
+  const handleCancelEditing = () => {
+    setEditedAttributes({})
+    setIsEditing(false)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -211,7 +229,7 @@ export function IdentityManagementPage() {
           <div className="flex gap-2">
             {!isEditing && (
               <Button
-                onClick={() => setIsEditing(true)}
+                onClick={handleStartEditing}
                 variant="outline"
                 className="gap-2"
               >
@@ -222,7 +240,7 @@ export function IdentityManagementPage() {
             {isEditing && (
               <>
                 <Button
-                  onClick={() => setIsEditing(false)}
+                  onClick={handleCancelEditing}
                   variant="outline"
                 >
                   Cancel
