@@ -13,7 +13,7 @@ export interface UseCameraScannerState {
   videoRef: React.RefObject<HTMLVideoElement>
 }
 
-const FRAME_INTERVAL = 200 // Process frame every 200ms for better detection speed
+const FRAME_INTERVAL = 100 // Process frame every 100ms (increased from 200ms) for faster detection
 
 /**
  * Hook for real-time QR code scanning from camera
@@ -68,6 +68,13 @@ export function useQRCameraScanner(): UseCameraScannerState {
       return
     }
 
+    // Check if video is actually playing and has dimensions
+    if (!videoRef.current.srcObject || videoRef.current.videoWidth === 0 || videoRef.current.videoHeight === 0) {
+      console.log('[v0] Video not ready yet, retrying...')
+      animationFrameRef.current = requestAnimationFrame(processVideoFrame)
+      return
+    }
+
     // Throttle frame processing to reduce CPU usage
     const now = Date.now()
     if (now - lastProcessTimeRef.current < FRAME_INTERVAL) {
@@ -90,7 +97,7 @@ export function useQRCameraScanner(): UseCameraScannerState {
       
       // Handle decode errors gracefully
       if (result && !result.success && result.error) {
-        console.log('[v0] QR decode attempt - no valid code found:', result.error)
+        console.log('[v0] QR decode attempt - no valid code found')
       }
     } catch (err) {
       console.error('[v0] Frame processing error:', err)

@@ -80,52 +80,39 @@ function multiPassEnhance(ctx: CanvasRenderingContext2D, width: number, height: 
 /**
  * Decode QR code from canvas with multi-strategy detection
  * Tries multiple preprocessing and decoding strategies for maximum reliability
+ * Optimized for real-time camera frame detection
  */
 function decodeQRFromCanvas(canvas: HTMLCanvasElement): string | null {
   try {
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
 
-    // Strategy 1: Otsu-thresholded enhanced image
-    try {
-      const enhanced = multiPassEnhance(ctx, canvas.width, canvas.height);
-      const result = jsQR(enhanced.data, canvas.width, canvas.height, {
-        inversionAttempts: 'dontInvert'
-      });
-      if (result?.data) {
-        console.log('[v0] QR detected via Otsu thresholding');
-        return result.data;
-      }
-    } catch (err) {
-      console.log('[v0] Otsu strategy failed:', err);
-    }
-
-    // Strategy 2: Otsu with inversion attempt
-    try {
-      const enhanced = multiPassEnhance(ctx, canvas.width, canvas.height);
-      const result = jsQR(enhanced.data, canvas.width, canvas.height, {
-        inversionAttempts: 'attemptBoth'
-      });
-      if (result?.data) {
-        console.log('[v0] QR detected via Otsu with inversion');
-        return result.data;
-      }
-    } catch (err) {
-      console.log('[v0] Otsu inversion strategy failed:', err);
-    }
-
-    // Strategy 3: Raw image with inversion
+    // Strategy 1: Raw image with both inversion attempts (fastest, most compatible)
     try {
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const result = jsQR(imageData.data, canvas.width, canvas.height, {
         inversionAttempts: 'attemptBoth'
       });
       if (result?.data) {
-        console.log('[v0] QR detected from raw image');
+        console.log('[v0] QR detected via raw image');
         return result.data;
       }
     } catch (err) {
-      console.log('[v0] Raw image strategy failed:', err);
+      console.log('[v0] Raw image strategy failed');
+    }
+
+    // Strategy 2: Otsu-thresholded enhanced image (better for poor lighting)
+    try {
+      const enhanced = multiPassEnhance(ctx, canvas.width, canvas.height);
+      const result = jsQR(enhanced.data, canvas.width, canvas.height, {
+        inversionAttempts: 'attemptBoth'
+      });
+      if (result?.data) {
+        console.log('[v0] QR detected via Otsu thresholding');
+        return result.data;
+      }
+    } catch (err) {
+      console.log('[v0] Otsu strategy failed');
     }
 
     console.log('[v0] No QR code detected in frame');
@@ -219,17 +206,34 @@ export async function decodeQRFromImage(file: File): Promise<QRDecodeResult> {
  */
 export function decodeQRFromVideoFrame(video: HTMLVideoElement): QRDecodeResult | null {
   try {
+    // Validate video dimensions
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      console.log('[v0] Video dimensions not ready')
+      return null
+    }
+
     const canvas = document.createElement('canvas')
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
     const ctx = canvas.getContext('2d')
     
-    if (!ctx) return null
+    if (!ctx) {
+      console.error('[v0] Failed to get canvas context')
+      return null
+    }
     
-    ctx.drawImage(video, 0, 0)
+    try {
+      ctx.drawImage(video, 0, 0)
+    } catch (err) {
+      console.log('[v0] Could not draw video frame:', err)
+      return null
+    }
+    
     const qrData = decodeQRFromCanvas(canvas)
     
-    if (!qrData) return null
+    if (!qrData) {
+      return null
+    }
     
     return parseAndValidateQRData(qrData)
   } catch (error) {
