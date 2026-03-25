@@ -1,60 +1,51 @@
 'use client'
 
-// Force cache invalidation - v2.1
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Lock, Zap, Shield } from 'lucide-react'
-import { WalletMultiButton } from '@/components/wallet-button'
-import { IDCardPreview } from '@/components/id-card-preview'
-import { useAleoWallet } from '@/hooks/use-aleo-wallet'
-import { ArrowRight } from 'lucide-react'
+import { Shield, Zap, Lock, ChevronDown } from 'lucide-react'
+import { useState } from 'react'
 
 export function LandingHero() {
-  const { address } = useAleoWallet()
-  const isConnected = !!address
+  const [expandedCore, setExpandedCore] = useState<number | null>(null)
+  const [expandedPrivacy, setExpandedPrivacy] = useState<number | null>(null)
+
+  const coreFeatures = [
+    {
+      num: 1,
+      title: 'Initialize Identity',
+      desc: 'Select and activate verifiable attributes (Age Range, Jurisdiction, Professional Title, etc.). Register cryptographic commitment on Aleo blockchain.'
+    },
+    {
+      num: 2,
+      title: 'Accrue Endorsements',
+      desc: 'Collect peer attestations for claimed attributes. Shadow Score increases with verified endorsements, reflecting community-validated credibility.'
+    },
+    {
+      num: 3,
+      title: 'Generate Proofs',
+      desc: 'Create selective disclosure proofs encoded as QR codes. Verify targeted claims without exposing identity or extraneous information.'
+    }
+  ]
+
+  const privacyFeatures = [
+    {
+      title: 'Zero-Knowledge Cryptography',
+      desc: 'Authenticate claims without disclosing underlying data. Attributes remain encrypted on device, inaccessible to external parties.'
+    },
+    {
+      title: 'Decentralized Reputation',
+      desc: 'Community-validated credibility independent of centralized systems. Shadow Score represents peer-verified attribute claims.'
+    },
+    {
+      title: 'Granular Disclosure Control',
+      desc: 'Expose only necessary attributes for specific verification scenarios. Age confirmation, professional status, or jurisdictional claims independently.'
+    },
+    {
+      title: 'Immutable Verification Layer',
+      desc: 'All identity commitments and endorsements recorded on Aleo blockchain. Permanent audit trail without centralized intermediary.'
+    }
+  ]
 
   return (
-    <main className="min-h-screen bg-background flex flex-col">
-      {/* Wallet Button - Top Right */}
-      <div className="fixed top-6 right-6 z-50">
-        <WalletMultiButton />
-      </div>
-
-      <section className="flex-1 flex flex-col items-center justify-center px-4 py-20 max-w-4xl mx-auto text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/20 bg-accent/5 mb-8">
-          <span className="relative inline-block w-2 h-2 bg-accent rounded-full"></span>
-          <span className="text-xs font-medium text-accent">Zero-Knowledge Identity</span>
-        </div>
-
-        <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6 text-balance">
-          Your Identity
-          <span className="text-accent"> Your Control. Peer Verified.</span>
-        </h1>
-
-        <p className="text-lg text-muted-foreground max-w-2xl mb-10 text-balance leading-relaxed">
-          Create a zero-knowledge identity with peer endorsements. Build credibility on the Aleo blockchain while keeping your data private. Share selective proofs without revealing everything.
-        </p>
-
-        {/* ID Card Preview - Interactive with wallet connection */}
-        <IDCardPreview />
-
-        {/* Show text when not connected, button when connected */}
-        <div className="mt-8">
-          {!isConnected ? (
-            <p className="text-xs text-muted-foreground">
-              Zero-knowledge secured via Aleo Testnet
-            </p>
-          ) : (
-            <Link href="/dashboard">
-              <Button size="lg" className="h-12 px-8 gap-2 bg-blue-600 hover:bg-blue-700 text-white">
-                Go to Dashboard
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-          )}
-        </div>
-      </section>
-
+    <main className="pt-20">
       <section className="bg-card/50 py-20 px-4 border-t border-border">
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -92,36 +83,36 @@ export function LandingHero() {
             Establish verifiable identity credentials through decentralized peer verification and zero-knowledge cryptography.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="border border-border rounded-lg p-8 bg-background/50">
-              <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-accent/10 mb-4">
-                <span className="text-xl font-bold text-accent">1</span>
+          <div className="space-y-3 max-w-2xl mx-auto">
+            {coreFeatures.map((feature, idx) => (
+              <div key={idx} className="border border-border rounded-lg overflow-hidden bg-background/50">
+                <button
+                  onClick={() => setExpandedCore(expandedCore === idx ? null : idx)}
+                  className="w-full flex items-center justify-between p-6 hover:bg-accent/5 transition-colors"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-accent/10 flex-shrink-0">
+                      <span className="text-base font-bold text-accent">{feature.num}</span>
+                    </div>
+                    <h3 className="font-semibold text-lg text-left">{feature.title}</h3>
+                  </div>
+                  <ChevronDown 
+                    className={`w-5 h-5 text-accent flex-shrink-0 transition-transform duration-300 ${
+                      expandedCore === idx ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+                <div
+                  className={`overflow-hidden transition-all duration-300 ease-out ${
+                    expandedCore === idx ? 'max-h-40' : 'max-h-0'
+                  }`}
+                >
+                  <p className="px-6 pb-6 text-sm text-muted-foreground">
+                    {feature.desc}
+                  </p>
+                </div>
               </div>
-              <h3 className="font-semibold text-lg mb-3">Initialize Identity</h3>
-              <p className="text-sm text-muted-foreground">
-                Select and activate verifiable attributes (Age Range, Jurisdiction, Professional Title, etc.). Register cryptographic commitment on Aleo blockchain.
-              </p>
-            </div>
-
-            <div className="border border-border rounded-lg p-8 bg-background/50">
-              <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-accent/10 mb-4">
-                <span className="text-xl font-bold text-accent">2</span>
-              </div>
-              <h3 className="font-semibold text-lg mb-3">Accrue Endorsements</h3>
-              <p className="text-sm text-muted-foreground">
-                Collect peer attestations for claimed attributes. Shadow Score increases with verified endorsements, reflecting community-validated credibility.
-              </p>
-            </div>
-
-            <div className="border border-border rounded-lg p-8 bg-background/50">
-              <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-accent/10 mb-4">
-                <span className="text-xl font-bold text-accent">3</span>
-              </div>
-              <h3 className="font-semibold text-lg mb-3">Generate Proofs</h3>
-              <p className="text-sm text-muted-foreground">
-                Create selective disclosure proofs encoded as QR codes. Verify targeted claims without exposing identity or extraneous information.
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -133,34 +124,31 @@ export function LandingHero() {
             Full user control over identity data. Verify credibility without comprehensive data exposure.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="border border-border rounded-lg p-8 bg-background/50 hover:border-accent/50 transition-colors">
-              <h3 className="font-semibold text-lg mb-3">Zero-Knowledge Cryptography</h3>
-              <p className="text-sm text-muted-foreground">
-                Authenticate claims without disclosing underlying data. Attributes remain encrypted on device, inaccessible to external parties.
-              </p>
-            </div>
-
-            <div className="border border-border rounded-lg p-8 bg-background/50 hover:border-accent/50 transition-colors">
-              <h3 className="font-semibold text-lg mb-3">Decentralized Reputation</h3>
-              <p className="text-sm text-muted-foreground">
-                Community-validated credibility independent of centralized systems. Shadow Score represents peer-verified attribute claims.
-              </p>
-            </div>
-
-            <div className="border border-border rounded-lg p-8 bg-background/50 hover:border-accent/50 transition-colors">
-              <h3 className="font-semibold text-lg mb-3">Granular Disclosure Control</h3>
-              <p className="text-sm text-muted-foreground">
-                Expose only necessary attributes for specific verification scenarios. Age confirmation, professional status, or jurisdictional claims independently.
-              </p>
-            </div>
-
-            <div className="border border-border rounded-lg p-8 bg-background/50 hover:border-accent/50 transition-colors">
-              <h3 className="font-semibold text-lg mb-3">Immutable Verification Layer</h3>
-              <p className="text-sm text-muted-foreground">
-                All identity commitments and endorsements recorded on Aleo blockchain. Permanent audit trail without centralized intermediary.
-              </p>
-            </div>
+          <div className="space-y-3 max-w-2xl mx-auto">
+            {privacyFeatures.map((feature, idx) => (
+              <div key={idx} className="border border-border rounded-lg overflow-hidden bg-background/50">
+                <button
+                  onClick={() => setExpandedPrivacy(expandedPrivacy === idx ? null : idx)}
+                  className="w-full flex items-center justify-between p-6 hover:bg-accent/5 transition-colors"
+                >
+                  <h3 className="font-semibold text-lg text-left">{feature.title}</h3>
+                  <ChevronDown 
+                    className={`w-5 h-5 text-accent flex-shrink-0 transition-transform duration-300 ${
+                      expandedPrivacy === idx ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+                <div
+                  className={`overflow-hidden transition-all duration-300 ease-out ${
+                    expandedPrivacy === idx ? 'max-h-40' : 'max-h-0'
+                  }`}
+                >
+                  <p className="px-6 pb-6 text-sm text-muted-foreground">
+                    {feature.desc}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
