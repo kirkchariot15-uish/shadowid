@@ -28,18 +28,45 @@ export default function SelectiveDisclosurePage() {
   const [qrUrl, setQrUrl] = useState<string>('')
   const [proofData, setProofData] = useState<ProofData | null>(null)
   const [error, setError] = useState<string>('')
+  const [activatedAttributes, setActivatedAttributes] = useState<string[]>([])
+  const [mounted, setMounted] = useState(false)
 
-  // Load stored commitment
+  // Load stored commitment and activated attributes
   const storedCommitment = typeof window !== 'undefined' 
     ? localStorage.getItem('shadowid-commitment') 
     : null
 
+  useEffect(() => {
+    setMounted(true)
+    if (typeof window !== 'undefined') {
+      // Load activated attributes from ID creation
+      const stored = localStorage.getItem('shadowid-activated-attributes')
+      if (stored) {
+        try {
+          const attrs = JSON.parse(stored)
+          setActivatedAttributes(Array.isArray(attrs) ? attrs : [])
+          console.log('[v0] Loaded activated attributes:', attrs)
+        } catch (err) {
+          console.error('[v0] Error parsing activated attributes:', err)
+          setActivatedAttributes([])
+        }
+      }
+    }
+  }, [])
+
   const toggleAttribute = (attrId: string) => {
+    // Only allow toggling attributes that were activated during ID creation
+    if (!activatedAttributes.includes(attrId)) {
+      setError(`Attribute "${attrId}" was not activated when you created your ShadowID`)
+      return
+    }
+
     setSelectedAttrs(prev =>
       prev.includes(attrId)
         ? prev.filter(a => a !== attrId)
         : [...prev, attrId]
     )
+    setError('')
   }
 
   const generateQRCode = async () => {
@@ -168,31 +195,47 @@ export default function SelectiveDisclosurePage() {
                   </div>
                 )}
 
-                <div className="space-y-3 mb-8">
-                  {Object.entries(STANDARD_ATTRIBUTES).map(([id, attr]) => (
-                    <label key={id} className="flex items-center gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/5 transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={selectedAttrs.includes(id)}
-                        onChange={() => toggleAttribute(id)}
-                        className="rounded border-border"
-                      />
-                      <div>
-                        <div className="font-medium">{attr.name}</div>
-                        <div className="text-xs text-muted-foreground">{attr.description}</div>
-                      </div>
-                    </label>
-                  ))}
-                </div>
+                {!mounted || activatedAttributes.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground mb-4">Loading your activated attributes...</p>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      You have {activatedAttributes.length} activated attribute{activatedAttributes.length !== 1 ? 's' : ''} to disclose
+                    </p>
 
-                <Button 
-                  onClick={generateQRCode}
-                  disabled={!selectedAttrs.length || isGenerating}
-                  className="w-full gap-2"
-                >
-                  <Zap className="h-4 w-4" />
-                  {isGenerating ? 'Generating...' : 'Generate Proof'}
-                </Button>
+                    <div className="space-y-3 mb-8">
+                      {Object.entries(STANDARD_ATTRIBUTES)
+                        .filter(([id]) => activatedAttributes.includes(id))
+                        .map(([id, attr]) => (
+                          <label key={id} className="flex items-center gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/5 transition-colors border border-accent/20">
+                            <input
+                              type="checkbox"
+                              checked={selectedAttrs.includes(id)}
+                              onChange={() => toggleAttribute(id)}
+                              className="rounded border-border"
+                            />
+                            <div>
+                              <div className="font-medium">{attr.name}</div>
+                              <div className="text-xs text-muted-foreground">{attr.description}</div>
+                            </div>
+                          </label>
+                        ))}
+                    </div>
+                  </>
+                )}
+
+                {mounted && activatedAttributes.length > 0 && (
+                  <Button 
+                    onClick={generateQRCode}
+                    disabled={!selectedAttrs.length || isGenerating}
+                    className="w-full gap-2"
+                  >
+                    <Zap className="h-4 w-4" />
+                    {isGenerating ? 'Generating...' : 'Generate Proof'}
+                  </Button>
+                )}
               </div>
 
               {/* QR Code Display */}

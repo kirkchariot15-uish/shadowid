@@ -369,6 +369,10 @@ export function CreateIdentityPage() {
       localStorage.setItem('shadowid-user-id', address)
       localStorage.setItem('shadowid-wallet-address', address)
       localStorage.setItem('identity-created', 'true')
+      
+      // CRITICAL: Store activated attributes IDs for disclosure page
+      localStorage.setItem('shadowid-activated-attributes', JSON.stringify(enabledAttrIds))
+      
       localStorage.setItem('shadowid-user-info', JSON.stringify({
         hasPhoto: false,
         documentCount: 0,
