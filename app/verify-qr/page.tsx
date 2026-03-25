@@ -20,19 +20,91 @@ export default function VerifyQRPage() {
   const [isVerifying, setIsVerifying] = useState(false)
   const [isExpired, setIsExpired] = useState(false)
   const [showCameraDialog, setShowCameraDialog] = useState(false)
+  const [timeRemaining, setTimeRemaining] = useState<string>('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Update time remaining every second
+  useEffect(() => {
+    if (!qrData || isExpired) return
+
+    const updateTimer = () => {
+      const timeInfo = getQRTimeRemaining(qrData.expiresAt)
+      setTimeRemaining(timeInfo.formatted)
+      
+      // Check if just expired
+      if (timeInfo.isExpired && !isExpired) {
+        setIsExpired(true)
+        console.log('[v0] QR code has expired')
+      }
+    }
+
+    // Initial update
+    updateTimer()
+
+    // Update every second
+    const interval = setInterval(updateTimer, 1000)
+    return () => clearInterval(interval)
+  }, [qrData, isExpired])
+
   // Handle QR detection from all sources
-  const handleQRDetected = (result: QRDecodeResult) => {
+  const handleQRDetected = async (result: QRDecodeResult) => {
     if (result.success && result.data) {
-      setQrData(result.data)
-      setError('')
-      setIsExpired(false)
-      setMethod('select')
+      // Double-check expiration before accepting
+      const timeInfo = getQRTimeRemaining(result.data.expiresAt)
+      
+      if (timeInfo.isExpired) {
+        setError('This QR code has expired and cannot be verified')
+        setIsExpired(true)
+        setQrData(null)
+        setMethod('select')
+      } else {
+        // Show loading while verifying with server
+        setIsVerifying(true)
+        
+        try {
+          // Verify QR code with server (confirms expiration, etc.)
+          const verifyResponse = await fetch('/api/verify-qr', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              commitment: result.data.commitment,
+              expiresAt: result.data.expiresAt,
+              selectedAttributes: result.data.selectedAttributes
+            })
+          })
+
+          if (!verifyResponse.ok) {
+            const errorData = await verifyResponse.json()
+            setError(errorData.error || 'Verification failed')
+            if (errorData.isExpired) {
+              setIsExpired(true)
+            }
+            setQrData(null)
+            setIsVerifying(false)
+            return
+          }
+
+          // Server confirmed - display the QR data
+          setQrData(result.data)
+          setError('')
+          setIsExpired(false)
+          setTimeRemaining(timeInfo.formatted)
+          setMethod('select')
+        } catch (err) {
+          console.error('[v0] Server verification error:', err)
+          setError('Unable to verify with server. The QR code may still be valid.')
+          // Still accept the QR if server check fails, but warn user
+          setQrData(result.data)
+          setMethod('select')
+        } finally {
+          setIsVerifying(false)
+        }
+      }
     } else {
       setError(result.error || 'Failed to verify QR code')
       if (result.isExpired) {
         setIsExpired(true)
+        setQrData(null)
       }
     }
     setIsVerifying(false)
@@ -46,8 +118,14 @@ export default function VerifyQRPage() {
     setIsVerifying(true)
     setError('')
 
-    const result = await decodeQRFromImage(file)
-    handleQRDetected(result)
+    try {
+      const result = await decodeQRFromImage(file)
+      handleQRDetected(result)
+    } catch (err) {
+      setError('Failed to process image. Please try again.')
+      console.error('[v0] Upload error:', err)
+      setIsVerifying(false)
+    }
   }
 
   // Handle manual JSON paste
@@ -63,9 +141,7 @@ export default function VerifyQRPage() {
 
   // Format time remaining
   const getTimeRemaining = () => {
-    if (!qrData) return null
-    const timeInfo = getQRTimeRemaining(qrData.expiresAt)
-    return timeInfo.formatted
+    return timeRemaining || 'Loading...'
   }
 
   // Render content based on verification method
@@ -195,7 +271,14 @@ export default function VerifyQRPage() {
               </div>
 
               <Card className="p-8 bg-card/30 border-border">
-                {renderMethodContent()}
+                {isVerifying ? (
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-accent"></div>
+                    <p className="text-muted-foreground">Verifying QR code...</p>
+                  </div>
+                ) : (
+                  renderMethodContent()
+                )}
               </Card>
 
               {error && (
