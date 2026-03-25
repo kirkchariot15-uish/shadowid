@@ -56,35 +56,46 @@ export function IdentityManagementPage() {
     try {
       const storedCommitment = localStorage.getItem('shadowid-commitment')
       const storedCommitmentHex = localStorage.getItem('shadowid-commitment-hex')
-      const storedAttributes = localStorage.getItem('shadowid-credential')
       const storedCreatedAt = localStorage.getItem('shadowid-created-at')
       const storedAttributeHash = localStorage.getItem('shadowid-attribute-hash')
+      
+      // Load activated attributes from the dedicated storage
+      let activatedAttributeIds: string[] = []
+      try {
+        const stored = localStorage.getItem('shadowid-activated-attributes')
+        if (stored) {
+          activatedAttributeIds = JSON.parse(stored)
+        }
+      } catch (e) {
+        console.log('[v0] Could not parse activated attributes')
+      }
 
       if (storedCommitment) {
-        // Parse credential to get activated attributes
+        // Build activated attributes object from IDs
         let activatedAttributes: Record<string, { value: string; enabled: boolean }> = {}
-        if (storedAttributes) {
-          try {
-            const credential = JSON.parse(storedAttributes)
-            activatedAttributes = credential.attributes || {}
-          } catch (e) {
-            console.log('[v0] Could not parse credential attributes')
-          }
+        
+        if (activatedAttributeIds && activatedAttributeIds.length > 0) {
+          activatedAttributeIds.forEach(id => {
+            activatedAttributes[id] = {
+              value: '',
+              enabled: true
+            }
+          })
         }
 
         setIdentity({
           commitment: storedCommitment,
           attributeHash: storedAttributeHash || '',
           activatedAttributes,
-          shadowScore: 50, // Default, will be fetched from blockchain
-          endorsementCount: 0, // Default, will be fetched from blockchain
+          shadowScore: 50,
+          endorsementCount: 0,
           createdAt: storedCreatedAt || new Date().toISOString(),
           isVerified: true
         })
         
         setEditedAttributes(
-          Object.keys(activatedAttributes).reduce((acc, key) => {
-            acc[key] = activatedAttributes[key].enabled || false
+          activatedAttributeIds.reduce((acc, id) => {
+            acc[id] = true
             return acc
           }, {} as Record<string, boolean>)
         )
