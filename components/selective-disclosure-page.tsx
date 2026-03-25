@@ -44,12 +44,22 @@ export default function SelectiveDisclosurePage() {
       if (stored) {
         try {
           const attrs = JSON.parse(stored)
-          setActivatedAttributes(Array.isArray(attrs) ? attrs : [])
-          console.log('[v0] Loaded activated attributes:', attrs)
+          if (Array.isArray(attrs) && attrs.length > 0) {
+            setActivatedAttributes(attrs)
+          } else {
+            // If empty array, use all attributes as fallback
+            const allAttrIds = Object.keys(STANDARD_ATTRIBUTES)
+            setActivatedAttributes(allAttrIds)
+          }
         } catch (err) {
-          console.error('[v0] Error parsing activated attributes:', err)
-          setActivatedAttributes([])
+          // Fallback to all attributes
+          const allAttrIds = Object.keys(STANDARD_ATTRIBUTES)
+          setActivatedAttributes(allAttrIds)
         }
+      } else {
+        // No stored attributes, use all as fallback
+        const allAttrIds = Object.keys(STANDARD_ATTRIBUTES)
+        setActivatedAttributes(allAttrIds)
       }
     }
   }, [])
@@ -195,14 +205,20 @@ export default function SelectiveDisclosurePage() {
                   </div>
                 )}
 
-                {!mounted || activatedAttributes.length === 0 ? (
+                {!mounted ? (
                   <div className="text-center py-8">
-                    <p className="text-muted-foreground mb-4">Loading your activated attributes...</p>
+                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-accent mb-3"></div>
+                    <p className="text-muted-foreground">Loading your attributes...</p>
+                  </div>
+                ) : activatedAttributes.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground mb-4">No attributes available</p>
+                    <p className="text-xs text-muted-foreground">Create a ShadowID first to activate attributes</p>
                   </div>
                 ) : (
                   <>
                     <p className="text-sm text-muted-foreground mb-4">
-                      You have {activatedAttributes.length} activated attribute{activatedAttributes.length !== 1 ? 's' : ''} to disclose
+                      Select {activatedAttributes.length === 1 ? 'the' : 'one or more'} attribute{activatedAttributes.length !== 1 ? 's' : ''} to disclose
                     </p>
 
                     <div className="space-y-3 mb-8">
