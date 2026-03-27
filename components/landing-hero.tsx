@@ -1,7 +1,11 @@
 'use client'
 
-import { Shield, Zap, Lock, ChevronDown } from 'lucide-react'
+import { Shield, Zap, Lock, ChevronDown, ArrowRight } from 'lucide-react'
 import { useState } from 'react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { ConnectWalletButton } from '@/components/connect-wallet-button'
+import { IDCardPreview } from '@/components/id-card-preview'
 
 export function LandingHero() {
   const [expandedCore, setExpandedCore] = useState<number | null>(null)
@@ -45,7 +49,39 @@ export function LandingHero() {
   ]
 
   return (
-    <main className="pt-20">
+    <main>
+      {/* Hero Section */}
+      <section className="min-h-[90vh] flex items-center justify-center px-4 pt-20">
+        <div className="max-w-6xl mx-auto w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h1 className="text-5xl lg:text-6xl font-bold mb-6 text-balance leading-tight">
+                Verifiable Identity, Zero Exposure
+              </h1>
+              <p className="text-xl text-muted-foreground mb-8 text-balance">
+                Control your identity data. Prove what matters without exposing everything. Register cryptographic commitments on Aleo blockchain.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 mb-8">
+                <ConnectWalletButton />
+                <Link href="/pricing">
+                  <Button variant="outline" className="w-full sm:w-auto gap-2">
+                    Learn More
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Aleo Testnet • Zero-Knowledge Proofs • Peer Verified
+              </p>
+            </div>
+            <div className="flex justify-center">
+              <IDCardPreview />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Core Features */}
       <section className="bg-card/50 py-20 px-4 border-t border-border">
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -76,6 +112,7 @@ export function LandingHero() {
         </div>
       </section>
 
+      {/* Core Process */}
       <section className="py-20 px-4">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl font-bold mb-4 text-center">Core Process</h2>
@@ -117,6 +154,7 @@ export function LandingHero() {
         </div>
       </section>
 
+      {/* Privacy by Design */}
       <section className="py-20 px-4 bg-card/30">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl font-bold mb-4 text-center">Privacy by Design</h2>
