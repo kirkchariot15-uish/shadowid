@@ -317,6 +317,9 @@ export function CreateIdentityPage() {
           // Store the personal commitment hash (scoped to wallet)
           storeCommitmentHash(personalHash, address)
           setCommitmentHash(personalHash)
+        } catch (hashError) {
+          console.error('[v0] Error generating commitment hash:', hashError)
+        }
       }, 10000)
 
       // Step 5: ONLY NOW create credential with blockchain-verified data
