@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Lock, ArrowLeft, Trash2, AlertTriangle, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 import { clearActivityLogs } from '@/lib/activity-logger'
+import { markAccountAsDeleted } from '@/lib/account-recovery'
 
 export default function SettingsPage() {
   const { address, disconnect } = useAleoWallet()
@@ -37,6 +38,12 @@ export default function SettingsPage() {
     setIsDeleting(true)
 
     try {
+      // Mark account as deleted BEFORE clearing local data
+      // This prevents recovery of deleted accounts
+      if (address) {
+        markAccountAsDeleted(address)
+      }
+
       // Clear ALL local data - complete account wipe
       const keysToRemove = [
         'shadowid-encrypted-bundle',
@@ -54,7 +61,8 @@ export default function SettingsPage() {
         'shadowid-disclosure-proofs',
         'shadowid-verification-history',
         'shadowid-endorsements',
-        'shadowid-anti-sybil-tokens'
+        'shadowid-anti-sybil-tokens',
+        'shadowid-activated-attributes'
       ]
       
       keysToRemove.forEach(key => {

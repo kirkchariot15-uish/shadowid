@@ -7,7 +7,7 @@
 
 /**
  * Check if wallet address already has an account registered on-chain
- * This is the source of truth for account existence
+ * This is the source of truth for account existence (excludes deleted accounts)
  */
 export async function checkExistingAccountOnBlockchain(
   walletAddress: string
@@ -29,8 +29,9 @@ export async function checkExistingAccountOnBlockchain(
     console.log('[v0] Total stored commitments:', allCommitments.length)
     
     const existingCommitment = allCommitments.find(c => {
-      console.log('[v0] Comparing wallet:', c.walletAddress, 'with:', walletAddress)
-      return c.walletAddress === walletAddress
+      console.log('[v0] Comparing wallet:', c.walletAddress, 'with:', walletAddress, 'deleted:', c.isDeleted)
+      // Skip deleted accounts - they should not be recoverable
+      return c.walletAddress === walletAddress && !c.isDeleted
     })
     
     if (existingCommitment) {
@@ -92,6 +93,36 @@ export function storeAccountMappingOnBlockchain(
 }
 
 /**
+ * Mark an account as permanently deleted - prevents recovery
+ */
+export function markAccountAsDeleted(walletAddress: string): void {
+  try {
+    console.log('[v0] Marking account as deleted:', walletAddress)
+    
+    // Get existing mappings
+    let allCommitments = getAllWalletCommitments()
+    
+    // Find and mark as deleted
+    allCommitments = allCommitments.map(c => {
+      if (c.walletAddress === walletAddress) {
+        return {
+          ...c,
+          isDeleted: true,
+          deletedAt: new Date().toISOString()
+        }
+      }
+      return c
+    })
+    
+    // Store updated mappings
+    localStorage.setItem('shadowid-wallet-commitments', JSON.stringify(allCommitments))
+    console.log('[v0] Account marked as deleted successfully')
+  } catch (error) {
+    console.error('[v0] Error marking account as deleted:', error)
+  }
+}
+
+/**
  * Get all wallet-to-commitment mappings (used for recovery)
  */
 export function getAllWalletCommitments(): Array<{
@@ -99,6 +130,8 @@ export function getAllWalletCommitments(): Array<{
   commitment: string
   timestamp: number
   createdAt: string
+  isDeleted?: boolean
+  deletedAt?: string
 }> {
   try {
     const stored = localStorage.getItem('shadowid-wallet-commitments')
