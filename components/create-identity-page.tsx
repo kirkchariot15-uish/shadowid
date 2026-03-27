@@ -268,7 +268,8 @@ export function CreateIdentityPage() {
       console.log('[v0] Starting identity creation:', {
         attributes: Object.keys(attributeMap),
         walletConnected: !!address,
-        executeTransactionAvailable: !!executeTransaction
+        executeTransactionAvailable: !!executeTransaction,
+        getTransactionStatusAvailable: !!getTransactionStatus
       })
 
       // Validate wallet connection and transaction function
@@ -277,6 +278,11 @@ export function CreateIdentityPage() {
         setIsCreating(false)
         return
       }
+
+      console.log('[v0] About to call registerAttributesAndGetCommitment with:', {
+        walletAddress: address,
+        attributeCount: enabledAttrIds.length
+      })
 
       // Send directly to blockchain with wallet SDK status function
       const blockchainResult = await registerAttributesAndGetCommitment(
@@ -288,6 +294,12 @@ export function CreateIdentityPage() {
         executeTransaction,
         getTransactionStatus // Pass wallet SDK method for confirmation
       )
+      
+      console.log('[v0] Blockchain result received:', { 
+        success: blockchainResult.success, 
+        error: blockchainResult.error,
+        transactionId: blockchainResult.transactionId 
+      })
       
       // Extract the BLOCKCHAIN-GENERATED commitment
       const commitmentDisplayHex = blockchainResult.commitmentHash?.slice(0, 16).toUpperCase() || ''

@@ -443,10 +443,12 @@ export async function registerAttributesAndGetCommitment(
         commitmentField,           // Commitment as field
         attributeHashField,        // Attribute hash as field
       ],
-      fee: 5000000, // 5 ALEO tokens (pricing standard) = 5,000,000 micro-ALEO
+      fee: 1000000, // 1 ALEO token = 1,000,000 micro-ALEO
       getTransactionStatus: getTransactionStatusFn,  // Pass wallet SDK method
     };
 
+    console.log('[v0] Executing blockchain registration with fee:', txParams.fee);
+    
     // Execute with duplicate prevention and retry logic
     const result = await executeWalletTransaction(
       executeTransactionFn || (async (params) => {
@@ -455,6 +457,8 @@ export async function registerAttributesAndGetCommitment(
       txParams,
       2 // Max 2 retries
     );
+
+    console.log('[v0] Blockchain execution result:', { success: result.success, transactionId: result.transactionId, error: result.error });
 
     if (result.success && result.transactionId) {
       // Query blockchain to verify transaction actually succeeded

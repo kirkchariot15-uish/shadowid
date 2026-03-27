@@ -115,12 +115,36 @@ export async function executeWalletTransaction(
   params: TransactionParams,
   maxRetries: number = 2
 ): Promise<TransactionResult> {
-  const txKey = generateTransactionKey(params);
+  console.log('[v0] executeWalletTransaction called with:', { program: params.program, functionName: params.functionName });
+  
+  // Validate inputs
+  if (!transactionFn || typeof transactionFn !== 'function') {
+    console.error('[v0] Transaction function not available');
+    return { success: false, error: 'Transaction function not available' };
+  }
+
+  const txKey = `${params.program}::${params.functionName}::${params.inputs.join('|')}`;
 
   // Check for duplicate in-flight transaction
   if (pendingTransactions.has(txKey)) {
     return pendingTransactions.get(txKey)!;
   }
+
+  // Create the transaction promise
+  const txPromise = executeTransactionWithRetry(transactionFn, params, maxRetries);
+
+  // Store it to prevent duplicates
+  pendingTransactions.set(txKey, txPromise);
+
+  try {
+    const result = await txPromise;
+    console.log('[v0] Transaction result:', { success: result.success, error: result.error });
+    return result;
+  } finally {
+    // Remove from pending after completion
+    pendingTransactions.delete(txKey);
+  }
+}
 
   // Create the transaction promise
   const txPromise = executeTransactionWithRetry(transactionFn, params, maxRetries);
@@ -169,9 +193,11 @@ async function executeTransactionWithRetry(
         program: params.program,
         functionName: params.functionName,
         inputsCount: params.inputs.length,
+        fee: params.fee
       });
 
       // Prepare transaction object matching the wallet hook API
+      // Fee should be 1 ALEO (1,000,000 microcredits) unless explicitly set
       const txObj = {
         transitions: [
           {
@@ -180,12 +206,16 @@ async function executeTransactionWithRetry(
             inputs: params.inputs,
           }
         ],
-        fee: params.fee || 5000000, // Default fee: 5 ALEO tokens = 5,000,000 micro-ALEO
+        fee: params.fee || 1000000, // Default fee: 1 ALEO = 1,000,000 microcredits
         feePrivate: params.privateFee ?? false,
       };
 
+      console.log('[v0] Calling wallet.executeTransaction with:', { program: params.program, functionName: params.functionName, fee: txObj.fee });
+
       // Execute transaction
       const transactionId = await transactionFn(txObj);
+      
+      console.log('[v0] Wallet returned transaction ID:', transactionId);
 
       if (!transactionId || transactionId.trim() === '') {
         throw new Error('Wallet returned empty transaction ID');
