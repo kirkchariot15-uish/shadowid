@@ -292,7 +292,8 @@ export function CreateIdentityPage() {
       // Extract the BLOCKCHAIN-GENERATED commitment
       const commitmentDisplayHex = blockchainResult.commitmentHash?.slice(0, 16).toUpperCase() || ''
 
-      console.error('[v0] Blockchain registration failed:', blockchainResult.error)
+      if (!blockchainResult.success) {
+        console.error('[v0] Blockchain registration failed:', blockchainResult.error)
         addActivityLog('Register on-chain', 'blockchain', `Failed: ${blockchainResult.error}`, 'error')
         setError(`Blockchain error: ${blockchainResult.error}`)
         setIsCreating(false)
