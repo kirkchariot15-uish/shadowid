@@ -183,9 +183,11 @@ async function executeTransactionWithRetry(
         program: params.program,
         functionName: params.functionName,
         inputsCount: params.inputs.length,
+        fee: params.fee || 1000000
       });
 
-      // Prepare transaction object matching the wallet hook API
+      // Prepare transaction object matching the Aleo wallet API
+      // Fee should be 1 ALEO (1,000,000 microcredits) unless explicitly set
       const txObj = {
         transitions: [
           {
@@ -194,9 +196,12 @@ async function executeTransactionWithRetry(
             inputs: params.inputs,
           }
         ],
-        fee: params.fee || 5000000, // Default fee: 5 ALEO tokens = 5,000,000 micro-ALEO
+        fee: params.fee || 1000000, // Default fee: 1 ALEO = 1,000,000 microcredits (MUST match user expectations)
         feePrivate: params.privateFee ?? false,
       };
+
+      console.log('[v0] Transaction object:', JSON.stringify(txObj, null, 2));
+      console.log('[v0] Submitting transaction to wallet with fee:', txObj.fee, 'microcredits');
 
       // Execute transaction
       const transactionId = await transactionFn(txObj);

@@ -17,7 +17,7 @@ interface SubscriptionCheckoutProps {
 export function SubscriptionCheckout({ selectedTier, onPaymentSuccess, onPaymentError }: SubscriptionCheckoutProps) {
   const { address, executeTransaction, getTransactionStatus } = useAleoWallet()
   const [isProcessing, setIsProcessing] = useState(false)
-  const [paymentToken, setPaymentToken] = useState<'ALEO' | 'USDx'>(selectedTier.currency)
+  const [paymentToken, setPaymentToken] = useState<'ALEO' | 'USDCx'>(selectedTier.currency as 'ALEO' | 'USDCx')
 
   const handlePayment = async () => {
     if (!address || !executeTransaction) {
@@ -110,7 +110,7 @@ export function SubscriptionCheckout({ selectedTier, onPaymentSuccess, onPayment
                   name="payment"
                   value="ALEO"
                   checked={paymentToken === 'ALEO'}
-                  onChange={(e) => setPaymentToken(e.target.value as 'ALEO' | 'USDx')}
+                  onChange={(e) => setPaymentToken(e.target.value as 'ALEO' | 'USDCx')}
                   className="w-4 h-4"
                 />
                 <label htmlFor="aleo" className="flex-1 cursor-pointer">
@@ -120,19 +120,19 @@ export function SubscriptionCheckout({ selectedTier, onPaymentSuccess, onPayment
               </div>
             )}
 
-            {selectedTier.currency === 'USDx' && (
+            {selectedTier.currency === 'USDCx' && (
               <div className="flex items-center gap-3 p-3 border border-border rounded-lg bg-background/50 cursor-pointer">
                 <input
                   type="radio"
-                  id="usdx"
+                  id="usdcx"
                   name="payment"
-                  value="USDx"
-                  checked={paymentToken === 'USDx'}
-                  onChange={(e) => setPaymentToken(e.target.value as 'ALEO' | 'USDx')}
+                  value="USDCx"
+                  checked={paymentToken === 'USDCx'}
+                  onChange={(e) => setPaymentToken(e.target.value as 'ALEO' | 'USDCx')}
                   className="w-4 h-4"
                 />
-                <label htmlFor="usdx" className="flex-1 cursor-pointer">
-                  <span className="font-medium">USDx (Aleo)</span>
+                <label htmlFor="usdcx" className="flex-1 cursor-pointer">
+                  <span className="font-medium">USDCx (Aleo)</span>
                   <p className="text-xs text-muted-foreground">Stablecoin on Aleo testnet</p>
                 </label>
               </div>
