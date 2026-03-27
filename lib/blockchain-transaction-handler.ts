@@ -146,21 +146,6 @@ export async function executeWalletTransaction(
   }
 }
 
-  // Create the transaction promise
-  const txPromise = executeTransactionWithRetry(transactionFn, params, maxRetries);
-
-  // Store it to prevent duplicates
-  pendingTransactions.set(txKey, txPromise);
-
-  try {
-    const result = await txPromise;
-    return result;
-  } finally {
-    // Remove from pending after completion
-    pendingTransactions.delete(txKey);
-  }
-}
-
 /**
  * Execute transaction with exponential backoff retry on failure
  */
