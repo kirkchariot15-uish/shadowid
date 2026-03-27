@@ -259,61 +259,6 @@ async function processAleoPayment(
   }
 }
 
-  try {
-    // Build transaction to transfer ALEO tokens
-    const txParams = {
-      program: 'credits.aleo',
-      functionName: 'transfer_public',
-      inputs: [
-        'aleo1subscription_vault_address', // Recipient address (subscription contract vault)
-        `${tier.cost}u64` // Amount in micro-ALEO (tier.cost is in ALEO)
-      ],
-      fee: 1000000, // 1 ALEO token fee
-      privateFee: false, // Public fee
-      getTransactionStatus: getTransactionStatusFn
-    }
-
-    console.log('[v0] Submitting ALEO transfer transaction:', { from: walletAddress, to: txParams.inputs[0], amount: tier.cost })
-    
-    // Execute transaction through wallet
-    const transactionId = await executeTransactionFn(txParams)
-    
-    if (!transactionId) {
-      throw new Error('No transaction ID returned from wallet')
-    }
-
-    console.log('[v0] ALEO transfer submitted:', transactionId)
-    
-    // Wait for confirmation if status function available
-    if (getTransactionStatusFn) {
-      let confirmed = false
-      let attempts = 0
-      const maxAttempts = 30 // 1 minute (2 second intervals)
-      
-      while (!confirmed && attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        const status = await getTransactionStatusFn(transactionId)
-        console.log('[v0] ALEO transaction status:', status)
-        
-        if (status?.toLowerCase().includes('finalize') || status?.toLowerCase().includes('accept')) {
-          confirmed = true
-          break
-        }
-        attempts++
-      }
-      
-      if (!confirmed) {
-        console.warn('[v0] ALEO transfer did not confirm within timeout, but may still succeed')
-      }
-    }
-
-    return { success: true, transactionId }
-  } catch (error) {
-    console.error('[v0] ALEO payment error:', error)
-    throw error
-  }
-}
-
 async function processUSDCxPayment(
   tier: SubscriptionTier,
   walletAddress: string,
