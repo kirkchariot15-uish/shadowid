@@ -21,6 +21,7 @@ import { checkAccountCreationRateLimit, trackAccountCreation } from '@/lib/anti-
 import { generateCommitmentHash, storeCommitmentHash } from '@/lib/commitment-hash-generator'
 import { storeEncryptedData } from '@/lib/storage-encryption'
 import { checkExistingAccountOnBlockchain, recoverAccountFromBlockchain, storeAccountMappingOnBlockchain } from '@/lib/account-recovery'
+import { processUSDCxPaymentForIdentity } from '@/lib/aleo-sdk-integration'
 
 export function CreateIdentityPage() {
   const { address, executeTransaction, getTransactionStatus, disconnect } = useAleoWallet()
@@ -37,6 +38,7 @@ export function CreateIdentityPage() {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
   const [subscriptionInfo, setSubscriptionInfo] = useState(getSubscriptionInfo())
+  const [paymentToken, setPaymentToken] = useState<'ALEO' | 'USDCx'>('ALEO')
 
   // When commitment hash is generated, show completion after brief pause
   useEffect(() => {
@@ -268,14 +270,24 @@ export function CreateIdentityPage() {
       console.log('[v0] Starting identity creation:', {
         attributes: Object.keys(attributeMap),
         walletConnected: !!address,
-        executeTransactionAvailable: !!executeTransaction
+        executeTransactionAvailable: !!executeTransaction,
+        paymentToken
       })
 
-      // Validate wallet connection and transaction function
-      if (!address || !executeTransaction) {
-        setError('Wallet not connected. Please connect your Aleo wallet first.')
-        setIsCreating(false)
-        return
+      // Process payment first if USDCx is selected
+      if (paymentToken === 'USDCx') {
+        console.log('[v0] Processing USDCx payment before registration')
+        const paymentResult = await processUSDCxPaymentForIdentity(address, executeTransaction, getTransactionStatus)
+        
+        if (!paymentResult.success) {
+          setError(`USDCx payment failed: ${paymentResult.error}`)
+          setIsCreating(false)
+          addActivityLog('Process payment', 'payment', `USDCx payment failed: ${paymentResult.error}`, 'error')
+          return
+        }
+        
+        console.log('[v0] USDCx payment successful:', paymentResult.transactionId)
+        addActivityLog('Process payment', 'payment', `USDCx payment successful: ${paymentResult.transactionId}`, 'success')
       }
 
       // Send directly to blockchain with wallet SDK status function
@@ -705,6 +717,37 @@ export function CreateIdentityPage() {
             )}
             {!isCreating && (
               <>
+                <div className="flex gap-3 w-full">
+                  <label className="flex-1 flex items-center gap-3 p-4 rounded-lg border border-border cursor-pointer hover:bg-accent/5 transition-colors" style={{borderColor: paymentToken === 'ALEO' ? 'var(--accent)' : undefined}}>
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="ALEO"
+                      checked={paymentToken === 'ALEO'}
+                      onChange={(e) => setPaymentToken(e.target.value as 'ALEO' | 'USDCx')}
+                      className="w-4 h-4"
+                    />
+                    <div>
+                      <p className="font-semibold text-sm">ALEO Token</p>
+                      <p className="text-xs text-muted-foreground">5 ALEO + 1 ALEO fee</p>
+                    </div>
+                  </label>
+                  <label className="flex-1 flex items-center gap-3 p-4 rounded-lg border border-border cursor-pointer hover:bg-accent/5 transition-colors" style={{borderColor: paymentToken === 'USDCx' ? 'var(--accent)' : undefined}}>
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="USDCx"
+                      checked={paymentToken === 'USDCx'}
+                      onChange={(e) => setPaymentToken(e.target.value as 'ALEO' | 'USDCx')}
+                      className="w-4 h-4"
+                    />
+                    <div>
+                      <p className="font-semibold text-sm">USDCx Stablecoin</p>
+                      <p className="text-xs text-muted-foreground">1.0 USDCx + 1 ALEO fee</p>
+                    </div>
+                  </label>
+                </div>
+
                 <Button
                   onClick={handleCreateIdentity}
                   disabled={isCreating || Object.keys(selectedAttributes).length === 0}

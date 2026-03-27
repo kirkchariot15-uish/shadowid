@@ -981,3 +981,67 @@ export async function revokeDAOAttestation(
     executeTransactionFn
   );
 }
+
+/**
+ * Process USDCx payment for ID creation (alternative to ALEO)
+ * Transfers USDCx from public balance to identity creation vault
+ */
+export async function processUSDCxPaymentForIdentity(
+  walletAddress: string,
+  executeTransactionFn?: (params: any) => Promise<string>,
+  getTransactionStatusFn?: (txId: string) => Promise<string | null>
+): Promise<{ success: boolean; transactionId?: string; error?: string }> {
+  try {
+    if (!executeTransactionFn) {
+      throw new Error('Wallet executeTransaction not available')
+    }
+
+    console.log('[v0] Processing USDCx payment for identity creation:', walletAddress)
+    
+    // USDCx payment for ID creation: 1.0 USDCx (1000000 in smallest units)
+    const txParams = {
+      program: 'usdcx_stablecoin.aleo',
+      functionName: 'transfer_public',
+      inputs: [
+        'aleo1identity_vault_address', // Recipient address (identity creation vault)
+        '1000000u64' // 1.0 USDCx in smallest units
+      ],
+      fee: 1000000, // 1 ALEO token fee
+      privateFee: false, // Fee is public
+      getTransactionStatus: getTransactionStatusFn
+    }
+
+    console.log('[v0] Submitting USDCx identity payment transaction')
+    const transactionId = await executeTransactionFn(txParams)
+    
+    if (!transactionId) {
+      throw new Error('No transaction ID returned from wallet')
+    }
+
+    console.log('[v0] USDCx identity payment submitted:', transactionId)
+    
+    // Wait for confirmation
+    if (getTransactionStatusFn) {
+      let confirmed = false
+      let attempts = 0
+      const maxAttempts = 30 // 1 minute
+      
+      while (!confirmed && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        const status = await getTransactionStatusFn(transactionId)
+        
+        if (status?.toLowerCase().includes('finalize') || status?.toLowerCase().includes('accept')) {
+          confirmed = true
+          break
+        }
+        attempts++
+      }
+    }
+
+    return { success: true, transactionId }
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : 'USDCx payment failed'
+    console.error('[v0] USDCx payment error:', errorMsg)
+    return { success: false, error: errorMsg }
+  }
+}
