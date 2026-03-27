@@ -82,7 +82,9 @@ function encryptData(data: string, walletAddress: string, nonce: string): { ciph
       const dataChar = data.charCodeAt(i)
       
       // Multi-layer mixing (still weak, but better than simple XOR)
-      const encrypted = dataChar ^ keyChar ^ nonceChar ^ (i * 13)
+      let encrypted = dataChar ^ keyChar ^ nonceChar ^ (i * 13)
+      // CRITICAL FIX: Clamp to valid Unicode range (0-65535) to prevent invalid characters
+      encrypted = encrypted & 0xFFFF // Mask to 16-bit range
       ciphertext += String.fromCharCode(encrypted)
     }
     
@@ -116,7 +118,9 @@ function decryptData(ciphertext: string, walletAddress: string, nonce: string, w
       const nonceChar = nonce.charCodeAt(i % nonce.length)
       const cipherChar = data.charCodeAt(i)
       
-      const decryptedChar = cipherChar ^ keyChar ^ nonceChar ^ (i * 13)
+      // Use same clamping during decryption to match encryption
+      let decryptedChar = cipherChar ^ keyChar ^ nonceChar ^ (i * 13)
+      decryptedChar = decryptedChar & 0xFFFF // Mask to 16-bit range
       decrypted += String.fromCharCode(decryptedChar)
     }
     

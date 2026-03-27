@@ -401,21 +401,14 @@ export function CreateIdentityPage() {
       trackAccountCreation()
       
       // SECURITY: Encrypt credential before storing
-      try {
-        const encryptedCredential = JSON.stringify({
-          encrypted: true,
-          data: JSON.stringify(credential),
-          timestamp: Date.now()
-        })
-        
-        // Store encrypted credential using wallet-based key
-        storeEncryptedData('shadowid-credential', encryptedCredential, address)
-      } catch (encryptError) {
-        // Encryption error is not critical if blockchain transaction succeeded
-        console.warn('[v0] Encryption warning (blockchain succeeded):', encryptError)
-        addActivityLog('Store encrypted credential', 'storage', 'Blockchain succeeded but local encryption failed - data stored unencrypted', 'warning')
-        // Continue anyway - blockchain transaction is what matters
-      }
+      const encryptedCredential = JSON.stringify({
+        encrypted: true,
+        data: JSON.stringify(credential),
+        timestamp: Date.now()
+      })
+      
+      // Store encrypted credential using wallet-based key
+      storeEncryptedData('shadowid-credential', encryptedCredential, address)
       
       localStorage.setItem('shadowid-attribute-hash', blockchainResult.attributeHash)
       localStorage.setItem('shadowid-signature', blockchainResult.signature)
