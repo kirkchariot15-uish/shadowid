@@ -416,17 +416,22 @@ export async function registerAttributesAndGetCommitment(
     const data = encoder.encode(dataToHash);
     const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const attributeHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    const fullAttributeHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    // CRITICAL FIX: Only use first 16 hex chars (64 bits) to avoid massive field arithmetic
+    // Full 256-bit hash causes proving timeout because field becomes too large for circuits
+    const attributeHash = fullAttributeHash.slice(0, 16);
     
     console.log('[v0] Computed attribute hash:', {
-      attributeHash: attributeHash.slice(0, 16) + '...',
+      truncatedHash: attributeHash,
+      fullHash: fullAttributeHash.slice(0, 16) + '...',
       fromAttributes: attributesJson,
       timestamp,
       attributeCount
     });
 
     // Convert hex hash to proper Aleo field format
-    // THIS is what we send to blockchain - the hash of attributes
+    // THIS is what we send to blockchain - the hash of attributes (truncated to 64-bit)
     const commitmentField = hexToField(attributeHash);
     const attributeHashField = hexToField(attributeHash);
     
@@ -479,7 +484,7 @@ export async function registerAttributesAndGetCommitment(
       // For now: use transaction ID as proof, derive commitment from blockchain state query
       
       const blockchainCommitment = await deriveCommitmentFromBlockchain(
-        attributeHash,
+        attributeHash,  // Using truncated 64-bit hash
         walletAddress,
         result.transactionId
       );
