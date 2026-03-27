@@ -305,9 +305,17 @@ export function CreateIdentityPage() {
       const commitmentDisplayHex = blockchainResult.commitmentHash?.slice(0, 16).toUpperCase() || ''
 
       if (!blockchainResult.success) {
-        console.error('[v0] Blockchain registration failed:', blockchainResult.error)
-        addActivityLog('Register on-chain', 'blockchain', `Failed: ${blockchainResult.error}`, 'error')
-        setError(`Blockchain error: ${blockchainResult.error}`)
+        const errorMsg = blockchainResult.error || 'Blockchain error'
+        addActivityLog('Register on-chain', 'blockchain', `Failed: ${errorMsg}`, 'error')
+        
+        // Distinguish between proving timeout and other errors
+        if (errorMsg.includes('proving') || errorMsg.includes('asString()')) {
+          setError('The Aleo proving service is temporarily busy. This is a network issue. Please try again in a few moments.')
+        } else if (errorMsg.includes('Aleo proving service')) {
+          setError(errorMsg)
+        } else {
+          setError(`Blockchain error: ${errorMsg}`)
+        }
         setIsCreating(false)
         return
       }

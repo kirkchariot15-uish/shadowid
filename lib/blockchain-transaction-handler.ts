@@ -178,7 +178,8 @@ async function executeTransactionWithRetry(
         program: params.program,
         functionName: params.functionName,
         inputsCount: params.inputs.length,
-        fee: params.fee
+        fee: params.fee,
+        inputCharCount: params.inputs.reduce((sum, input) => sum + input.length, 0)
       });
 
       // Prepare transaction object matching the wallet hook API
@@ -216,11 +217,21 @@ async function executeTransactionWithRetry(
       );
       
       if (!confirmationResult.confirmed) {
-        console.error('[v0] Transaction not confirmed:', confirmationResult.error);
+        const errorMsg = confirmationResult.error || 'Transaction not confirmed by blockchain';
+        
+        // Handle proving timeout specifically - user needs to know this is wallet service issue
+        if (errorMsg.includes('timeout') || errorMsg.includes('asString()')) {
+          return {
+            success: false,
+            transactionId,
+            error: 'Aleo proving service is busy. Please try again in a moment. This is a temporary network issue, not a problem with your transaction.'
+          };
+        }
+        
         return {
           success: false,
           transactionId,
-          error: confirmationResult.error || 'Transaction not confirmed by blockchain',
+          error: errorMsg,
         };
       }
       
@@ -234,10 +245,22 @@ async function executeTransactionWithRetry(
       const errorMsg = lastError.message;
 
       // Check if error is retryable
-      const isRetryable = errorMsg.includes('timeout') || 
+      const isRetryable = (errorMsg.includes('timeout') && !errorMsg.includes('asString()')) || 
                          errorMsg.includes('network') || 
                          errorMsg.includes('ECONNREFUSED') ||
                          errorMsg.includes('429'); // Rate limited
+      
+      // Don't retry proving timeouts - those are wallet service issues
+      const isProvingTimeout = errorMsg.includes('asString()') || 
+                              errorMsg.includes('building proving');
+
+      if (isProvingTimeout) {
+        // Proving timeout - don't retry, return to user
+        return {
+          success: false,
+          error: 'Aleo proving service is temporarily busy. Please try again in a few moments. This is a network service issue, not a problem with your transaction.'
+        };
+      }
 
       if (isRetryable && attempt < maxRetries) {
         // Exponential backoff: 1s, 2s, 4s
