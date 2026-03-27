@@ -39,8 +39,8 @@ export function SubscriptionCheckout({ selectedTier, onPaymentSuccess, onPayment
       let result
       if (paymentToken === 'ALEO') {
         result = await processAleoPayment(selectedTier, address, executeTransaction, getTransactionStatus)
-      } else if (paymentToken === 'USDx') {
-        result = await processUSDxPayment(selectedTier, address, executeTransaction, getTransactionStatus)
+      } else if (paymentToken === 'USDCx') {
+        result = await processUSDCxPayment(selectedTier, address, executeTransaction, getTransactionStatus)
       } else {
         throw new Error('Invalid payment currency')
       }
@@ -233,34 +233,34 @@ async function processAleoPayment(
   }
 }
 
-async function processUSDxPayment(
+async function processUSDCxPayment(
   tier: SubscriptionTier,
   walletAddress: string,
   executeTransactionFn: (params: any) => Promise<string>,
   getTransactionStatusFn?: (txId: string) => Promise<string | null>
 ) {
-  console.log('[v0] Processing USDx payment for tier:', tier.name, 'amount:', tier.cost)
+  console.log('[v0] Processing USDCx payment for tier:', tier.name, 'amount:', tier.cost)
   
   if (!executeTransactionFn) {
     throw new Error('Wallet executeTransaction not available')
   }
 
   try {
-    // Build transaction to transfer USDx tokens from public to private
-    // This requires a special transition function that moves public balance to private records
+    // USDCx on Aleo uses the program: usdcx_stablecoin.aleo
+    // Transfer from public balance to subscription vault
     const txParams = {
-      program: 'usdx_token.aleo',
-      functionName: 'transfer_public_to_private',
+      program: 'usdcx_stablecoin.aleo',
+      functionName: 'transfer_public',
       inputs: [
         'aleo1subscription_vault_address', // Recipient address (subscription contract vault)
-        `${tier.cost}u64` // Amount in micro-USDx
+        `${tier.cost}u64` // Amount in USDCx (smallest unit)
       ],
-      fee: 1000000, // 1 ALEO token fee for USDx transfer
+      fee: 1000000, // 1 ALEO token fee for transaction
       privateFee: false, // Fee is public
       getTransactionStatus: getTransactionStatusFn
     }
 
-    console.log('[v0] Submitting USDx transfer transaction:', { from: walletAddress, to: txParams.inputs[0], amount: tier.cost })
+    console.log('[v0] Submitting USDCx transfer transaction:', { from: walletAddress, to: txParams.inputs[0], amount: tier.cost })
     
     // Execute transaction through wallet
     const transactionId = await executeTransactionFn(txParams)
@@ -269,7 +269,7 @@ async function processUSDxPayment(
       throw new Error('No transaction ID returned from wallet')
     }
 
-    console.log('[v0] USDx transfer submitted:', transactionId)
+    console.log('[v0] USDCx transfer submitted:', transactionId)
     
     // Wait for confirmation if status function available
     if (getTransactionStatusFn) {
@@ -280,7 +280,7 @@ async function processUSDxPayment(
       while (!confirmed && attempts < maxAttempts) {
         await new Promise(resolve => setTimeout(resolve, 2000))
         const status = await getTransactionStatusFn(transactionId)
-        console.log('[v0] USDx transaction status:', status)
+        console.log('[v0] USDCx transaction status:', status)
         
         if (status?.toLowerCase().includes('finalize') || status?.toLowerCase().includes('accept')) {
           confirmed = true
@@ -290,13 +290,13 @@ async function processUSDxPayment(
       }
       
       if (!confirmed) {
-        console.warn('[v0] USDx transfer did not confirm within timeout, but may still succeed')
+        console.warn('[v0] USDCx transfer did not confirm within timeout, but may still succeed')
       }
     }
 
     return { success: true, transactionId }
   } catch (error) {
-    console.error('[v0] USDx payment error:', error)
+    console.error('[v0] USDCx payment error:', error)
     throw error
   }
 }

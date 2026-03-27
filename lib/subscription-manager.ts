@@ -11,7 +11,7 @@ export interface SubscriptionStatus {
   maxCustomAttributes: number;
   transactionHash: string | null;
   subscribedAt: string | null;
-  paymentToken: 'ALEO' | 'USDx';
+  paymentToken: 'ALEO' | 'USDCx';
 }
 
 export interface SubscriptionTier {
@@ -22,7 +22,7 @@ export interface SubscriptionTier {
   standardAttributes: boolean;
   customAttributesAllowed: boolean;
   cost: number;
-  currency: 'ALEO' | 'USDx';
+  currency: 'ALEO' | 'USDCx';
   description: string;
 }
 
@@ -57,7 +57,7 @@ export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
     standardAttributes: true,
     customAttributesAllowed: true,
     cost: 10,
-    currency: 'USDx',
+    currency: 'USDCx',
     description: '8 standard + 5 custom attributes'
   },
   CUSTOM: {
@@ -68,7 +68,7 @@ export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
     standardAttributes: true,
     customAttributesAllowed: true,
     cost: 25,
-    currency: 'USDx',
+    currency: 'USDCx',
     description: 'Up to 20 custom attributes'
   }
 };
@@ -127,7 +127,7 @@ export function getSubscriptionStatus(walletAddress?: string): SubscriptionStatu
 export function setSubscriptionStatus(
   tier: 'standard' | 'premium' | 'custom',
   transactionHash: string,
-  paymentToken: 'ALEO' | 'USDx' = 'ALEO',
+  paymentToken: 'ALEO' | 'USDCx' = 'ALEO',
   durationDays: number = 365,
   walletAddress?: string
 ): SubscriptionStatus {
