@@ -41,31 +41,25 @@ async function waitForTransactionConfirmation(
   maxWaitMs: number = 300 * 1000 // 5 minutes max (increased from 3 for fee calculation timeout)
 ): Promise<{ confirmed: boolean; status?: string; error?: string }> {
   if (!getStatusFn) {
-    console.warn('[v0] No getTransactionStatus function provided, assuming confirmed');
     return { confirmed: true, status: 'PENDING' };
   }
-
-  console.log('[v0] Starting transaction confirmation polling:', transactionId);
   
   // Check immediately first
   try {
     const initialStatus = await getStatusFn(transactionId);
     if (initialStatus) {
       const normalized = (initialStatus || '').toString().toLowerCase();
-      console.log('[v0] Initial status check:', { raw: initialStatus, normalized });
       
       if (normalized.includes('finalize') || normalized.includes('complete') || normalized.includes('accept')) {
-        console.log('[v0] ✅ Transaction CONFIRMED immediately:', initialStatus);
         return { confirmed: true, status: initialStatus };
       }
       
       if (normalized.includes('reject') || normalized.includes('fail') || normalized.includes('abort')) {
-        console.error('[v0] ❌ Transaction REJECTED:', initialStatus);
         return { confirmed: false, status: initialStatus, error: `Transaction rejected: ${initialStatus}` };
       }
     }
   } catch (err) {
-    console.log('[v0] Initial status check failed, will retry:', err);
+    // Continue to polling on error
   }
 
   // Poll every 2 seconds for up to 2 minutes (60 attempts)
@@ -84,38 +78,31 @@ async function waitForTransactionConfirmation(
       
       // Normalize response to handle different wallet formats
       const statusStr = (status || '').toString().toLowerCase();
-      console.log('[v0] Poll attempt status:', { raw: status, normalized: statusStr, elapsed: Date.now() - startTime });
 
       if (!status) {
-        console.log('[v0] Status not available yet, continuing poll...');
         continue;
       }
 
       // Check for CONFIRMED states
       if (statusStr.includes('finalize') || statusStr.includes('complete') || statusStr.includes('accept')) {
-        console.log('[v0] ✅ Transaction CONFIRMED after polling:', status);
         clearInterval(pollInterval);
         return { confirmed: true, status };
       }
 
       // Check for REJECTED states
       if (statusStr.includes('reject') || statusStr.includes('fail') || statusStr.includes('abort')) {
-        console.error('[v0] ❌ Transaction REJECTED during polling:', status);
         clearInterval(pollInterval);
         return { confirmed: false, status, error: `Transaction rejected: ${status}` };
       }
 
       // Still pending, continue polling
-      console.log('[v0] ⏳ Still pending, continuing to poll...');
     } catch (error) {
-      console.warn('[v0] Error during polling:', error);
       // Continue polling on error
       continue;
     }
   }
 
   clearInterval(pollInterval);
-  console.error('[v0] ⏱️  Transaction confirmation timeout after 2 minutes');
   return { confirmed: false, error: 'Transaction confirmation timeout after 2 minutes' };
 }
 
@@ -132,7 +119,6 @@ export async function executeWalletTransaction(
 
   // Check for duplicate in-flight transaction
   if (pendingTransactions.has(txKey)) {
-    console.warn('[v0] Duplicate transaction detected, using existing request:', txKey);
     return pendingTransactions.get(txKey)!;
   }
 

@@ -60,7 +60,6 @@ export function useAleoWallet() {
     async (params: AleoTransactionRequest): Promise<string> => {
       // Prevent double-submission - return existing promise if already in flight
       if (transactionInFlightRef.current) {
-        console.log('[v0] Transaction already in flight, ignoring duplicate request');
         throw new Error('Transaction already in progress');
       }
 
@@ -78,14 +77,6 @@ export function useAleoWallet() {
           throw new Error('No transition provided');
         }
 
-        console.log('[v0] Wallet:', wallet?.adapter?.name);
-        console.log('[v0] Executing:', transition.program, transition.functionName);
-        console.log('[v0] Inputs array:', transition.inputs);
-        transition.inputs.forEach((input, idx) => {
-          console.log(`[v0]   Input ${idx}: "${input}" (length: ${input.length})`);
-        });
-        console.log('[v0] Fee (microcredits):', params.fee);
-
         // TransactionOptions per @provablehq/aleo-types
         const result = await walletExecuteTransaction({
           program: transition.program,
@@ -95,13 +86,10 @@ export function useAleoWallet() {
           privateFee: params.feePrivate ?? false,
         });
 
-        console.log('[v0] Result:', result);
-
         if (!result || !result.transactionId) {
           throw new Error('No transaction ID returned from wallet');
         }
 
-        console.log('[v0] Transaction ID:', result.transactionId);
         return result.transactionId;
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Transaction failed';
@@ -151,23 +139,17 @@ export function useAleoWallet() {
   const getActualTxHash = useCallback(
     async (shieldTxId: string): Promise<string> => {
       try {
-        console.log('[v0] Getting actual TX hash for shield ID:', shieldTxId);
-        
         // If it's already a proper transaction hash (starts with "at1"), return it
         if (shieldTxId && shieldTxId.startsWith('at1')) {
-          console.log('[v0] Already a proper Aleo TX hash:', shieldTxId);
           return shieldTxId;
         }
         
         // If it's a shield ID, check immediately first, then wait if needed
         if (shieldTxId && shieldTxId.startsWith('shield_')) {
-          console.log('[v0] Shield ID detected, checking for real TX hash...');
-          
           // Try up to 3 times max (9 seconds total instead of 30)
           for (let i = 0; i < 3; i++) {
             try {
               const status = await transactionStatus(shieldTxId);
-              console.log(`[v0] TX Status check ${i + 1}/3:`, status);
               
               if (status && typeof status === 'object') {
                 // Look for the actual blockchain transaction ID
@@ -178,12 +160,11 @@ export function useAleoWallet() {
                                     (status as any).tx;
                 
                 if (possibleHash && possibleHash.startsWith('at1')) {
-                  console.log('[v0] Found confirmed TX hash:', possibleHash);
                   return possibleHash;
                 }
               }
             } catch (checkErr) {
-              console.log(`[v0] Status check ${i + 1} failed:`, checkErr);
+              // Continue to next attempt
             }
             
             // Only wait if not the last iteration
@@ -191,13 +172,10 @@ export function useAleoWallet() {
               await new Promise(resolve => setTimeout(resolve, 3000));
             }
           }
-          
-          console.log('[v0] Using shield ID as-is (real hash may come later)');
         }
         
         return shieldTxId;
       } catch (err) {
-        console.log('[v0] Error getting TX hash, using shield ID:', shieldTxId, err);
         return shieldTxId;
       }
     },

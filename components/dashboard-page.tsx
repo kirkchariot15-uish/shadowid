@@ -8,7 +8,7 @@ import { Navigation } from '@/components/navigation'
 import { BlockchainStatus } from '@/components/blockchain-status'
 import { OnboardingModal } from '@/components/onboarding-modal'
 import { Button } from '@/components/ui/button'
-import { Lock, Award, Plus, FileText, Activity, Shield, CheckCircle } from 'lucide-react'
+import { Lock, Award, Plus, FileText, Activity, Shield, CheckCircle, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { addActivityLog } from '@/lib/activity-logger'
 import { initializeProofRequestSystem } from '@/lib/proof-request-integration'
@@ -19,6 +19,7 @@ export default function DashboardPage() {
   const [credentials, setCredentials] = useState<number>(0)
   const [proofs, setProofs] = useState<number>(0)
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false)
 
   // Enforce session timeout on this page
   useSessionTimeout()
@@ -34,6 +35,17 @@ export default function DashboardPage() {
     const attrs = localStorage.getItem('shadowid-attributes')
     if (attrs) {
       setCredentials(JSON.parse(attrs).length)
+    }
+
+    // Check for successful identity creation
+    const identityCreatedFlag = localStorage.getItem('shadowid-identity-created-success')
+    if (identityCreatedFlag === 'true') {
+      setShowSuccessNotification(true)
+      // Clear the flag after showing
+      localStorage.removeItem('shadowid-identity-created-success')
+      // Auto-dismiss after 5 seconds
+      const timer = setTimeout(() => setShowSuccessNotification(false), 5000)
+      return () => clearTimeout(timer)
     }
 
     // CRITICAL: Verify wallet matches the ShadowID owner before initializing
@@ -98,6 +110,25 @@ export default function DashboardPage() {
       <Navigation />
       
       {showOnboarding && <OnboardingModal onComplete={() => setShowOnboarding(false)} />}
+      
+      {/* Success Notification Banner */}
+      {showSuccessNotification && (
+        <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-40 max-w-md mx-auto">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3 shadow-lg">
+            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h3 className="font-semibold text-green-900">Identity Created Successfully</h3>
+              <p className="text-sm text-green-700 mt-1">Your ShadowID has been registered on the Aleo blockchain.</p>
+            </div>
+            <button
+              onClick={() => setShowSuccessNotification(false)}
+              className="text-green-600 hover:text-green-700 flex-shrink-0"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
       
       {/* Main Content - with top padding for navigation */}
       <div className="pt-24 md:pt-20 pb-32 px-4 sm:px-6 lg:px-8">
