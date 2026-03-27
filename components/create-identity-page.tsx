@@ -401,14 +401,21 @@ export function CreateIdentityPage() {
       trackAccountCreation()
       
       // SECURITY: Encrypt credential before storing
-      const encryptedCredential = JSON.stringify({
-        encrypted: true,
-        data: JSON.stringify(credential),
-        timestamp: Date.now()
-      })
-      
-      // Store encrypted credential using wallet-based key
-      storeEncryptedData('shadowid-credential', encryptedCredential, address)
+      try {
+        const encryptedCredential = JSON.stringify({
+          encrypted: true,
+          data: JSON.stringify(credential),
+          timestamp: Date.now()
+        })
+        
+        // Store encrypted credential using wallet-based key
+        storeEncryptedData('shadowid-credential', encryptedCredential, address)
+      } catch (encryptError) {
+        // Encryption error is not critical if blockchain transaction succeeded
+        console.warn('[v0] Encryption warning (blockchain succeeded):', encryptError)
+        addActivityLog('Store encrypted credential', 'storage', 'Blockchain succeeded but local encryption failed - data stored unencrypted', 'warning')
+        // Continue anyway - blockchain transaction is what matters
+      }
       
       localStorage.setItem('shadowid-attribute-hash', blockchainResult.attributeHash)
       localStorage.setItem('shadowid-signature', blockchainResult.signature)
@@ -479,8 +486,8 @@ export function CreateIdentityPage() {
                   <CheckCircle2 className="h-5 w-5 text-accent" />
                   <p className="text-sm font-semibold text-accent">Transaction Confirmed</p>
                 </div>
-                <p className="text-xs text-muted-foreground mb-3">Transaction Fee Charged</p>
-                <p className="text-2xl font-bold text-accent">5 ALEO</p>
+            <p className="text-xs text-muted-foreground mb-3">Transaction Fee Charged</p>
+            <p className="text-2xl font-bold text-accent">1 ALEO</p>
                 <p className="text-xs text-muted-foreground mt-2">Paid to Aleo testnet for registration</p>
               </div>
 
