@@ -103,8 +103,12 @@ export function IdentityManagementPage() {
           isVerified: true
         })
         
-        // Don't initialize editedAttributes here - only initialize when entering edit mode
-        setEditedAttributes({})
+        setEditedAttributes(
+          activatedAttributeIds.reduce((acc, id) => {
+            acc[id] = true
+            return acc
+          }, {} as Record<string, boolean>)
+        )
       }
       setLoading(false)
     } catch (error) {
@@ -162,15 +166,13 @@ export function IdentityManagementPage() {
 
   // Initialize edited attributes when entering edit mode
   const handleStartEditing = () => {
-    if (identity && Object.keys(identity.activatedAttributes).length > 0) {
-      // Pre-populate with current enabled states - check if attribute data exists
+    if (identity) {
+      // Pre-populate with current enabled states
       const currentStates: Record<string, boolean> = {}
       Object.entries(identity.activatedAttributes).forEach(([attrId, data]) => {
-        // Each attribute is enabled by default, but can be toggled
-        currentStates[attrId] = data.enabled !== false
+        currentStates[attrId] = data.enabled || false
       })
       setEditedAttributes(currentStates)
-      console.log('[v0] Initialized edit mode with attributes:', currentStates)
     }
     setIsEditing(true)
   }
