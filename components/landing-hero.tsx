@@ -4,7 +4,7 @@ import { Shield, Zap, Lock, ChevronDown, ArrowRight } from 'lucide-react'
 import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { WalletButton } from '@/components/wallet-button'
+import { WalletMultiButton } from '@/components/wallet-button'
 import { IDCardPreview } from '@/components/id-card-preview'
 
 export function LandingHero() {
@@ -62,7 +62,7 @@ export function LandingHero() {
                 Control your identity data. Prove what matters without exposing everything. Register cryptographic commitments on Aleo blockchain.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                <WalletButton />
+                <WalletMultiButton />
                 <Link href="/pricing">
                   <Button variant="outline" className="w-full sm:w-auto gap-2">
                     Learn More
