@@ -11,6 +11,7 @@ import { PROGRAM_ID } from '@/lib/aleo-sdk-integration'
 import { addActivityLog } from '@/lib/activity-logger'
 import { STANDARD_ATTRIBUTES } from '@/lib/attribute-schema'
 import { CONFIG, getQRValidityHours } from '@/lib/config'
+import { createExpiringDisclosure } from '@/lib/disclosure-expiration'
 
 interface ProofData {
   commitment: string
@@ -154,6 +155,13 @@ export default function SelectiveDisclosurePage() {
       setQrUrl(qr)
       setProofGenerated(true)
       setCurrentNullifier(newNullifier)
+
+      // Track this disclosure for privacy management
+      try {
+        createExpiringDisclosure(selectedAttrs, Math.floor((new Date(proof.expiresAt).getTime() - Date.now()) / (60 * 60 * 1000)))
+      } catch (trackErr) {
+        console.error('[v0] Failed to track disclosure:', trackErr)
+      }
 
       addActivityLog(
         'Generate Disclosure Proof',

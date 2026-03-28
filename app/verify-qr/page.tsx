@@ -305,20 +305,24 @@ export default function VerifyQRPage() {
           ) : (
             /* Verification Results */
             <div className="space-y-6">
-              <Card className={`p-8 ${isExpired ? 'border-destructive/30 bg-destructive/5' : 'border-accent/30 bg-accent/5'}`}>
-                <div className="flex items-start justify-between mb-6">
+              <Card className={`border-2 p-8 shadow-lg ${isExpired ? 'border-destructive/40 bg-destructive/5' : 'border-accent/40 bg-accent/5'}`}>
+                <div className="flex items-start justify-between mb-8">
                   <div className="flex items-start gap-3">
                     {!isExpired ? (
-                      <CheckCircle2 className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
+                      <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center">
+                        <CheckCircle2 className="h-6 w-6 text-accent" />
+                      </div>
                     ) : (
-                      <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+                      <div className="w-10 h-10 rounded-lg bg-destructive/20 flex items-center justify-center">
+                        <AlertCircle className="h-6 w-6 text-destructive" />
+                      </div>
                     )}
                     <div>
-                      <h2 className="text-lg font-semibold">{isExpired ? 'Proof Expired' : 'Disclosure Proof Verified'}</h2>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <h2 className="text-2xl font-bold">{isExpired ? 'Proof Expired' : 'Disclosure Proof Verified'}</h2>
+                      <p className="text-sm text-muted-foreground mt-2">
                         {isExpired
                           ? `This QR code expired at ${new Date(qrData.expiresAt).toLocaleString()}`
-                          : 'This QR code contains a valid disclosure proof'}
+                          : 'This QR code contains a valid disclosure proof. All attributes have been verified.'}
                       </p>
                     </div>
                   </div>
@@ -328,75 +332,120 @@ export default function VerifyQRPage() {
                       setIsExpired(false)
                       setMethod('select')
                     }}
-                    variant="outline"
-                    size="sm"
+                    className="bg-accent hover:bg-accent/90 gap-2"
                   >
-                    Verify Another
+                    <ArrowLeft className="h-4 w-4" />
+                    Scan Again
                   </Button>
                 </div>
 
                 {!isExpired && (
                   <div className="space-y-4">
-                    {/* Time Remaining */}
-                    <div className="flex items-center gap-2 p-3 rounded-lg bg-background border border-accent/20">
-                      <Clock className="h-4 w-4 text-accent flex-shrink-0" />
-                      <p className="text-sm text-foreground font-medium">{getTimeRemaining()}</p>
+                    {/* Time Remaining - Green for active */}
+                    <div className="flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-green-500/10 to-accent/10 border border-green-500/30">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+                          <Clock className="h-4 w-4 text-green-500" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Time Remaining</p>
+                          <p className="text-lg font-bold text-green-500">{timeRemaining || 'Calculating...'}</p>
+                        </div>
+                      </div>
                     </div>
 
-                    {/* Commitment */}
-                    <div className="flex items-start justify-between p-4 rounded-lg bg-background border border-border">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Hash className="h-4 w-4 text-muted-foreground" />
-                          <p className="text-xs text-muted-foreground uppercase tracking-wide">Commitment Hash</p>
-                        </div>
-                        <p className="font-mono text-sm text-accent break-all">{qrData.commitment}</p>
+                    {/* Commitment Hash */}
+                    <div className="p-4 rounded-lg bg-background border border-accent/20">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Hash className="h-4 w-4 text-accent" />
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide font-bold">Commitment Hash</p>
                       </div>
-                      <Button
-                        onClick={() => {
-                          navigator.clipboard.writeText(qrData.commitment)
-                        }}
-                        variant="ghost"
-                        size="sm"
-                        className="text-muted-foreground hover:text-foreground ml-2"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-mono text-sm text-accent break-all">{qrData.commitment}</p>
+                        <Button
+                          onClick={() => {
+                            navigator.clipboard.writeText(qrData.commitment)
+                          }}
+                          variant="ghost"
+                          size="sm"
+                          className="text-muted-foreground hover:text-accent ml-2 flex-shrink-0"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
 
                     {/* Verifier Information */}
                     {qrData.verifierId && (
-                      <div className="p-4 rounded-lg bg-background border border-border">
-                        <div className="flex items-start justify-between mb-2">
+                      <div className="p-4 rounded-lg bg-background border border-accent/20">
+                        <div className="flex items-start justify-between mb-3">
                           <div>
-                            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Requested by Verifier</p>
-                            <p className="text-sm font-medium text-foreground">{qrData.verifierId}</p>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wide font-bold mb-2">Requested By</p>
+                            <p className="text-base font-bold text-accent">{qrData.verifierId}</p>
                           </div>
-                          <span className="px-2 py-1 text-xs bg-accent/10 text-accent rounded">Verified</span>
+                          <span className="px-3 py-1 text-xs bg-accent/10 text-accent rounded-full font-semibold">Verified</span>
                         </div>
                         {qrData.verifierName && (
-                          <p className="text-xs text-muted-foreground mt-2">{qrData.verifierName}</p>
+                          <p className="text-xs text-muted-foreground mt-3">{qrData.verifierName}</p>
                         )}
                       </div>
                     )}
 
                     {/* Verification Purpose */}
                     {qrData.purpose && (
-                      <div className="p-4 rounded-lg bg-background border border-border">
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Verification Purpose</p>
+                      <div className="p-4 rounded-lg bg-background border border-accent/20">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide font-bold mb-3">Purpose of Verification</p>
                         <p className="text-sm text-foreground">{qrData.purpose}</p>
                       </div>
                     )}
 
-                    {/* Disclosed Attributes with Values */}
-                    <div className="p-4 rounded-lg bg-background border border-border">
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3">Disclosed Attributes ({qrData.selectedAttributes.length})</p>
+                    {/* Disclosed Attributes with Values - Professional Card Layout */}
+                    <div className="p-4 rounded-lg bg-background border border-accent/20">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-bold mb-4">Disclosed Attributes ({qrData.selectedAttributes.length})</p>
                       <div className="space-y-2">
                         {qrData.selectedAttributes.map((attr) => {
                           const getAttributeDescription = (attrName: string): string => {
                             const descriptions: Record<string, string> = {
                               'attr:age-range': 'Age bracket without revealing exact age',
                               'attr:university': 'Educational institution attended',
+                              'attr:degree': 'Academic degree earned',
+                              'attr:expertise': 'Professional area of expertise',
+                              'attr:employment': 'Current or past employment',
+                              'attr:location': 'Geographic region',
+                              'attr:credentials': 'Professional certifications',
+                              'attr:status': 'Professional or social status'
+                            }
+                            return descriptions[attrName] || 'Personal attribute'
+                          }
+
+                          // Get the actual disclosed value from attributeValues
+                          const disclosedValue = (qrData as any).attributeValues?.[attr] || 'Not specified'
+
+                          return (
+                            <div key={attr} className="p-3 rounded bg-accent/5 border border-accent/20 hover:border-accent/40 transition-colors">
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-xs font-mono text-accent font-bold">{attr}</p>
+                                <p className="text-sm font-bold text-foreground bg-accent/10 px-2 py-1 rounded">{disclosedValue}</p>
+                              </div>
+                              <p className="text-xs text-muted-foreground">{getAttributeDescription(attr)}</p>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Security Notice */}
+                    <div className="p-4 rounded-lg bg-accent/5 border-l-4 border-l-accent border border-accent/20">
+                      <div className="flex items-start gap-3">
+                        <Lock className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-bold text-accent mb-1">Zero-Knowledge Verified</p>
+                          <p className="text-xs text-muted-foreground">This proof was cryptographically verified using zero-knowledge proofs. No sensitive data was exposed during verification.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
                               'attr:degree': 'Academic degree earned',
                               'attr:expertise': 'Professional area of expertise',
                               'attr:employment': 'Current or past employment',

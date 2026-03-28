@@ -25,6 +25,13 @@ export default function PrivacyPage() {
   useEffect(() => {
     setMounted(true)
     loadDisclosures()
+    
+    // Refresh disclosure list every 5 seconds when page is active
+    const refreshInterval = setInterval(() => {
+      loadDisclosures()
+    }, 5000)
+    
+    return () => clearInterval(refreshInterval)
   }, [])
 
   const loadDisclosures = () => {
@@ -164,12 +171,23 @@ export default function PrivacyPage() {
 
         {/* Privacy Settings Dashboard */}
         <div className="border border-accent/30 rounded-lg p-8 bg-card shadow-lg">
-          <h2 className="text-2xl font-bold mb-8 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center">
-              <Clock className="w-5 h-5 text-accent" />
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-accent" />
+              </div>
+              <h2 className="text-2xl font-bold">Disclosure Privacy Settings</h2>
             </div>
-            Disclosure Privacy Settings
-          </h2>
+            <Button
+              onClick={loadDisclosures}
+              variant="outline"
+              size="sm"
+              className="gap-2"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </Button>
+          </div>
 
           {/* Default Expiration Setting */}
           <div className="mb-8 p-6 bg-background rounded-lg border border-accent/20 shadow-md">
