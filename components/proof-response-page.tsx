@@ -350,33 +350,57 @@ export function ProofResponsePage() {
                   Share this QR code with {request.requesterName} to verify your attributes
                 </p>
 
-                {/* QR Code */}
-                <div className="bg-background p-4 rounded-lg mb-8 border border-border flex items-center justify-center">
-                  <img src={qrUrl} alt="Proof Response QR Code" className="w-64 h-64" />
+                {/* QR Code Section */}
+                <div className="border border-accent/30 rounded-lg p-8 bg-card shadow-lg mb-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center">
+                      <CheckCircle className="h-5 w-5 text-accent" />
+                    </div>
+                    <h2 className="text-2xl font-bold">Share Proof</h2>
+                  </div>
+
+                  <p className="text-muted-foreground mb-6">
+                    Share this QR code with {request.requesterName} to verify your attributes
+                  </p>
+
+                  <div className="bg-gradient-to-br from-accent/5 to-background p-8 rounded-xl mb-8 flex flex-col items-center justify-center border-2 border-dashed border-accent/30 shadow-md">
+                    <div className="bg-background p-6 rounded-lg shadow-lg">
+                      <img src={qrUrl} alt="Proof Response QR Code" className="w-80 h-80" />
+                    </div>
+                  </div>
+
+                  {/* Proof Details */}
+                  <div className="w-full space-y-4">
+                    <div className="p-4 bg-background rounded-lg border border-accent/20">
+                      <p className="text-xs font-bold text-muted-foreground uppercase mb-2">Requested By</p>
+                      <p className="text-base font-semibold text-accent">{request.requesterName}</p>
+                    </div>
+
+                    <div className="p-4 bg-background rounded-lg border border-accent/20">
+                      <p className="text-xs font-bold text-muted-foreground uppercase mb-2">Attributes Provided</p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {selectedAttributes.map(attrId => {
+                          const attr = STANDARD_ATTRIBUTES[attrId]
+                          return (
+                            <span
+                              key={attrId}
+                              className="text-xs px-3 py-1.5 bg-accent/10 text-accent rounded-full font-medium"
+                            >
+                              {attr?.name || attrId}
+                            </span>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-background rounded-lg border border-accent/20">
+                      <p className="text-xs font-bold text-muted-foreground uppercase mb-2">Your Identity Hash</p>
+                      <p className="font-mono text-xs text-muted-foreground break-all">
+                        {localStorage.getItem('shadowid-commitment')?.substring(0, 40)}...
+                      </p>
+                    </div>
+                  </div>
                 </div>
-
-                {/* Proof Details */}
-                <div className="w-full mb-8 space-y-4 text-left">
-                  <Card className="border-border/40 bg-background/50 p-4">
-                    <p className="text-sm text-muted-foreground mb-1">Requested By</p>
-                    <p className="font-semibold">{request.requesterName}</p>
-                  </Card>
-
-                  <Card className="border-border/40 bg-background/50 p-4">
-                    <p className="text-sm text-muted-foreground mb-1">Your Commitment</p>
-                    <p className="font-mono text-xs text-accent break-all">
-                      {localStorage.getItem('shadowid-commitment') || 'Not available'}
-                    </p>
-                  </Card>
-
-                  <Card className="border-border/40 bg-background/50 p-4">
-                    <p className="text-sm text-muted-foreground mb-2">Attributes Provided</p>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedAttributes.map(attrId => {
-                        const attr = STANDARD_ATTRIBUTES[attrId]
-                        return (
-                          <span
-                            key={attrId}
                             className="px-3 py-1 rounded bg-accent/10 text-accent text-sm"
                           >
                             {attr?.name || attrId}

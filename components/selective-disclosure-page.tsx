@@ -308,41 +308,62 @@ export default function SelectiveDisclosurePage() {
 
               {/* QR Code Display */}
               {proofGenerated && qrUrl && (
-                <div className="border border-border rounded-lg p-8 bg-card/30">
-                  <div className="flex items-center gap-2 mb-6">
-                    <CheckCircle className="h-5 w-5 text-accent" />
-                    <h2 className="text-xl font-semibold">Proof Generated</h2>
+                <div className="border border-accent/30 rounded-lg p-8 bg-card shadow-lg">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center">
+                      <CheckCircle className="h-5 w-5 text-accent" />
+                    </div>
+                    <h2 className="text-2xl font-bold">Disclosure Proof Ready</h2>
                   </div>
 
-                  <div className="bg-background p-4 rounded-lg mb-6 flex items-center justify-center border border-border">
-                    <img src={qrUrl} alt="QR Code" className="h-64 w-64" />
+                  <div className="bg-gradient-to-br from-accent/5 to-background p-6 rounded-xl mb-8 flex flex-col items-center justify-center border-2 border-dashed border-accent/30 shadow-md hover:border-accent/50 transition-colors">
+                    <div className="bg-background p-6 rounded-lg shadow-lg mb-4">
+                      <img src={qrUrl} alt="QR Code" className="h-72 w-72" />
+                    </div>
+                    <p className="text-xs text-muted-foreground text-center">Scan this QR code to verify your disclosure proof</p>
                   </div>
 
                   {proofData && (
-                    <div className="space-y-3 mb-6 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">Commitment:</span>
-                        <div className="font-mono text-xs text-accent break-all">{proofData.commitment.slice(0, 32)}...</div>
+                    <div className="space-y-4 mb-8 p-6 bg-background rounded-lg border border-accent/20">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="border border-accent/20 p-4 rounded-lg">
+                          <p className="text-xs font-bold text-muted-foreground uppercase mb-2">Attributes</p>
+                          <div className="flex flex-wrap gap-2">
+                            {proofData.selectedAttributes.map((attr) => (
+                              <span key={attr} className="text-xs px-3 py-1.5 bg-accent/10 text-accent rounded-full font-medium">
+                                {attr}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="border border-accent/20 p-4 rounded-lg">
+                          <p className="text-xs font-bold text-muted-foreground uppercase mb-2">Expiration</p>
+                          <p className="text-sm font-mono text-accent">{new Date(proofData.expiresAt).toLocaleString()}</p>
+                        </div>
                       </div>
-                      <div>
-                        <span className="text-muted-foreground">Attributes:</span>
-                        <div className="text-xs mt-1">{proofData.selectedAttributes.join(', ')}</div>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Expires:</span>
-                        <div className="text-xs">{new Date(proofData.expiresAt).toLocaleString()}</div>
+                      <div className="border border-accent/20 p-4 rounded-lg">
+                        <p className="text-xs font-bold text-muted-foreground uppercase mb-2">Commitment Hash</p>
+                        <p className="text-xs font-mono text-muted-foreground break-all">{proofData.commitment}</p>
                       </div>
                     </div>
                   )}
 
-                  <Button 
-                    onClick={downloadProof}
-                    variant="outline"
-                    className="w-full gap-2"
-                  >
-                    <Download className="h-4 w-4" />
-                    Download QR Code
-                  </Button>
+                  <div className="flex gap-3">
+                    <Button 
+                      onClick={downloadProof}
+                      className="flex-1 gap-2 bg-accent hover:bg-accent/90"
+                    >
+                      <Download className="h-4 w-4" />
+                      Download QR Code
+                    </Button>
+                    <Button 
+                      onClick={() => setProofGenerated(false)}
+                      variant="outline"
+                      className="flex-1 gap-2"
+                    >
+                      Generate New
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>

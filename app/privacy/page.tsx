@@ -28,10 +28,17 @@ export default function PrivacyPage() {
   }, [])
 
   const loadDisclosures = () => {
-    const config = getExpirationConfig()
-    setDefaultExpiration(config.defaultExpirationHours)
-    setActiveDisclosures(getActiveDisclosures())
-    setExpiredDisclosures(getExpiredDisclosures())
+    try {
+      const config = getExpirationConfig()
+      setDefaultExpiration(config.defaultExpirationHours)
+      const active = getActiveDisclosures()
+      const expired = getExpiredDisclosures()
+      console.log('[v0] Loaded disclosures - Active:', active.length, 'Expired:', expired.length)
+      setActiveDisclosures(active)
+      setExpiredDisclosures(expired)
+    } catch (err) {
+      console.error('[v0] Error loading disclosures:', err)
+    }
   }
 
   const handleExpirationChange = (hours: number) => {
@@ -156,33 +163,129 @@ export default function PrivacyPage() {
         </div>
 
         {/* Privacy Settings Dashboard */}
-        <div className="border border-border rounded-lg p-8 bg-card/50 mb-12">
-          <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2">
-            <Clock className="w-6 h-6 text-accent" />
+        <div className="border border-accent/30 rounded-lg p-8 bg-card shadow-lg">
+          <h2 className="text-2xl font-bold mb-8 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center">
+              <Clock className="w-5 h-5 text-accent" />
+            </div>
             Disclosure Privacy Settings
           </h2>
 
           {/* Default Expiration Setting */}
-          <div className="mb-8 p-6 bg-background rounded-lg border border-accent/20">
+          <div className="mb-8 p-6 bg-background rounded-lg border border-accent/20 shadow-md">
             <label className="block mb-4">
-              <span className="text-sm font-semibold text-foreground block mb-2">Default QR Code Expiration</span>
-              <p className="text-xs text-muted-foreground mb-3">QR codes expire after this duration. Expired codes cannot be used for verification.</p>
+              <span className="text-sm font-bold text-foreground block mb-2 uppercase tracking-wide">Default QR Code Expiration</span>
+              <p className="text-xs text-muted-foreground mb-4">QR codes expire after this duration. Expired codes cannot be used for verification.</p>
               <select
                 value={defaultExpiration}
                 onChange={(e) => handleExpirationChange(parseInt(e.target.value))}
-                className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground"
+                className="w-full px-4 py-3 bg-background border border-accent/20 rounded-lg text-foreground font-medium hover:border-accent/40 transition-colors"
               >
                 <option value={1}>1 hour</option>
                 <option value={3}>3 hours</option>
                 <option value={6}>6 hours</option>
                 <option value={12}>12 hours</option>
                 <option value={24}>1 day</option>
-                <option value={72}>3 days</option>
+                <option value={72}>3 days (Recommended)</option>
                 <option value={168}>1 week</option>
-                <option value={720}>30 days (max)</option>
+                <option value={720}>30 days (Max)</option>
               </select>
+              <p className="text-xs text-accent mt-2">Current setting: {defaultExpiration} hours</p>
             </label>
           </div>
+
+          {/* Active Disclosures */}
+          {activeDisclosures.length > 0 && (
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
+                  <span className="text-xs font-bold text-green-500">✓</span>
+                </div>
+                <h3 className="font-bold text-lg text-foreground">Active Disclosures ({activeDisclosures.length})</h3>
+              </div>
+              <div className="space-y-3 bg-background rounded-lg p-4">
+                {activeDisclosures.map((disclosure, idx) => {
+                  const timeLeft = getTimeRemaining(disclosure.disclosureId)
+                  return (
+                    <div key={disclosure.disclosureId} className="p-4 bg-accent/5 border border-accent/30 rounded-lg hover:border-accent/50 transition-colors shadow-sm">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <p className="text-xs font-mono text-accent/70 mb-2 bg-background px-2 py-1 rounded w-fit">QR #{idx + 1}</p>
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            {disclosure.attributes.map((attr) => (
+                              <span key={attr} className="text-xs px-3 py-1.5 bg-accent/10 text-accent rounded-full font-medium">
+                                {attr}
+                              </span>
+                            ))}
+                          </div>
+                          <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-green-500" />
+                            {timeLeft ? formatTimeRemaining(timeLeft) : 'Calculating...'}
+                          </p>
+                        </div>
+                        <Button
+                          onClick={() => handleExtendDisclosure(disclosure.disclosureId)}
+                          className="gap-2 bg-accent hover:bg-accent/90"
+                          size="sm"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                          Extend 24h
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Created: {new Date(disclosure.createdAt).toLocaleDateString()} at {new Date(disclosure.createdAt).toLocaleTimeString()}</p>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Expired Disclosures */}
+          {expiredDisclosures.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center">
+                  <span className="text-xs font-bold text-red-500">✕</span>
+                </div>
+                <h3 className="font-bold text-lg text-foreground">Expired Disclosures ({expiredDisclosures.length})</h3>
+              </div>
+              <div className="space-y-2 bg-background rounded-lg p-4">
+                {expiredDisclosures.map((disclosure) => (
+                  <div key={disclosure.disclosureId} className="p-4 bg-muted/10 border border-muted/30 rounded-lg opacity-60 hover:opacity-100 transition-opacity">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="text-xs font-mono text-muted-foreground mb-2">{disclosure.disclosureId.substring(0, 20)}...</p>
+                        <div className="flex gap-2">
+                          {disclosure.attributes.map((attr) => (
+                            <span key={attr} className="text-xs px-2 py-1 bg-muted/30 text-muted-foreground rounded">
+                              {attr}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => handleDeleteExpired(disclosure.disclosureId)}
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground hover:text-red-500 gap-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeDisclosures.length === 0 && expiredDisclosures.length === 0 && (
+            <div className="text-center py-12 bg-background rounded-lg border border-dashed border-accent/20">
+              <Clock className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
+              <p className="text-muted-foreground">No disclosures yet</p>
+              <p className="text-xs text-muted-foreground mt-1">Create a QR code to start managing your disclosures</p>
+            </div>
+          )}
+        </div>
 
           {/* Active Disclosures */}
           {activeDisclosures.length > 0 && (
