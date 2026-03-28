@@ -1,0 +1,1293 @@
+=================================================================================
+                        SHADOWID - COMPREHENSIVE PRESENTATION
+          Zero-Knowledge Identity with Peer Verification on the Aleo Blockchain
+=================================================================================
+
+This presentation script covers every page and feature of ShadowID. Present this 
+narrative to judges to tell the complete story of the platform.
+
+=================================================================================
+                              INTRODUCTION
+=================================================================================
+
+"Hello. I'm presenting ShadowID—a zero-knowledge identity platform that reimagines 
+how we verify credibility in a decentralized world.
+
+The problem we're solving is fundamental: How do you prove you are who you claim 
+to be without revealing everything about yourself? How do you build reputation 
+across applications without a centralized authority controlling your identity?
+
+ShadowID answers these questions by combining three revolutionary concepts:
+1. Zero-Knowledge Cryptography - Prove facts without disclosing data
+2. Decentralized Peer Verification - Build reputation through community consensus
+3. Blockchain Attestation - Immutable, transparent verification layer on Aleo
+
+Let me walk you through every feature of the platform."
+
+=================================================================================
+                         PAGE 1: LANDING PAGE
+=================================================================================
+
+[User lands on landing page - wallet not connected]
+
+"This is our landing page. It immediately communicates three core concepts:
+
+HEADLINE: 'Your Identity. Your Control. Peer Verified.'
+
+Below that, we show an interactive ID Card preview that demonstrates what a 
+ShadowID looks like - it displays the user's commitment hash, their disclosed 
+attributes, creation date, and expiration.
+
+THREE CORE PILLARS:
+
+1. CRYPTOGRAPHIC PRIVACY
+   'Personal data remains encrypted locally. Blockchain verification operates 
+   exclusively on cryptographic commitments, not raw attributes.'
+   
+   Translation: We never store or transmit your actual personal information. 
+   Instead, we create a mathematical commitment to your attributes. Only you 
+   can prove you hold those attributes.
+
+2. SELECTIVE ATTRIBUTE DISCLOSURE
+   'Prove specific claims without exposing complete identity. Share only the 
+   information required for verification.'
+   
+   Translation: If someone needs to verify you're over 18, you prove that 
+   without revealing your exact age. If they need your professional title, 
+   you share that without revealing your jurisdiction.
+
+3. BLOCKCHAIN ATTESTATION
+   'All identity commitments are recorded on the Aleo blockchain for immutable, 
+   transparent verification.'
+   
+   Translation: Everything is auditable. No blackbox servers. No hidden changes. 
+   All records live permanently on the blockchain.
+
+THREE-STEP CORE PROCESS:
+
+Step 1: INITIALIZE IDENTITY
+   'Select and activate verifiable attributes (Age Range, Jurisdiction, 
+   Professional Title, etc.). Register cryptographic commitment on Aleo blockchain.'
+   
+   You choose which attributes describe you, enter values for each, and the 
+   system creates a cryptographic commitment representing your identity.
+
+Step 2: ACCRUE ENDORSEMENTS
+   'Collect peer attestations for claimed attributes. Shadow Score increases with 
+   verified endorsements, reflecting community-validated credibility.'
+   
+   Other users can endorse your attributes. As you accumulate endorsements, your 
+   Shadow Score rises—a decentralized reputation metric built by the community, 
+   not algorithms.
+
+Step 3: GENERATE PROOFS
+   'Create selective disclosure proofs encoded as QR codes. Verify targeted claims 
+   without exposing identity or extraneous information.'
+   
+   When someone needs verification, you generate a QR code proving only the 
+   specific attributes they requested. The QR code is cryptographically signed 
+   and has an expiration time.
+
+PRIVACY BY DESIGN SECTION (4 Cards):
+
+- Zero-Knowledge Cryptography
+  'Authenticate claims without disclosing underlying data. Attributes remain 
+  encrypted on device, inaccessible to external parties.'
+
+- Decentralized Reputation
+  'Community-validated credibility independent of centralized systems. Shadow 
+  Score represents peer-verified attribute claims.'
+
+- Granular Disclosure Control
+  'Expose only necessary attributes for specific verification scenarios. Age 
+  confirmation, professional status, or jurisdictional claims independently.'
+
+- Immutable Verification Layer
+  'All identity commitments and endorsements recorded on Aleo blockchain. 
+  Permanent audit trail without centralized intermediary.'
+
+WALLET CONNECTION:
+When wallet is disconnected, the page shows: 'Zero-knowledge secured via 
+Aleo Testnet'
+
+When wallet is connected, a blue button appears: 'Go to Dashboard' with an 
+arrow icon, inviting them into the application."
+
+=================================================================================
+                    PAGE 2: DASHBOARD (Main Hub)
+=================================================================================
+
+[User connects wallet and goes to dashboard]
+
+"After connecting their wallet, users land on the Dashboard—the central hub of 
+ShadowID.
+
+HEADER SECTION:
+- Welcome message with wallet address displayed
+- Status indicators showing if they have a ShadowID created or not
+- Quick navigation to all key features
+
+LEFT SIDEBAR - STATISTICS:
+The dashboard displays key metrics:
+
+1. MY CREDENTIALS
+   'Number of attributes you've activated on your ShadowID'
+   Shows a count and brief description of what this means.
+
+2. ENDORSEMENTS RECEIVED
+   'Total number of peer endorsements for your activated attributes'
+   This is your reputation metric.
+
+3. SHADOW SCORE
+   'Community-validated credibility score based on endorsements'
+   Calculated by: number of unique endorsers × endorsement weight
+   It's not a simple count—diversity of endorsers matters. One person endorsing 
+   you 100 times is worth less than 10 different people endorsing you once.
+
+RIGHT SIDEBAR - ACTIONS:
+Four primary action buttons:
+
+1. CREATE SHADOWID
+   Takes them to /create-identity
+   Only visible if they haven't created an identity yet.
+   
+   Description: 'Initialize your zero-knowledge identity with attributes that 
+   represent who you are. Attributes are claimed but unverified until they 
+   receive peer endorsements.'
+
+2. VIEW MY SHADOWID
+   Takes them to /identity
+   Only visible if they have a ShadowID.
+   
+   Description: 'View your complete identity profile, activated attributes, 
+   endorsements received, and options to restore or manage your identity.'
+
+3. ENDORSE PEERS
+   Takes them to /endorse-peer
+   
+   Description: 'Endorse another user''s claimed attributes. You can verify their 
+   claims and attest to their credibility.'
+
+4. ADMIN PANEL (with Key icon)
+   Takes them to /admin
+   Only visible for users with admin privileges.
+   
+   Description: 'Access the admin control panel to manage flagged accounts, 
+   assign mini-admin roles, and view audit logs.'
+
+MAIN CONTENT AREA:
+If no ShadowID exists: Shows onboarding steps
+If ShadowID exists: Shows credential overview, recent activity, pending proof 
+requests
+
+IMPORTANT: The dashboard initializes the proof request system when a wallet 
+connects, making the system ready to receive verification requests from external 
+applications."
+
+=================================================================================
+                 PAGE 3: CREATE SHADOWID (Identity Creation)
+=================================================================================
+
+[User clicks "Create ShadowID"]
+
+"Creating a ShadowID is the most critical step. Here's how it works:
+
+STEP 1: ATTRIBUTE SELECTION
+
+Users see all available attributes from our standard schema. Examples include:
+- Age Range (e.g., '18-25', '26-35', '36-45', '46-55', '56-65', '66+')
+- Jurisdiction (e.g., 'United States', 'European Union', 'Asia-Pacific')
+- Professional Title (e.g., 'Software Engineer', 'Doctor', 'Lawyer')
+- Educational Background (e.g., 'Bachelor''s Degree', 'Master''s Degree')
+- DAO Member Status
+- Organizational Affiliation
+
+For EACH attribute they claim, they:
+1. Enable it (checkbox)
+2. Enter a value from the predefined options
+3. This becomes part of their identity commitment
+
+Why this matters: These are the facts about themselves they want to be verified. 
+They're not yet proven—they're claims. The peer endorsement system verifies them.
+
+STEP 2: COMMITMENT GENERATION
+
+Behind the scenes, a sophisticated process happens:
+
+1. The system takes all their selected attributes and values
+2. Creates a cryptographic hash combining all this data
+3. Generates a mathematical 'commitment'—a unique fingerprint of their identity
+4. This commitment is registered on the Aleo blockchain
+
+The blockchain now knows: 'This wallet address is associated with this commitment.'
+
+But the blockchain knows NOTHING about the actual attributes or their values. 
+Only the commitment hash exists on-chain.
+
+STEP 3: LOCAL ENCRYPTION & STORAGE
+
+The system generates:
+- Commitment Hash: A checksum-verified version with format: 'XXXX-YYYYYYYYYY...'
+  This is their public identity identifier they can share
+- Encryption Key: Derives from their wallet
+- All attribute data is encrypted locally and stored in localStorage
+
+The commitment hash is displayed:
+'Your ShadowID: 927B-0714FE5AEB7CE97358F300578FB38EI'
+
+Copy button lets them save it.
+
+STEP 4: CONFIRMATION SCREEN
+
+Success state shows:
+- ✓ ShadowID Created Successfully! 🎉
+- 'Your zero-knowledge identity is now active on the Aleo testnet.'
+- Their commitment hash clearly displayed
+- QR code of their commitment for sharing
+- Options to proceed to their identity page
+
+BLOCKCHAIN VERIFICATION:
+The system checks if this wallet already has an account on the blockchain. 
+If yes, it recovers the previous commitment. If no, it registers the new one.
+
+This enables account recovery—if they connect from a different device with the 
+same wallet, they automatically recover their ShadowID.
+
+SUBSCRIPTION LIMITS:
+Users have limits on how many attributes they can activate based on a 
+subscription tier:
+- Free: 3 attributes
+- Premium: 10 attributes
+- Pro: Unlimited
+
+If they exceed their limit, a subscription modal appears offering upgrades.
+
+ANTI-SYBIL PROTECTION:
+The system tracks account creation attempts and rate-limits users to prevent 
+creating multiple identities. Each wallet address can only create one identity 
+per time period."
+
+=================================================================================
+            PAGE 4: MY SHADOWID / IDENTITY MANAGEMENT PAGE
+=================================================================================
+
+[User views their identity profile]
+
+"This page is their identity dashboard. It shows everything about their ShadowID.
+
+HEADER SECTION:
+- Large display of their commitment hash with QR code
+- Status badge (Active, Created Date, Expiration Date)
+- Quick actions: Edit, Download as QR, Restore from QR
+
+ACTIVATED ATTRIBUTES SECTION:
+A table showing all their claimed attributes:
+- Attribute Name (e.g., 'Age Range', 'Jurisdiction')
+- Claimed Value (e.g., '26-35', 'United States')
+- Status (Not Specified, Claimed, Verified)
+- Endorsements Count (how many peers endorsed this specific attribute)
+
+COLOR CODING:
+- Red: Not yet endorsed
+- Yellow: Partially endorsed (1-2 endorsements)
+- Green: Well endorsed (3+ endorsements)
+
+ENDORSEMENTS SECTION:
+Shows endorsements received for each attribute:
+- Who endorsed it (wallet address)
+- Which attribute they endorsed
+- When it was endorsed
+- Their trust score (based on their own Shadow Score)
+
+'John (0xAB...CD) endorsed your Age Range claim on March 25, 2024'
+
+SHADOW SCORE CALCULATION:
+'Your Shadow Score: 47
+
+Calculated as: Σ(Endorser Trust Score) for all unique endorsers
+- Endorser 1: Trust Score 12 (they have 12 endorsements from diverse peers)
+- Endorser 2: Trust Score 8
+- Endorser 3: Trust Score 27
+Total: 47'
+
+Why it works: Someone with a high Shadow Score endorsing you is more valuable 
+than someone with a low score. This creates a network effect where credibility 
+compounds over time.
+
+RECOVERY SECTION:
+'Recover ID from QR / Commit Hash'
+
+Users can restore their ShadowID on a new device by:
+1. Entering their commitment hash
+2. Scanning their QR code with the camera
+3. System recovers all their data from localStorage encryption
+
+ADMIN ACCESS (Hidden Section):
+At the bottom, a purple section appears:
+
+'Admin Access - Enter your admin credentials to access the admin panel'
+
+A button says: 'Recover Admin Access'
+
+Clicking it reveals a form:
+'Enter: Aleo2Admin + Your Commitment Hash'
+
+For example: 'Aleo2Admin927B-0714FE5AEB7CE97358F300578FB38EI'
+
+Only global admins know this pattern. It's the secret back-door to the admin 
+panel that requires knowing both:
+1. The Aleo2Admin prefix (known only to the founder)
+2. Their commitment hash (stored in their wallet/device)
+
+This provides admin access without a separate login system."
+
+=================================================================================
+             PAGE 5: ENDORSE PEERS (Peer Verification)
+=================================================================================
+
+[User goes to endorse another user]
+
+"This is the heart of the decentralized reputation system.
+
+PROCESS:
+
+Step 1: INPUT PHASE
+User enters:
+1. Target Commitment Hash
+   'Who do you want to endorse?'
+   They paste the other person's commitment hash
+   
+2. Select an Attribute
+   A dropdown showing all standard attributes:
+   - Age Range
+   - Jurisdiction
+   - Professional Title
+   - Educational Background
+   - Etc.
+   
+   They choose which attribute they're verifying.
+
+VALIDATION:
+The system checks several conditions BEFORE allowing the endorsement:
+
+1. Self-Endorsement Check
+   'You cannot endorse your own attributes'
+   Their own commitment hash is detected and rejected.
+
+2. Account Status Check
+   'You must create a ShadowID before endorsing peers'
+   Users need their own identity to endorse others.
+
+3. Format Validation
+   Ensures the commitment hash is valid format:
+   - New format: 'XXXX-YYYYYYYYYY...' (checksum-hash)
+   - Legacy hex format: '0x...' or pure hex
+
+4. Flagging Check (Anti-Sybil)
+   'Cannot endorse: this account has been flagged by administrators'
+   If the target account is flagged as a Sybil or fraudulent, 
+   the endorsement is blocked entirely.
+
+5. Rate Limiting
+   Prevents spam endorsements. Each user has a rate limit on how many 
+   endorsements they can give per day.
+
+Step 2: CONFIRMATION
+Shows:
+- Their commitment hash
+- Target commitment hash
+- Attribute being endorsed
+- Summary: 'You are confirming that [Target Hash] genuinely has [Attribute]'
+
+Step 3: BLOCKCHAIN TRANSACTION
+The system calls the Aleo smart contract:
+execute_transaction('endorse_attribute', {
+  target_commitment: [hash],
+  attribute_id: 'jurisdiction',
+  endorser_address: [wallet]
+})
+
+The blockchain records this permanently. It can never be deleted or falsified.
+
+Step 4: CONFIRMATION SCREEN
+✓ Endorsement Successful
+
+'You endorsed the Age Range attribute for commitment 927B-0714FE...'
+
+Shows:
+- Transaction hash for immutability proof
+- The endorsement is now live on the blockchain
+- Option to endorse another attribute or go back
+
+IMPORTANT FEATURES:
+
+Anonymous But Traceable:
+- The endorsement is recorded on blockchain
+- It shows your wallet address endorsed someone
+- But endorsements aren't tied to your real identity—just your wallet
+- Creates pseudonymity with transparency
+
+Trust Network Formation:
+As users endorse each other, a network forms:
+- Users with many diverse endorsers gain high Shadow Scores
+- Users who endorse high-credibility people build trust themselves
+- Sybils (fake accounts) are isolated because they can't get diverse endorsements
+
+Spam Prevention:
+- Rate limits prevent one account endorsing many others rapidly
+- Flagged accounts can't be endorsed
+- Self-endorsement is impossible"
+
+=================================================================================
+         PAGE 6: SELECTIVE DISCLOSURE (Generate Proof QR Codes)
+=================================================================================
+
+[User goes to create a selective disclosure proof]
+
+"This is where zero-knowledge proofs become practical.
+
+SCENARIO:
+'An online community wants to verify you're over 18 before letting you into 
+an adult section. You need to prove your age without revealing your exact 
+age or any other information.'
+
+THE SOLUTION: Selective Disclosure Proofs
+
+INTERFACE:
+
+Left Side: Available Attributes
+Shows all attributes the user activated when creating their ShadowID.
+They're displayed as toggleable checkboxes:
+
+☐ Age Range
+☐ Jurisdiction  
+☐ Professional Title
+☐ Educational Background
+☐ DAO Member Status
+
+Right Side: Attribute Values
+For each selected attribute, they must enter the specific value they're 
+proving. For example:
+
+Age Range: [26-35] (dropdown select)
+Jurisdiction: [United States] (dropdown select)
+
+This is CRITICAL: They're saying 'I'm claiming this specific value for this 
+attribute, and I'm about to prove it.'
+
+THE PROOF GENERATION PROCESS:
+
+1. User selects which attributes to disclose
+2. Enters the specific values they claim
+3. System creates a zero-knowledge proof showing:
+   'This user (identified by their commitment hash) genuinely has these 
+    attribute values'
+   
+   WITHOUT showing:
+   - Any other attributes
+   - Their real name
+   - Their wallet address
+   - Any identifying information
+
+4. System generates a QR code encoding the proof
+5. The QR includes:
+   - The proof itself (cryptographic mathematical verification)
+   - Their commitment hash
+   - The attributes they're proving
+   - Timestamp and expiration (default 7 days)
+   - A nullifier (one-time-use code to prevent replay attacks)
+
+EXPIRATION & SECURITY:
+
+Each QR has an expiration time. After expiration:
+- The QR code becomes invalid
+- The verifier won't accept it
+- User must generate a new QR
+
+This prevents:
+- Stolen QR codes being used indefinitely
+- Proof leakage weeks later
+- Unauthorized access
+
+NULLIFIER (One-Time Use):
+Each QR has a unique nullifier—a session identifier. The system tracks which 
+nullifiers have been used. If someone tries to use the same QR twice:
+- First use: ✓ Accepted
+- Second use: ✗ Rejected 'This proof has already been verified'
+
+DOWNLOAD & SHARING:
+Users can:
+- Download QR as an image
+- Display QR on screen
+- Email QR code
+- Share QR link
+
+The other party simply scans the QR to verify the proof.
+
+DEMONSTRATION:
+'Age Range selective disclosure:
+- System proves: User has Age Range = 26-35
+- It does NOT prove or reveal: Jurisdiction, Title, Name, Address
+- Verifier can be confident: User is indeed 26-35
+- Privacy maintained: Everything else remains hidden
+
+This is zero-knowledge cryptography in practice.'
+
+COMMON USE CASES:
+1. Age verification (gaming, adult sites)
+2. Professional credential verification (job applications)
+3. Jurisdictional restrictions (financial products)
+4. Educational background proof (university admissions)
+5. DAO membership verification (exclusive communities)"
+
+=================================================================================
+         PAGE 7: PROOF REQUESTS & VERIFIER DASHBOARD
+=================================================================================
+
+[User goes to proof requests page / verifier dashboard]
+
+"Now we switch perspective to the verifier—someone who needs to verify claims.
+
+TWO COMPLEMENTARY FLOWS:
+
+FLOW 1: VERIFIER INITIATES REQUEST (Verifier Dashboard)
+
+Verifiers are applications, organizations, or individuals who need proof.
+They access the Verifier Dashboard.
+
+DASHBOARD SHOWS:
+- All active verification sessions
+- Pending requests waiting for user response
+- Completed verifications with results
+- Statistics on verification throughput
+
+CREATING A PROOF REQUEST:
+1. Verifier inputs: 'Which commitment hash am I verifying?'
+2. Specifies: 'Which attributes do I need?'
+   (They can request Age Range, Jurisdiction, Title, etc.)
+3. Sets expiration: 'How long should the request stay open?'
+4. Generates request ID and QR code
+5. Sends to the user (via email, message, or QR scan)
+
+USER RECEIVES REQUEST:
+They see: 'Verify Age Range proof for [Verifier Name]'
+
+On the /proof-request/[id] page:
+- Shows what's being requested
+- Shows who's requesting it
+- Shows request expiration
+- Explains why (the verifier can add context)
+- Has a button: 'Respond with Proof'
+
+USER RESPONDS:
+1. Generates selective disclosure QR for Age Range
+2. Submits to the verifier
+3. System creates a nullifier linking response to request
+4. Records on blockchain: 'User at [commitment] responded to request [id]'
+
+VERIFICATION:
+Verifier receives the response:
+1. Scans the proof QR
+2. System validates the zero-knowledge proof
+3. Confirms: 'Yes, this user has Age Range = 26-35'
+4. Verifier sees ✓ VERIFIED
+5. Session marked complete
+
+FLOW 2: USER RESPONDS TO REQUEST (Proof Request Inbox)
+
+Users get a notification: 'New verification request from [Verifier]'
+
+At /proof-requests, they see:
+- 'Verify my Age Range - Requested by YoloGames'
+- 'Verify my Jurisdiction - Requested by FinanceApp'
+- Etc.
+
+Each request shows:
+- Who requested it
+- What attributes are needed
+- How long until expiration
+- Button: 'Generate & Submit Proof'
+
+Clicking it:
+1. Takes them to selective disclosure page
+2. Pre-populates with the requested attributes
+3. User confirms and submits
+4. Proof sent back to verifier
+
+VERIFIER DASHBOARD STATISTICS:
+
+Verification Metrics:
+- Total Verifications: 347
+- Pending Requests: 8
+- Verified This Week: 42
+- Verification Success Rate: 98.7%
+
+Recent Verification Sessions:
+Shows timeline of all verifications:
+- 'User [addr...] verified Age Range on March 25, 2:14 PM'
+- 'User [addr...] failed jurisdiction check on March 25, 1:45 PM'
+- Filters by: All / Pending / Verified / Failed
+
+IMPORTANT DESIGN PRINCIPLE:
+The system is completely decentralized. There's no central authority saying 
+'you may verify'. Any user can be a verifier. Any application can request 
+proofs. The blockchain and cryptography do the actual verification, not a 
+central server."
+
+=================================================================================
+                    PAGE 8: ATTESTATION SYSTEM
+=================================================================================
+
+[The /attestation page is part of the verification flow]
+
+"The Attestation page is where users can publicly attest to being verified 
+for certain attributes.
+
+PURPOSE:
+After completing verification with multiple verifiers, users can collect 
+attestation badges showing 'this was verified'.
+
+FLOW:
+1. User completes multiple proof requests
+2. Goes to /attestation
+3. Sees list of attributes they've been verified for
+4. Can request an 'attestation certificate'—a public record showing they were 
+   verified
+
+ATTESTATION CERTIFICATE:
+Format: 'Certificate of Verification'
+- Attribute: Age Range
+- Value: 26-35
+- Verifier: YoloGames (wallet: 0x...)
+- Date Verified: March 25, 2024
+- Verifier Trust Score: 87 (proof that verifier is trustworthy)
+
+This is stored on blockchain as a permanent record.
+
+USE CASES:
+- Showing to other platforms: 'I was verified by trusted parties'
+- Building multi-layer reputation: Each attestation adds credibility
+- Competitive verification: Services compete to be trusted verifiers
+
+ANTI-FRAUD MEASURES:
+- Only users who completed proof requests can get attestations
+- Attestations include the verifier's trust score
+- Revocation: If a verifier is flagged, their attestations lose credibility"
+
+=================================================================================
+         PAGE 9: ACTIVITY LOGS & AUDIT TRAIL
+=================================================================================
+
+[User goes to /logs page]
+
+"Every action in ShadowID is logged and cryptographically recorded.
+
+WHAT'S LOGGED:
+1. Identity Creation
+   'Created ShadowID with 5 attributes' - March 25, 2024, 2:14 PM
+
+2. Endorsements Received
+   'Received endorsement from 0xAB...CD for Jurisdiction' - March 25, 2024, 1:45 PM
+
+3. Endorsements Given
+   'Endorsed 0x12...34 for Professional Title' - March 24, 2024, 3:22 PM
+
+4. Proof Requests Received
+   'Received proof request from VerifierApp for Age Range' - March 24, 2024, 10:01 AM
+
+5. Proof Requests Responded
+   'Responded to proof request from VerifierApp' - March 24, 2024, 2:15 PM
+
+6. Attestations Issued
+   'Received attestation certificate for Age Range' - March 23, 2024, 4:30 PM
+
+7. Account Modifications
+   'Updated activated attributes' - March 20, 2024, 9:00 AM
+
+LOG DISPLAY:
+Timeline view showing all activities chronologically.
+Each entry shows:
+- Action type with icon
+- Description
+- Timestamp
+- Related commitments/addresses (abbreviated for privacy)
+
+Filters by:
+- All activities
+- Identity activities
+- Endorsements
+- Proof requests
+- Account activities
+
+AUDIT TRAIL GUARANTEE:
+'All activities are immutable on the Aleo blockchain. This log is generated 
+directly from blockchain records. It cannot be falsified or altered.'
+
+PURPOSE:
+1. User transparency: Users see everything happening on their account
+2. Fraud detection: Unusual activity patterns become obvious
+3. Regulatory compliance: Complete audit trail for compliance audits"
+
+=================================================================================
+                 PAGE 10: PRIVACY & SETTINGS
+=================================================================================
+
+[User goes to /settings page]
+
+"The settings page gives users complete control over their privacy and account.
+
+ACCOUNT SECTION:
+- Display: Current wallet address
+- Status: ShadowID active / not created
+- Created: Date and time
+- Link: 'View Full Profile' button
+
+PRIVACY SETTINGS:
+1. Attribute Visibility
+   'Choose which attributes are visible on your public profile'
+   Toggles: Age Range [ON], Jurisdiction [ON], Title [OFF]
+
+2. Endorsement Visibility
+   'Show endorsements from other users on your profile'
+   Options: Everyone / Verified Users Only / Only Me
+
+3. Search Indexing
+   'Allow your commitment hash to be found in public search'
+   Default: OFF (opt-in, not opt-out)
+
+NOTIFICATION SETTINGS:
+1. Email Notifications
+   ☐ When someone endorses me
+   ☐ When I receive proof requests
+   ☐ When verification is complete
+   ☐ Weekly summary of my credibility score
+
+2. In-App Notifications
+   ☐ Same options as email
+
+DATA MANAGEMENT:
+1. Download My Data
+   'Export all your ShadowID data as JSON'
+   Includes: Attributes, endorsements, proofs, activity logs
+   For portability or backup
+
+2. View Activity Log
+   Direct link to /logs page
+
+3. Clear Activity History
+   'Permanently delete all activity logs from your device'
+   WARNING: Blockchain records are permanent and cannot be deleted
+   This only clears local cache
+
+ACCOUNT RECOVERY:
+1. Backup Commitment Hash
+   'Save your commitment hash in multiple locations'
+   Shows QR code and text version
+
+2. Recovery Seed
+   'If you lose wallet access, you can recover with this seed'
+   (In production, would integrate with wallet backup systems)
+
+DANGER ZONE:
+1. Delete ShadowID
+   'Permanently delete your ShadowID and all associated data'
+   WARNING: 'This cannot be undone. Your commitment hash will be marked as 
+   inactive on the blockchain.'
+   
+   Confirmation required:
+   - Type 'DELETE MY IDENTITY' to confirm
+   - Understand all endorsements become invalid
+   - Public profile disappears
+
+ADMIN ACCESS (If User is Admin):
+1. Admin Panel Link
+   'You have admin privileges. Access the admin control panel.'
+   Shows button to /admin
+
+2. Admin Status
+   'Type: Global Admin / University Admin / Government Admin / DAO Admin'
+   Shows organization (if applicable)
+   Shows when admin access was granted"
+
+=================================================================================
+              PAGE 11: ADMIN PANEL (Global Admin Only)
+=================================================================================
+
+[Global admin accesses /admin page]
+
+"The Admin Panel is the governance layer of ShadowID.
+
+ADMIN ACCESS:
+Only accessible via the commitment hash password mechanism:
+1. Go to /identity page (if no ShadowID, show recovery option)
+2. Click 'Recover Admin Access' button
+3. Enter: 'Aleo2Admin' + their commitment hash
+4. Redirected to /admin if correct
+
+FORMAT: Aleo2Admin927B-0714FE5AEB7CE97358F300578FB38EI
+
+DASHBOARD OVERVIEW:
+Displays:
+- Currently logged in as: 0x...
+- Admin type: Global / University / Government / DAO / Universal
+- Last admin action: [timestamp]
+
+FOUR MAIN SECTIONS:
+
+SECTION 1: FLAGGED ACCOUNTS
+
+Table of all flagged accounts:
+Columns: Wallet Address | Reason | Severity | Flagged By | Date | Status | Actions
+
+Severity Levels:
+- Low: User broke minor rules (1 warning)
+- Medium: Suspected Sybil behavior (multiple accounts)
+- High: Confirmed Sybil or fraudulent activity
+
+Actions:
+- View Details: See full flag history and investigation notes
+- Remove Flag: Unmark account if investigation shows it's clean
+- Remove Shadow Score: Permanently zero out their credibility score
+
+SECTION 2: FLAG NEW ACCOUNT
+
+Form to flag a suspicious account:
+- Wallet Address: [input field]
+- Severity: [Low / Medium / High] dropdown
+- Reason: [text area]
+  - Options: Sybil Activity / Fraudulent Claims / Spam Endorsements / 
+            Other (explain)
+- Investigation Notes: [longer text area]
+- Attachments: [upload evidence/screenshots]
+
+Click 'Flag Account':
+- Account added to flagged list
+- Immediately prevented from endorsing others
+- Public profile shows warning badge
+- Audit log entry created
+
+SECTION 3: ASSIGN MINI-ADMIN
+
+Form to delegate admin powers to trusted users:
+
+Wallet Address: [input field]
+Mini-Admin Type: [dropdown]
+  - University Admin (manage university members)
+  - Government Admin (manage government verified users)
+  - DAO Admin (manage DAO members)
+  - Universal Admin (full access like global admin, for judges)
+
+Organization Name (if not Universal):
+  - Examples: 'MIT', 'US Treasury', 'MakerDAO'
+
+Click 'Assign Mini-Admin':
+- User gets admin access immediately
+- Can only see/manage their organization's users
+- Can verify credentials from their institution
+- Audit log records the assignment
+
+Mini-Admin Interface:
+When mini-admins log in, they see:
+- Only users claiming to be from their organization
+- Can verify credentials: 'Is John really a MIT graduate?'
+- Can flag suspicious accounts within their organization
+- Cannot manage global admin functions
+
+SECTION 4: MANAGE ADMINS
+
+Table of all current admins:
+
+Columns: Wallet Address | Type | Organization | Assigned By | Date Assigned | Actions
+
+Actions for Each Admin:
+- View Activity: See all their admin actions
+- Revoke Access: Remove their admin privileges immediately
+- Edit Type: Change their admin type or organization
+
+Audit Trail:
+'John (0xAB...CD) revoked admin access from Mike (0xEF...12) on March 25, 2024, 
+2:14 PM. Reason: Left organization'
+
+SECTION 5: AUDIT LOG
+
+Complete timeline of all admin actions:
+
+Columns: Timestamp | Action | Admin | Target | Details
+
+Actions Tracked:
+- Account flagged: 'John flagged 0xAB...CD for Sybil activity'
+- Flag removed: 'Jane removed flag from 0xEF...12'
+- Shadow score removed: 'Admin removed shadow score from 0x12...34'
+- Mini-admin assigned: 'John assigned 0x99...AA as University Admin for MIT'
+- Mini-admin revoked: 'Admin revoked access from 0x99...AA'
+
+Each entry is immutable—recorded on blockchain.
+
+ANTI-SYBIL PROTECTION OVERVIEW:
+
+System shows statistics:
+- Total flagged accounts: 23
+- Accounts with removed shadow score: 8
+- Pending investigations: 3
+- Admins in system: 4 (1 Global, 3 Mini-admins)
+
+GOVERNING PRINCIPLES:
+
+'The admin panel implements a decentralized governance model:
+1. Global admins can flag, verify, and assign other admins
+2. Mini-admins can only operate within their organization
+3. All actions are audited and immutable on blockchain
+4. No action can hide or be reversed—only documented
+5. Universal admins (judges) get full access for dispute resolution'"
+
+=================================================================================
+           PAGE 12: PRICING & SUBSCRIPTION (Optional)
+=================================================================================
+
+[User can access /pricing to see plans]
+
+"ShadowID offers tiered subscriptions for different use cases.
+
+THREE TIERS:
+
+TIER 1: FREE
+- Attributes: 3 activated attributes
+- Shadow Score: Unlimited growth
+- Proofs: 5 proofs per month
+- Endorsements: Unlimited giving
+- Priority: Standard
+- Cost: $0/month
+
+TIER 2: PREMIUM ($9.99/month)
+- Attributes: 10 activated attributes
+- Shadow Score: Unlimited
+- Proofs: 50 proofs per month
+- Endorsements: Priority in networks
+- Priority: Email support
+- Cost: $9.99/month
+
+TIER 3: PROFESSIONAL ($29.99/month)
+- Attributes: Unlimited
+- Proofs: Unlimited
+- Custom attributes: Create your own attribute types
+- API access: For integrating ShadowID into apps
+- Priority: 24/7 phone support
+- Cost: $29.99/month
+
+CHECKOUT FLOW (Stripe Integration):
+When users try to exceed their tier limits:
+1. Subscription modal appears: 'Upgrade to continue'
+2. Shows current tier and what's included
+3. 'Upgrade to Premium' button
+4. Redirects to Stripe checkout
+5. Completes payment
+6. Immediate access upgrade
+
+USAGE DASHBOARD:
+Users can see:
+- Current tier: Premium
+- Proofs used this month: 32/50
+- Attributes used: 8/10
+- Days until billing cycle: 12"
+
+=================================================================================
+                      PAGE 13: PUBLIC IDENTITY PROFILE
+=================================================================================
+
+[User's public profile at /identity when viewed by others]
+
+"Each user can have a public identity profile visible to others.
+
+PROFILE SHOWS:
+1. Commitment Hash
+   Large display at top
+   QR code for sharing
+   'Share this commitment hash to receive endorsements'
+
+2. Public Attributes
+   Table of attributes they chose to make public:
+   
+   Attribute | Value | Endorsements | Verified?
+   Age Range | 26-35 | 12 | ✓
+   Jurisdiction | USA | 8 | ✓
+   Title | Engineer | 5 | ✗
+
+   Green checkmark = Verified (3+ endorsements from trusted sources)
+   Red X = Not verified (insufficient endorsements)
+
+3. Shadow Score
+   Large number: 47
+   Breakdown: '47 credibility points from 8 different endorsers'
+   
+   Chart showing endorsement distribution:
+   - 12 endorsements from users with 20+ credibility
+   - 8 endorsements from users with 5-20 credibility
+   - 5 endorsements from users with <5 credibility
+
+4. Endorsements Section
+   Depends on user's privacy setting:
+   
+   If public:
+   'Recent Endorsements:
+   - 0xAB...CD endorsed Age Range on March 25'
+   - 0xEF...12 endorsed Jurisdiction on March 24'
+   
+   If private:
+   'Endorsements are private'
+
+5. Verification History
+   Shows: 'This user has completed [X] proof requests from verified organizations'
+   'Verified by YoloGames, FinanceApp, EducationHub'
+
+6. Trust Indicators
+   
+   - Verification Status: 'Actively Verified' / 'Unverified' / 'Flagged'
+   - Account Age: 'Created 3 months ago'
+   - Activity Status: 'Last active 2 hours ago'
+
+7. Action Buttons (For Visitors)
+   - 'Endorse an Attribute' - Send them an endorsement
+   - 'Request Verification' - Ask them to prove a specific attribute
+
+PRIVACY CONTROLS:
+Users can completely hide their profile:
+Setting: 'Make profile private'
+Result: Profile returns 404 or 'User has made their profile private'
+
+Or make it semi-public:
+- Show shadow score: Yes/No
+- Show endorsements: Yes/No
+- Show activity: Yes/No"
+
+=================================================================================
+                         PAGE 14: VERIFY PAGE
+=================================================================================
+
+[External verifier comes to /verify to scan proofs]
+
+"This is the public verification interface for third parties.
+
+SIMPLE INTERFACE:
+Heading: 'Verify ShadowID Proof'
+
+Instructions: 'Scan the QR code from a user''s ShadowID proof to verify their 
+claims.'
+
+Two Input Methods:
+
+1. SCAN QR CODE
+   Camera scanner: Click to open device camera
+   Scan the proof QR code
+   Auto-detects and processes
+
+2. PASTE PROOF CODE
+   Text area: Paste the proof code directly
+   (For mobile or if camera unavailable)
+
+VERIFICATION PROCESS:
+System:
+1. Reads proof data
+2. Validates zero-knowledge proof cryptographically
+3. Checks proof hasn't expired
+4. Checks proof hasn't been used before (nullifier check)
+5. Confirms commitment hash is valid
+6. Extracts proven attributes
+
+RESULT SCREEN:
+
+✓ VERIFIED
+User: 927B-0714FE5AEB7CE97358F300578FB38EI
+Proven Attributes:
+- Age Range: 26-35 ✓
+- Jurisdiction: United States ✓
+
+Proof Details:
+- Verified At: March 25, 2024, 2:14 PM UTC
+- Expires: March 31, 2024, 2:14 PM UTC
+- Prover Trust Score: 47 / 100
+- Verifier: You (0x...)
+
+Additional Checks:
+- ✓ Proof cryptographically valid
+- ✓ Expiration is valid
+- ✓ Not a replay attack
+- ✓ One-time use: Not previously verified
+
+User Information:
+- Account age: 3 months
+- Shadow Score: 47 (Moderate credibility)
+- Flagged status: Clean
+
+FAILURE CASES:
+
+❌ PROOF INVALID
+'This proof failed cryptographic validation. Possible reasons:
+- Code was altered or corrupted
+- Code is malformed
+- Code is from a different system
+
+Ask the user to generate a new proof.'
+
+❌ PROOF EXPIRED
+'This proof expired on March 30, 2024. It can no longer be used for verification.
+Ask the user to generate a new proof.'
+
+❌ PROOF ALREADY USED
+'This proof has already been verified once. It cannot be reused.
+For security, each proof is one-time-use. Ask the user to generate a new proof.'
+
+❌ USER FLAGGED
+'⚠️ WARNING: This user''s account is flagged as suspicious.
+Reason: Sybil Activity
+Flagged by: Admin
+Date: March 20, 2024
+
+We recommend not accepting this proof. Proceed with caution.'
+
+INTEGRATION NOTES:
+Developers can:
+- Embed this verification UI in their apps
+- Call the verification API directly
+- Build custom verification flows
+
+Example: Gaming platform integrates ShadowID:
+1. User tries to enter adult section
+2. Platform says 'Verify age'
+3. User generates age-range proof
+4. Platform scans with /verify
+5. Gets instant ✓ VERIFIED for 26-35
+6. User gets access"
+
+=================================================================================
+                        PAGE 15: VERIFIER DASHBOARD
+=================================================================================
+
+[Covered in Page 7 - See that section for full details]
+
+This page was already covered comprehensively. It's the dashboard for applications 
+and verifiers who need to request proofs from users.
+
+=================================================================================
+                     PAGE 16: PRIVACY & TERMS
+=================================================================================
+
+[User accesses /privacy page]
+
+"ShadowID privacy documentation explains:
+
+CORE PRINCIPLES:
+1. 'We never store your personal data. Everything is encrypted on your device.'
+2. 'Your blockchain commitments are immutable but disconnected from your identity.'
+3. 'You have total control over what you share.'
+
+WHAT WE STORE:
+- Your commitment hash (public, on blockchain)
+- Your encrypted attributes (on your device only)
+- Your endorsement history (public, on blockchain)
+- Your activity logs (private, on your device)
+
+WHAT WE NEVER STORE:
+- Your real name
+- Your email address (unless you voluntarily share for notifications)
+- Your personal documents
+- Your biometric data
+- Your location (unless claimed as attribute)
+- IP addresses (edge servers don't log)
+
+DATA RIGHTS:
+- Right to access: Download all your data
+- Right to delete: Permanently remove local data (blockchain is permanent)
+- Right to portability: Export in standard formats
+- Right to be forgotten: Request profile deletion (commitment becomes inactive)
+
+BLOCKCHAIN TRANSPARENCY:
+'All commitments and endorsements are recorded on the Aleo blockchain. 
+This means:
+- Anyone can verify we didn't tamper with data
+- No backdoor access by us
+- Permanent audit trail
+- But also: your commitment hash is permanently part of the ledger
+
+We do not ever have access to your private keys or actual attribute values. 
+Only cryptographic commitments are visible.'"
+
+=================================================================================
+                    CONCLUSION & GOVERNANCE
+=================================================================================
+
+[Wrap up the presentation]
+
+"So, to summarize what ShadowID accomplishes:
+
+PROBLEM SOLVED:
+Traditional systems force a choice:
+- Privacy OR credibility
+- Centralization OR trust
+
+ShadowID achieves:
+- Privacy AND credibility through zero-knowledge cryptography
+- Decentralization with trust through peer verification and blockchain
+
+KEY INNOVATIONS:
+
+1. Zero-Knowledge Cryptography
+   Prove attributes without revealing values. The first practical zero-knowledge 
+   identity system for everyday use.
+
+2. Decentralized Reputation (Shadow Score)
+   Credibility earned through diverse peer endorsements, not centralized algorithms. 
+   Can't be gamed. Can't be hidden.
+
+3. Selective Disclosure
+   Users share only what's needed for each verification. Age-restricted content 
+   doesn't learn your jurisdiction. Job applications don't learn your age.
+
+4. Blockchain Attestation
+   All records immutable, auditable, permanent. No company can manipulate history. 
+   Complete transparency.
+
+5. Anti-Sybil Protection
+   Rate limiting, flagging, isolation of fraudulent accounts. The system is 
+   resistant to identity fraud at scale.
+
+6. Decentralized Admin Model
+   Global admins, mini-admins for organizations, universal admins for judges. 
+   Governance without centralized control.
+
+GOVERNANCE & FUTURE:
+The system is designed to transition to full decentralization:
+- Currently: Centralized server for speed
+- Phase 2: Hybrid with some on-chain
+- Phase 3: Fully decentralized with DAO governance
+- Phase 4: Community-operated with zero core team
+
+The admin panel is built for this transition. Mini-admins become the foundation 
+of decentralized verification networks for universities, governments, DAOs.
+
+REAL-WORLD IMPACT:
+
+This system enables:
+- Identity verification without data breaches (no personal data to leak)
+- Decentralized education verification (universities verify their graduates)
+- Jurisdiction-specific regulation (financial products know user's jurisdiction 
+  without identity)
+- Community-driven trust (reputation earned genuinely from community)
+- Privacy-first services (apps that don't need full identity)
+
+We believe ShadowID represents the future of digital identity: 
+decentralized, private, verifiable, and user-controlled.
+
+Thank you."
+
+=================================================================================
+                            END OF PRESENTATION
+=================================================================================
+
+TIPS FOR JUDGES:
+1. Lead with the problem: Most web3 identity projects ignore privacy
+2. Show the dashboard: Let them see the UI is intuitive
+3. Explain Shadow Score: It's the key innovation (reputation network)
+4. Demo a proof: Generate a selective disclosure, show them the QR
+5. Highlight anti-sybil: Show how flagging and mini-admins prevent fraud
+6. Emphasize decentralization path: Not just crypto theater, actual roadmap
+7. Note the blockchain integration: All on Aleo, all verifiable
