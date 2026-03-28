@@ -205,9 +205,14 @@ export function IdentityManagementPage() {
             <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <h2 className="text-xl font-semibold mb-2">No ShadowID Found</h2>
             <p className="text-muted-foreground mb-6">You haven't created a ShadowID yet. Create one to start building your zero-knowledge identity.</p>
-            <Link href="/create-identity">
-              <Button>Create ShadowID</Button>
-            </Link>
+            <div className="flex flex-col gap-3 sm:flex-row justify-center">
+              <Link href="/create-identity">
+                <Button>Create ShadowID</Button>
+              </Link>
+              <Link href="/import-identity">
+                <Button variant="outline">Restore from QR</Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

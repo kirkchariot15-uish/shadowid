@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Copy, CheckCircle, Download } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Copy, CheckCircle, Download, Share2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import QRCode from 'qrcode'
 
@@ -15,13 +15,14 @@ interface IDCardProps {
     notesCount: number
   }
   showActions?: boolean
+  onShare?: () => void
 }
 
-export function IDCard({ commitment, walletAddress, createdAt, userInfo, showActions = true }: IDCardProps) {
+export function IDCard({ commitment, walletAddress, createdAt, userInfo, showActions = true, onShare }: IDCardProps) {
   const [copied, setCopied] = useState(false)
   const [qrUrl, setQrUrl] = useState<string>('')
 
-  useState(() => {
+  useEffect(() => {
     // Generate QR code for the ID card
     const generateQR = async () => {
       try {
@@ -45,7 +46,7 @@ export function IDCard({ commitment, walletAddress, createdAt, userInfo, showAct
       }
     }
     generateQR()
-  })
+  }, [commitment, createdAt, walletAddress, userInfo])
 
   const handleCopy = () => {
     navigator.clipboard.writeText(commitment)
@@ -217,15 +218,21 @@ export function IDCard({ commitment, walletAddress, createdAt, userInfo, showAct
 
       {/* Actions */}
       {showActions && (
-        <div className="mt-6 flex gap-3">
-          <Button onClick={handleCopy} variant="outline" className="flex-1 gap-2">
+        <div className="mt-6 flex gap-3 flex-wrap">
+          <Button onClick={handleCopy} variant="outline" className="flex-1 gap-2 min-w-max">
             {copied ? <CheckCircle className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
             {copied ? 'Copied!' : 'Copy Commitment'}
           </Button>
-          <Button onClick={handleDownload} className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground gap-2">
+          <Button onClick={handleDownload} className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground gap-2 min-w-max">
             <Download className="h-4 w-4" />
             Download ID Card
           </Button>
+          {onShare && (
+            <Button onClick={onShare} variant="outline" className="flex-1 gap-2 min-w-max">
+              <Share2 className="h-4 w-4" />
+              Share
+            </Button>
+          )}
         </div>
       )}
     </div>

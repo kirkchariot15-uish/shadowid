@@ -4,6 +4,7 @@ export interface QRDisclosureProof {
   type: string
   commitment: string
   selectedAttributes: string[]
+  attributeValues?: Record<string, string>
   timestamp: number
   expiresAt: string
   userAddress: string
@@ -13,6 +14,18 @@ export interface QRDisclosureProof {
   purpose?: string
   requestLinkId?: string
   nullifier?: string
+}
+
+export interface IdentityQRCode {
+  type: 'shadowid-v1'
+  commitment: string
+  timestamp: string
+  walletAddress: string
+  userInfo: {
+    hasPhoto: boolean
+    documentCount: number
+    notesCount: number
+  }
 }
 
 export interface QRDecodeResult {
