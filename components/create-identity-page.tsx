@@ -425,6 +425,10 @@ export function CreateIdentityPage() {
       
       // Set flag for dashboard success notification
       localStorage.setItem('shadowid-identity-created-success', 'true')
+      
+      // Clear any errors from previous attempts
+      setError(null)
+      setRetryCount(0)
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to create identity'
       setError(errorMsg)
@@ -695,14 +699,20 @@ export function CreateIdentityPage() {
               </div>
             </div>
             {error && (
-              <div className="p-4 rounded-lg border border-red-400/30 bg-red-400/5">
-                <div className="flex items-start gap-3">
+              <div className="p-4 rounded-lg border border-red-400/30 bg-red-400/5 flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3 flex-1">
                   <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-red-400">Error Creating Identity</p>
                     <p className="text-xs text-red-400/80 mt-1">{error}</p>
                   </div>
                 </div>
+                <button
+                  onClick={() => setError(null)}
+                  className="text-red-400 hover:text-red-300 text-xl flex-shrink-0 leading-none"
+                >
+                  ×
+                </button>
               </div>
             )}
             {isCreating && (
