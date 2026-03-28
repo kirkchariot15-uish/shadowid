@@ -351,7 +351,7 @@ export function ProofResponsePage() {
                 </p>
 
                 {/* QR Code */}
-                <div className="bg-white p-4 rounded-lg mb-8">
+                <div className="bg-background p-4 rounded-lg mb-8 border border-border flex items-center justify-center">
                   <img src={qrUrl} alt="Proof Response QR Code" className="w-64 h-64" />
                 </div>
 

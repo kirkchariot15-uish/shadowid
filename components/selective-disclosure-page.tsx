@@ -314,7 +314,7 @@ export default function SelectiveDisclosurePage() {
                     <h2 className="text-xl font-semibold">Proof Generated</h2>
                   </div>
 
-                  <div className="bg-white p-4 rounded-lg mb-6 flex items-center justify-center">
+                  <div className="bg-background p-4 rounded-lg mb-6 flex items-center justify-center border border-border">
                     <img src={qrUrl} alt="QR Code" className="h-64 w-64" />
                   </div>
 
