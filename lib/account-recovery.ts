@@ -1,9 +1,25 @@
 'use client'
 
+import { getAdminStore } from './admin-store'
+
 /**
  * Account Recovery - Detects existing accounts on blockchain by wallet address
  * This allows users to recover their accounts when they import their private key
  */
+
+/**
+ * Verify admin access with commitment hash and password
+ * Global admins can access the admin panel by entering: Aleo2Admin{commitmentHash}
+ */
+export function verifyAdminAccess(commitmentHash: string, password: string): boolean {
+  try {
+    const adminStore = getAdminStore()
+    return adminStore.verifyGlobalAdminPassword(commitmentHash, password)
+  } catch (error) {
+    console.error('[v0] Error verifying admin access:', error)
+    return false
+  }
+}
 
 /**
  * Check if wallet address already has an account registered on-chain

@@ -1,13 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { Button } from '@/components/ui/button'
-import { Lock, ArrowLeft, Trash2, AlertTriangle, CheckCircle } from 'lucide-react'
+import { Lock, ArrowLeft, Trash2, AlertTriangle, CheckCircle, Key } from 'lucide-react'
 import Link from 'next/link'
 import { clearActivityLogs } from '@/lib/activity-logger'
 import { markAccountAsDeleted } from '@/lib/account-recovery'
+import { getAdminStore } from '@/lib/admin-store'
 
 export default function SettingsPage() {
   const { address, disconnect } = useAleoWallet()
@@ -16,6 +17,22 @@ export default function SettingsPage() {
   const [deleteInput, setDeleteInput] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteComplete, setDeleteComplete] = useState(false)
+  const [showAdminForm, setShowAdminForm] = useState(false)
+  const [adminPassword, setAdminPassword] = useState('')
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  // Check if this wallet has any admin role
+  const checkAdminStatus = () => {
+    const adminStore = getAdminStore()
+    const admin = adminStore.getAdmin(address!)
+    return !!admin
+  }
+
+  React.useEffect(() => {
+    if (isConnected) {
+      setIsAdmin(checkAdminStatus())
+    }
+  }, [address, isConnected])
 
   if (!isConnected) {
     return (
@@ -145,6 +162,85 @@ export default function SettingsPage() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Admin Access */}
+        {isAdmin && (
+          <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-6 mb-6">
+            <div className="flex items-start gap-3 mb-4">
+              <Key className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-semibold text-blue-600">Admin Access</h3>
+                <p className="text-sm text-blue-600/80 mt-1">You have admin privileges</p>
+              </div>
+            </div>
+            <Link href="/admin">
+              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                Go to Admin Panel
+              </Button>
+            </Link>
+          </div>
+        )}
+
+        {/* Admin Password Entry */}
+        <div className="rounded-lg border border-purple-500/30 bg-purple-500/5 p-6 mb-6">
+          <div className="flex items-start gap-3 mb-4">
+            <Key className="h-5 w-5 text-purple-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-purple-600">Global Admin Access</h3>
+              <p className="text-sm text-purple-600/80 mt-1">Enter admin password to access control panel</p>
+            </div>
+          </div>
+
+          {!showAdminForm ? (
+            <Button
+              onClick={() => setShowAdminForm(true)}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              Enter Admin Password
+            </Button>
+          ) : (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-purple-700 mb-1">
+                  Admin Password (Aleo2Admin + Commitment Hash)
+                </label>
+                <input
+                  type="password"
+                  placeholder="Aleo2Admin..."
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm"
+                />
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => {
+                    setShowAdminForm(false)
+                    setAdminPassword('')
+                  }}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    // Redirect to admin panel with password
+                    const commitment = localStorage.getItem('shadowid-commitment') || ''
+                    if (adminPassword === `Aleo2Admin${commitment}`) {
+                      window.location.href = '/admin'
+                    } else {
+                      alert('Invalid admin password')
+                    }
+                  }}
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
+                >
+                  Access Admin Panel
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Danger Zone */}

@@ -3,6 +3,8 @@
  * Prevents users from creating multiple identities and self-endorsing
  */
 
+import { getAdminStore } from './admin-store'
+
 /**
  * Check if user is trying to self-endorse
  * @param userCommitment - User's own commitment hash
@@ -14,16 +16,48 @@ export function isSelfEndorsement(userCommitment: string, targetCommitment: stri
 }
 
 /**
+ * Check if wallet address is flagged
+ * @param walletAddress - Wallet address to check
+ * @returns true if flagged, false otherwise
+ */
+export function isAccountFlagged(walletAddress: string): boolean {
+  try {
+    const adminStore = getAdminStore()
+    return adminStore.isAccountFlagged(walletAddress)
+  } catch (error) {
+    console.error('[v0] Error checking account flag status:', error)
+    return false
+  }
+}
+
+/**
+ * Check if wallet has shadow score removed
+ * @param walletAddress - Wallet address to check
+ * @returns true if shadow score was removed, false otherwise
+ */
+export function hasShadowScoreRemoved(walletAddress: string): boolean {
+  try {
+    const adminStore = getAdminStore()
+    return adminStore.hasRemovedShadowScore(walletAddress)
+  } catch (error) {
+    console.error('[v0] Error checking shadow score status:', error)
+    return false
+  }
+}
+
+/**
  * Validate endorsement attempt
  * @param userAddress - User's wallet address
  * @param targetCommitment - Target commitment to endorse
  * @param userCommitment - User's own commitment
+ * @param targetWalletAddress - Target wallet address for flagging check (optional)
  * @returns Error message if invalid, null if valid
  */
 export function validateEndorsementAttempt(
   userAddress: string,
   targetCommitment: string,
-  userCommitment: string | null
+  userCommitment: string | null,
+  targetWalletAddress?: string
 ): string | null {
   // Check if user has created an identity first
   if (!userCommitment) {
@@ -38,6 +72,11 @@ export function validateEndorsementAttempt(
   // Validate commitment format (should be valid field hash)
   if (!isValidCommitmentFormat(targetCommitment)) {
     return 'Invalid commitment hash format';
+  }
+
+  // Check if target account is flagged by admin
+  if (targetWalletAddress && isAccountFlagged(targetWalletAddress)) {
+    return 'Cannot endorse: this account has been flagged by administrators';
   }
 
   // Check for mutual endorsement (collusion detection)

@@ -8,10 +8,11 @@ import { Navigation } from '@/components/navigation'
 import { BlockchainStatus } from '@/components/blockchain-status'
 import { OnboardingModal } from '@/components/onboarding-modal'
 import { Button } from '@/components/ui/button'
-import { Lock, Award, Plus, FileText, Activity, Shield, CheckCircle, AlertCircle } from 'lucide-react'
+import { Lock, Award, Plus, FileText, Activity, Shield, CheckCircle, AlertCircle, Key } from 'lucide-react'
 import Link from 'next/link'
 import { addActivityLog } from '@/lib/activity-logger'
 import { initializeProofRequestSystem } from '@/lib/proof-request-integration'
+import { getAdminStore } from '@/lib/admin-store'
 
 export default function DashboardPage() {
   const { address } = useAleoWallet()
@@ -20,6 +21,7 @@ export default function DashboardPage() {
   const [proofs, setProofs] = useState<number>(0)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showSuccessNotification, setShowSuccessNotification] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   // Enforce session timeout on this page
   useSessionTimeout()
@@ -62,6 +64,13 @@ export default function DashboardPage() {
       } else if (storedWallet !== address) {
         console.warn('[v0] Wallet mismatch: cannot access ShadowID from different wallet')
       }
+    }
+
+    // Check if user has admin privileges
+    if (address) {
+      const adminStore = getAdminStore()
+      const admin = adminStore.getAdmin(address)
+      setIsAdmin(!!admin)
     }
   }, [address])
 
@@ -284,6 +293,16 @@ export default function DashboardPage() {
                       View My ShadowID
                     </Button>
                   </Link>
+
+                  {/* Admin Panel Button - Only shows for admins */}
+                  {isAdmin && (
+                    <Link href="/admin" className="w-full">
+                      <Button className="w-full gap-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600">
+                        <Key className="h-4 w-4" />
+                        Admin Panel
+                      </Button>
+                    </Link>
+                  )}
                 </>
               ) : (
                 <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-6 text-center space-y-4">
