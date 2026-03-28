@@ -401,28 +401,19 @@ export function ProofResponsePage() {
                     </div>
                   </div>
                 </div>
-                            className="px-3 py-1 rounded bg-accent/10 text-accent text-sm"
-                          >
-                            {attr?.name || attrId}
-                          </span>
-                        )
-                      })}
-                    </div>
-                  </Card>
 
-                  <Card className="border-border/40 bg-background/50 p-4 border-l-2 border-l-warning">
-                    <div className="flex items-start gap-3">
-                      <Lock className="h-4 w-4 text-warning mt-1 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm font-semibold text-warning mb-1">Privacy Notice</p>
-                        <p className="text-sm text-muted-foreground">
-                          Your actual attribute values are stored locally. The QR code contains only your commitment
-                          hash and proof metadata. The verifier cannot see your actual values without your consent.
-                        </p>
-                      </div>
+                {/* Privacy Notice */}
+                <Card className="border-accent/30 bg-card p-4 border-l-4 border-l-accent shadow-md">
+                  <div className="flex items-start gap-3">
+                    <Lock className="h-5 w-5 text-accent mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-accent mb-1">Privacy Notice</p>
+                      <p className="text-xs text-muted-foreground">
+                        Your actual attribute values are stored locally. The QR code contains only your commitment hash and proof metadata. The verifier cannot see your actual values.
+                      </p>
                     </div>
-                  </Card>
-                </div>
+                  </div>
+                </Card>
 
                 {/* Actions */}
                 <div className="w-full flex gap-4">
