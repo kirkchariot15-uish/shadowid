@@ -76,12 +76,13 @@ export function storeAccountMappingOnBlockchain(
     // Remove any existing mapping for this wallet (update case)
     allCommitments = allCommitments.filter(c => c.walletAddress !== walletAddress)
     
-    // Add new mapping
+    // Add new mapping - CRITICAL: Always set isDeleted to false for new accounts
     allCommitments.push({
       walletAddress,
       commitment,
       timestamp,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      isDeleted: false // CRITICAL FIX: Mark as not deleted when storing
     })
     
     // Store in secure location
@@ -116,7 +117,16 @@ export function markAccountAsDeleted(walletAddress: string): void {
     
     // Store updated mappings
     localStorage.setItem('shadowid-wallet-commitments', JSON.stringify(allCommitments))
-    console.log('[v0] Account marked as deleted successfully')
+    
+    // CRITICAL FIX: Also clear all local user data when account is deleted
+    localStorage.removeItem('shadowid-commitment')
+    localStorage.removeItem('shadowid-wallet-address')
+    localStorage.removeItem('identity-created')
+    localStorage.removeItem('shadowid-attributes')
+    localStorage.removeItem('shadowid-onboarding-done')
+    localStorage.removeItem('shadowid-identity-created-success')
+    
+    console.log('[v0] Account marked as deleted successfully and local data cleared')
   } catch (error) {
     console.error('[v0] Error marking account as deleted:', error)
   }
