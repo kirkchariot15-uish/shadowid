@@ -8,6 +8,11 @@ export interface QRDisclosureProof {
   expiresAt: string
   userAddress: string
   verifyUrl: string
+  verifierId?: string
+  verifierName?: string
+  purpose?: string
+  requestLinkId?: string
+  nullifier?: string
 }
 
 export interface QRDecodeResult {

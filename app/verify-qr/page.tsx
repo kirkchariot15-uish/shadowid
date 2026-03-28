@@ -350,15 +350,56 @@ export default function VerifyQRPage() {
                       </Button>
                     </div>
 
-                    {/* Attributes */}
+                    {/* Verifier Information */}
+                    {qrData.verifierId && (
+                      <div className="p-4 rounded-lg bg-background border border-border">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Requested by Verifier</p>
+                            <p className="text-sm font-medium text-foreground">{qrData.verifierId}</p>
+                          </div>
+                          <span className="px-2 py-1 text-xs bg-accent/10 text-accent rounded">Verified</span>
+                        </div>
+                        {qrData.verifierName && (
+                          <p className="text-xs text-muted-foreground mt-2">{qrData.verifierName}</p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Verification Purpose */}
+                    {qrData.purpose && (
+                      <div className="p-4 rounded-lg bg-background border border-border">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Verification Purpose</p>
+                        <p className="text-sm text-foreground">{qrData.purpose}</p>
+                      </div>
+                    )}
+
+                    {/* Disclosed Attributes with Details */}
                     <div className="p-4 rounded-lg bg-background border border-border">
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3">Disclosed Attributes</p>
-                      <div className="flex flex-wrap gap-2">
-                        {qrData.selectedAttributes.map((attr) => (
-                          <span key={attr} className="px-2 py-1 text-xs bg-accent/10 text-accent rounded font-medium">
-                            {attr}
-                          </span>
-                        ))}
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3">Disclosed Attributes ({qrData.selectedAttributes.length})</p>
+                      <div className="space-y-2">
+                        {qrData.selectedAttributes.map((attr) => {
+                          const getAttributeDescription = (attrName: string): string => {
+                            const descriptions: Record<string, string> = {
+                              'attr:age-range': 'Age bracket without revealing exact age',
+                              'attr:university': 'Educational institution attended',
+                              'attr:degree': 'Academic degree earned',
+                              'attr:expertise': 'Professional area of expertise',
+                              'attr:employment': 'Current or past employment',
+                              'attr:location': 'Geographic region',
+                              'attr:credentials': 'Professional certifications',
+                              'attr:status': 'Professional or social status'
+                            }
+                            return descriptions[attrName] || 'Personal attribute'
+                          }
+
+                          return (
+                            <div key={attr} className="p-2 rounded bg-accent/5 border border-accent/20">
+                              <p className="text-xs font-mono text-accent mb-1">{attr}</p>
+                              <p className="text-xs text-muted-foreground">{getAttributeDescription(attr)}</p>
+                            </div>
+                          )
+                        })}
                       </div>
                     </div>
 
