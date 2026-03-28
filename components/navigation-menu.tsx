@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { WalletMultiButton } from '@/components/wallet-button'
 import { Button } from '@/components/ui/button'
-import { Menu, X, Home, FileText, Settings, User, Shield, Award, CheckCircle, Mail } from 'lucide-react'
+import { Menu, X, Home, FileText, Settings, User, Shield, Award, CheckCircle, Mail, Users } from 'lucide-react'
 
 export function NavigationMenu() {
   const { address } = useAleoWallet()
@@ -19,11 +19,13 @@ export function NavigationMenu() {
     { href: '/dashboard', label: 'Dashboard', icon: Home },
     { href: '/identity', label: 'My ShadowID', icon: Shield },
     { href: '/create-identity', label: 'Create Identity', icon: FileText },
+    { href: '/privacy', label: 'Privacy Center', icon: Shield },
+    { href: '/selective-disclosure', label: 'Disclosure', icon: FileText },
+    { href: '/verify-qr', label: 'Verify QR Code', icon: CheckCircle },
+    { href: '/endorse-peer', label: 'Endorse Peers', icon: Users },
+    { href: '/verify', label: 'Public Profile', icon: User },
     { href: '/attestation', label: 'Attestations', icon: Award },
     { href: '/proof-requests', label: 'Proof Requests', icon: Mail },
-    { href: '/selective-disclosure', label: 'Disclosure', icon: FileText },
-    { href: '/privacy', label: 'Privacy Center', icon: Shield },
-    { href: '/verify-qr', label: 'Verify QR Code', icon: CheckCircle },
     { href: '/logs', label: 'Activity Logs', icon: FileText },
     { href: '/settings', label: 'Settings', icon: Settings },
   ]
