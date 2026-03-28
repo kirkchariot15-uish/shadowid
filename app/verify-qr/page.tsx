@@ -58,6 +58,19 @@ export default function VerifyQRPage() {
         setQrData(null)
         setMethod('select')
       } else {
+        // CRITICAL SECURITY FIX: Validate nullifier to ensure this is the latest QR
+        // If a nullifier exists and differs from the active one, this QR is superseded
+        const activeNullifier = typeof window !== 'undefined' 
+          ? localStorage.getItem('shadowid-active-qr-nullifier')
+          : null
+        
+        if ((result.data as any).nullifier && activeNullifier && (result.data as any).nullifier !== activeNullifier) {
+          setError('This QR code has been superseded. A newer proof was generated. Please use the latest QR code.')
+          setQrData(null)
+          setMethod('select')
+          return
+        }
+
         // Show loading while verifying with server
         setIsVerifying(true)
         
@@ -69,7 +82,8 @@ export default function VerifyQRPage() {
             body: JSON.stringify({
               commitment: result.data.commitment,
               expiresAt: result.data.expiresAt,
-              selectedAttributes: result.data.selectedAttributes
+              selectedAttributes: result.data.selectedAttributes,
+              nullifier: (result.data as any).nullifier // Send nullifier for server validation
             })
           })
 
@@ -374,7 +388,7 @@ export default function VerifyQRPage() {
                       </div>
                     )}
 
-                    {/* Disclosed Attributes with Details */}
+                    {/* Disclosed Attributes with Values */}
                     <div className="p-4 rounded-lg bg-background border border-border">
                       <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3">Disclosed Attributes ({qrData.selectedAttributes.length})</p>
                       <div className="space-y-2">
@@ -393,9 +407,15 @@ export default function VerifyQRPage() {
                             return descriptions[attrName] || 'Personal attribute'
                           }
 
+                          // Get the actual disclosed value from attributeValues
+                          const disclosedValue = (qrData as any).attributeValues?.[attr] || 'Not specified'
+
                           return (
-                            <div key={attr} className="p-2 rounded bg-accent/5 border border-accent/20">
-                              <p className="text-xs font-mono text-accent mb-1">{attr}</p>
+                            <div key={attr} className="p-3 rounded bg-accent/5 border border-accent/20">
+                              <div className="flex items-center justify-between mb-1">
+                                <p className="text-xs font-mono text-accent">{attr}</p>
+                                <p className="text-sm font-semibold text-foreground">{disclosedValue}</p>
+                              </div>
                               <p className="text-xs text-muted-foreground">{getAttributeDescription(attr)}</p>
                             </div>
                           )

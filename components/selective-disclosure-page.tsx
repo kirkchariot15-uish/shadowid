@@ -15,14 +15,17 @@ import { CONFIG, getQRValidityHours } from '@/lib/config'
 interface ProofData {
   commitment: string
   selectedAttributes: string[]
+  attributeValues: Record<string, string> // CRITICAL: Store actual values selected
   timestamp: number
   userAddress: string
   expiresAt: string
+  nullifier: string // CRITICAL: Unique session ID to invalidate old QR codes
 }
 
 export default function SelectiveDisclosurePage() {
   const { address, isConnected } = useAleoWallet()
   const [selectedAttrs, setSelectedAttrs] = useState<string[]>([])
+  const [attributeValues, setAttributeValues] = useState<Record<string, string>>({}) // Store selected values
   const [isGenerating, setIsGenerating] = useState(false)
   const [proofGenerated, setProofGenerated] = useState(false)
   const [qrUrl, setQrUrl] = useState<string>('')
@@ -30,6 +33,7 @@ export default function SelectiveDisclosurePage() {
   const [error, setError] = useState<string>('')
   const [activatedAttributes, setActivatedAttributes] = useState<string[]>([])
   const [mounted, setMounted] = useState(false)
+  const [currentNullifier, setCurrentNullifier] = useState<string>('') // Track active QR session
 
   // Load stored commitment and activated attributes
   const storedCommitment = typeof window !== 'undefined' 
@@ -85,6 +89,13 @@ export default function SelectiveDisclosurePage() {
       return
     }
 
+    // Verify all selected attributes have values
+    const missingValues = selectedAttrs.filter(attr => !attributeValues[attr])
+    if (missingValues.length > 0) {
+      setError(`Please provide values for: ${missingValues.join(', ')}`)
+      return
+    }
+
     if (!storedCommitment) {
       setError('No identity found. Please create a ShadowID first.')
       return
@@ -96,27 +107,39 @@ export default function SelectiveDisclosurePage() {
     try {
       const now = new Date()
       const expiresAt = new Date(now.getTime() + getQRValidityHours() * 60 * 60 * 1000).toISOString()
+      
+      // CRITICAL FIX: Generate unique nullifier for this QR code
+      // Any new QR generated invalidates previous ones
+      const newNullifier = `qr-${address}-${Date.now()}-${Math.random().toString(36).substring(7)}`
+      
+      // Invalidate old QR code by overwriting stored nullifier
+      localStorage.setItem('shadowid-active-qr-nullifier', newNullifier)
+      localStorage.setItem('shadowid-active-qr-expires', expiresAt)
 
       // Create proof data with blockchain-verified commitment
       const proof: ProofData = {
         commitment: storedCommitment,
         selectedAttributes: selectedAttrs,
+        attributeValues: { ...attributeValues }, // CRITICAL: Include actual values
         timestamp: Math.floor(now.getTime() / 1000),
         userAddress: address || '',
-        expiresAt
+        expiresAt,
+        nullifier: newNullifier // CRITICAL: Session ID for QR validation
       }
 
       console.log('[v0] Generating disclosure proof for attributes:', selectedAttrs)
+      console.log('[v0] Attribute values:', attributeValues)
 
-      // Create QR code with proof data - NO SENSITIVE ATTRIBUTES
-      // Only includes commitment and proof metadata
+      // Create QR code with proof data - includes nullifier to track session
       const qrData = JSON.stringify({
         type: 'shadowid-disclosure-v1',
         commitment: proof.commitment,
         selectedAttributes: proof.selectedAttributes,
+        attributeValues: proof.attributeValues, // CRITICAL: Include values in QR
         timestamp: proof.timestamp,
         expiresAt: proof.expiresAt,
         userAddress: proof.userAddress,
+        nullifier: newNullifier, // CRITICAL: Validates this is the latest QR
         verifyUrl: `${typeof window !== 'undefined' ? window.location.origin : ''}/verify?commitment=${proof.commitment}`
       })
 
@@ -130,11 +153,12 @@ export default function SelectiveDisclosurePage() {
       setProofData(proof)
       setQrUrl(qr)
       setProofGenerated(true)
+      setCurrentNullifier(newNullifier)
 
       addActivityLog(
         'Generate Disclosure Proof',
         'disclosure',
-        `Generated proof for: ${selectedAttrs.join(', ')}`,
+        `Generated proof for: ${selectedAttrs.join(', ')} (nullifier: ${newNullifier})`,
         'success'
       )
     } catch (err) {
@@ -225,18 +249,46 @@ export default function SelectiveDisclosurePage() {
                       {Object.entries(STANDARD_ATTRIBUTES)
                         .filter(([id]) => activatedAttributes.includes(id))
                         .map(([id, attr]) => (
-                          <label key={id} className="flex items-center gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/5 transition-colors border border-accent/20">
-                            <input
-                              type="checkbox"
-                              checked={selectedAttrs.includes(id)}
-                              onChange={() => toggleAttribute(id)}
-                              className="rounded border-border"
-                            />
-                            <div>
-                              <div className="font-medium">{attr.name}</div>
-                              <div className="text-xs text-muted-foreground">{attr.description}</div>
-                            </div>
-                          </label>
+                          <div key={id}>
+                            <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/5 transition-colors border border-accent/20">
+                              <input
+                                type="checkbox"
+                                checked={selectedAttrs.includes(id)}
+                                onChange={() => toggleAttribute(id)}
+                                className="rounded border-border"
+                              />
+                              <div className="flex-1">
+                                <div className="font-medium">{attr.name}</div>
+                                <div className="text-xs text-muted-foreground">{attr.description}</div>
+                              </div>
+                            </label>
+                            
+                            {/* Value input for selected attributes */}
+                            {selectedAttrs.includes(id) && (
+                              <div className="mt-2 ml-9 p-3 bg-accent/5 border border-accent/20 rounded-lg">
+                                {attr.dataType === 'enum' && attr.enumValues ? (
+                                  <select
+                                    value={attributeValues[id] || ''}
+                                    onChange={(e) => setAttributeValues(prev => ({ ...prev, [id]: e.target.value }))}
+                                    className="w-full px-3 py-2 bg-background border border-border rounded text-sm"
+                                  >
+                                    <option value="">Select {attr.name}...</option>
+                                    {attr.enumValues.map(val => (
+                                      <option key={val} value={val}>{val}</option>
+                                    ))}
+                                  </select>
+                                ) : (
+                                  <input
+                                    type={attr.dataType === 'number' ? 'number' : 'text'}
+                                    placeholder={`Enter ${attr.name.toLowerCase()}...`}
+                                    value={attributeValues[id] || ''}
+                                    onChange={(e) => setAttributeValues(prev => ({ ...prev, [id]: e.target.value }))}
+                                    className="w-full px-3 py-2 bg-background border border-border rounded text-sm"
+                                  />
+                                )}
+                              </div>
+                            )}
+                          </div>
                         ))}
                     </div>
                   </>
