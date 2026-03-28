@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { useAleoWallet } from '@/hooks/use-aleo-wallet'
 import { useSessionTimeout } from '@/hooks/use-session-timeout'
 import { WalletMultiButton } from '@/components/wallet-button'
@@ -9,21 +8,18 @@ import { Navigation } from '@/components/navigation'
 import { BlockchainStatus } from '@/components/blockchain-status'
 import { OnboardingModal } from '@/components/onboarding-modal'
 import { Button } from '@/components/ui/button'
-import { Lock, Award, Plus, FileText, Activity, Shield, CheckCircle, AlertCircle, Key } from 'lucide-react'
+import { Lock, Award, Plus, FileText, Activity, Shield, CheckCircle, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { addActivityLog } from '@/lib/activity-logger'
 import { initializeProofRequestSystem } from '@/lib/proof-request-integration'
-import { getAdminSession } from '@/lib/admin-system'
 
 export default function DashboardPage() {
   const { address } = useAleoWallet()
-  const router = useRouter()
   const isConnected = !!address
   const [credentials, setCredentials] = useState<number>(0)
   const [proofs, setProofs] = useState<number>(0)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showSuccessNotification, setShowSuccessNotification] = useState(false)
-  const [adminSession, setAdminSession] = useState(null)
 
   // Enforce session timeout on this page
   useSessionTimeout()
@@ -39,12 +35,6 @@ export default function DashboardPage() {
     const attrs = localStorage.getItem('shadowid-attributes')
     if (attrs) {
       setCredentials(JSON.parse(attrs).length)
-    }
-
-    // Check for admin session
-    const session = getAdminSession()
-    if (session) {
-      setAdminSession(session)
     }
 
     // Check for successful identity creation
@@ -161,25 +151,7 @@ export default function DashboardPage() {
           {/* Quick Stats - Cleaner Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
             <div className="rounded-xl border border-accent/20 bg-card/50 backdrop-blur p-6">
-              <div className="flex items-start justify-between mb-3">
-                <p className="text-xs uppercase tracking-widest font-semibold text-accent">Wallet Status</p>
-                {adminSession && (
-                  <button
-                    onClick={() => {
-                      const session = adminSession as any
-                      if (session.role === 'global_admin') {
-                        router.push('/admin')
-                      } else {
-                        router.push('/admin/mini-admin')
-                      }
-                    }}
-                    className="opacity-0 hover:opacity-100 transition-opacity p-1"
-                    title="Admin Access"
-                  >
-                    <Key className="w-4 h-4 text-accent" />
-                  </button>
-                )}
-              </div>
+              <p className="text-xs uppercase tracking-widest font-semibold text-accent mb-3">Wallet Status</p>
               <p className="text-2xl font-bold text-foreground">Connected</p>
               <p className="text-xs text-muted-foreground mt-2">{address?.slice(0, 10)}...</p>
             </div>
