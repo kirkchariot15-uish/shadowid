@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { getAdminStore } from '@/lib/admin-store'
 import { AdminPanel } from '@/components/admin-panel'
 import { MiniAdminPanel } from '@/components/mini-admin-panel'
+import { AdminBootstrap } from '@/components/admin-bootstrap'
 import type { AdminUser } from '@/lib/admin-system'
 
 export default function AdminPage() {
@@ -16,12 +17,19 @@ export default function AdminPage() {
   const isConnected = !!address
   const [admin, setAdmin] = useState<AdminUser | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showBootstrap, setShowBootstrap] = useState(false)
 
   useEffect(() => {
     if (isConnected && address) {
       const adminStore = getAdminStore()
       const adminUser = adminStore.getAdmin(address)
       setAdmin(adminUser || null)
+      
+      // Check if there are any admins at all
+      const allAdmins = adminStore.getAllAdmins()
+      if (allAdmins.length === 0) {
+        setShowBootstrap(true)
+      }
     }
     setLoading(false)
   }, [address, isConnected])
@@ -50,6 +58,27 @@ export default function AdminPage() {
   }
 
   if (!admin) {
+    // If no admins exist in system and user just accessed, show bootstrap
+    if (showBootstrap) {
+      return (
+        <div className="min-h-screen bg-background text-foreground">
+          <div className="bg-card border-b border-border sticky top-0 z-50">
+            <div className="flex items-center justify-between p-4 max-w-7xl mx-auto">
+              <h1 className="text-xl font-bold">Admin Initialization</h1>
+              <Link href="/dashboard">
+                <Button variant="outline" size="sm">
+                  Back to Dashboard
+                </Button>
+              </Link>
+            </div>
+          </div>
+          <div className="py-12 px-4">
+            <AdminBootstrap walletAddress={address!} />
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="text-center space-y-4">

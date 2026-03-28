@@ -24,6 +24,9 @@ export function AdminPanel({ adminWallet, adminType }: AdminPanelProps) {
   const [flagNotes, setFlagNotes] = useState('')
   const [allAdmins, setAllAdmins] = useState<any[]>([])
   const [auditLogs, setAuditLogs] = useState<any[]>([])
+  const [newMiniAdminWallet, setNewMiniAdminWallet] = useState('')
+  const [newMiniAdminType, setNewMiniAdminType] = useState<'university' | 'government' | 'dao' | 'universal'>('university')
+  const [miniAdminOrganization, setMiniAdminOrganization] = useState('')
 
   React.useEffect(() => {
     loadAdminData()
@@ -77,6 +80,32 @@ export function AdminPanel({ adminWallet, adminType }: AdminPanelProps) {
     loadAdminData()
   }
 
+  const handleAssignMiniAdmin = () => {
+    if (!newMiniAdminWallet.trim()) {
+      alert('Please enter a wallet address')
+      return
+    }
+
+    if (newMiniAdminType !== 'universal' && !miniAdminOrganization.trim()) {
+      alert('Please enter organization name for this mini-admin type')
+      return
+    }
+
+    const adminStore = getAdminStore()
+    adminStore.addAdmin(
+      newMiniAdminWallet,
+      newMiniAdminType,
+      newMiniAdminType === 'universal' ? undefined : miniAdminOrganization
+    )
+
+    // Clear form and reload
+    setNewMiniAdminWallet('')
+    setMiniAdminOrganization('')
+    setNewMiniAdminType('university')
+    loadAdminData()
+    alert('Mini-admin assigned successfully!')
+  }
+
   return (
     <div className="w-full max-w-6xl mx-auto p-4">
       <div className="mb-6">
@@ -88,9 +117,10 @@ export function AdminPanel({ adminWallet, adminType }: AdminPanelProps) {
       </div>
 
       <Tabs defaultValue="flags" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="flags">Flagged Accounts</TabsTrigger>
           <TabsTrigger value="flag-new">Flag Account</TabsTrigger>
+          <TabsTrigger value="assign-admin">Assign Mini-Admin</TabsTrigger>
           <TabsTrigger value="admins">Manage Admins</TabsTrigger>
           <TabsTrigger value="audit">Audit Log</TabsTrigger>
         </TabsList>
@@ -155,6 +185,69 @@ export function AdminPanel({ adminWallet, adminType }: AdminPanelProps) {
               </div>
             )}
           </Card>
+        </TabsContent>
+
+        {/* Assign Mini-Admin Tab */}
+        <TabsContent value="assign-admin" className="space-y-4">
+          {(adminType === 'global' || adminType === 'universal') ? (
+            <Card className="p-6">
+              <h2 className="text-xl font-bold mb-4">Assign Mini-Admin Role</h2>
+              <p className="text-gray-600 mb-6 text-sm">
+                Assign mini-admin roles to users. Choose the type of mini-admin and optionally specify the organization.
+              </p>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Wallet Address</label>
+                  <Input
+                    placeholder="0x..."
+                    value={newMiniAdminWallet}
+                    onChange={(e) => setNewMiniAdminWallet(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Mini-Admin Type</label>
+                  <select
+                    className="w-full border rounded p-2 text-sm"
+                    value={newMiniAdminType}
+                    onChange={(e) => setNewMiniAdminType(e.target.value as 'university' | 'government' | 'dao' | 'universal')}
+                  >
+                    <option value="university">University Admin</option>
+                    <option value="government">Government Admin</option>
+                    <option value="dao">DAO Admin</option>
+                    <option value="universal">Universal Admin (Full Access)</option>
+                  </select>
+                </div>
+
+                {newMiniAdminType !== 'universal' && (
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Organization Name</label>
+                    <Input
+                      placeholder="e.g., Harvard University, Ministry of Education, etc."
+                      value={miniAdminOrganization}
+                      onChange={(e) => setMiniAdminOrganization(e.target.value)}
+                    />
+                    <p className="text-xs text-gray-600 mt-1">
+                      Required for {newMiniAdminType} admins to identify the organization they manage
+                    </p>
+                  </div>
+                )}
+
+                <Button 
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
+                  onClick={handleAssignMiniAdmin}
+                >
+                  Assign Mini-Admin
+                </Button>
+              </div>
+            </Card>
+          ) : (
+            <Card className="p-6 border-orange-200 bg-orange-50">
+              <p className="text-orange-800">
+                Only Global and Universal admins can assign mini-admin roles.
+              </p>
+            </Card>
+          )}
         </TabsContent>
 
         {/* Flag New Account Tab */}

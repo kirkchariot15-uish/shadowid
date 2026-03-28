@@ -1,0 +1,226 @@
+═══════════════════════════════════════════════════════════════════════════════
+                    ADMIN SYSTEM SETUP AND USAGE GUIDE
+═══════════════════════════════════════════════════════════════════════════════
+
+QUICK START
+───────────────────────────────────────────────────────────────────────────────
+
+1. GLOBAL ADMIN INITIALIZATION
+   • Navigate to /admin in your application
+   • If no admins exist, you'll see the bootstrap screen
+   • Click "Initialize Global Admin" to become the first global admin
+   • Your wallet address will be recorded as having full admin privileges
+
+2. ACCESS ADMIN PANEL
+   Option A - Direct Access (if already an admin):
+   • Go to /admin
+   • Admin panel will load automatically
+   
+   Option B - Through Settings:
+   • Go to Settings page
+   • Find "Global Admin Access" section
+   • Enter password: Aleo2Admin{commitmentHash}
+   • Click "Access Admin Panel"
+
+3. DASHBOARD INDICATOR
+   • Admins see an "Admin Panel" button on the dashboard
+   • Button is subtle and doesn't advertise admin status
+   • Mini-admins see the same button without any visible admin indicator
+
+═══════════════════════════════════════════════════════════════════════════════
+ADMIN TYPES AND PERMISSIONS
+═══════════════════════════════════════════════════════════════════════════════
+
+1. GLOBAL ADMIN
+   • Full system access
+   • Can flag and manage any account
+   • Can assign all types of mini-admins
+   • Can remove shadow scores
+   • Accesses full admin panel at /admin
+   • Views complete audit logs
+
+2. UNIVERSAL ADMIN (For Judges/Special Access)
+   • Same permissions as Global Admin
+   • Designated for special roles like judges
+   • Full control over all admin functions
+   • No organization constraints
+
+3. UNIVERSITY ADMIN
+   • Organization-scoped access
+   • Can verify users claiming to be from their university
+   • Can manage credentials specific to their institution
+   • Mini-admin panel shows only their organization's users
+
+4. GOVERNMENT ADMIN
+   • Organization-scoped access
+   • Can verify government credentials
+   • Can manage government-related user claims
+   • Mini-admin panel shows only their organization's users
+
+5. DAO ADMIN
+   • Organization-scoped access
+   • Can verify DAO membership and credentials
+   • Can manage DAO-related user claims
+   • Mini-admin panel shows only their organization's users
+
+═══════════════════════════════════════════════════════════════════════════════
+ASSIGNING MINI-ADMINS (GLOBAL/UNIVERSAL ADMINS ONLY)
+═══════════════════════════════════════════════════════════════════════════════
+
+Step 1: Navigate to Admin Panel > "Assign Mini-Admin" Tab
+
+Step 2: Fill in the form:
+   • Wallet Address: The wallet you want to make a mini-admin
+   • Mini-Admin Type: Choose one of:
+     - University Admin
+     - Government Admin
+     - DAO Admin
+     - Universal Admin (full access, no organization)
+
+Step 3: Organization Name (required for non-universal types):
+   • Enter the organization name for the mini-admin
+   • Examples: "Harvard University", "Ministry of Education", "OpenDAO"
+
+Step 4: Click "Assign Mini-Admin"
+
+The user will now be able to access the admin panel with their specific role.
+
+═══════════════════════════════════════════════════════════════════════════════
+FLAGGING ACCOUNTS
+═══════════════════════════════════════════════════════════════════════════════
+
+When to Flag:
+• Suspicious endorsement patterns
+• Sybil attack indicators
+• Fraudulent credential claims
+• Policy violations
+• Account takeover suspects
+
+How to Flag:
+1. Go to Admin Panel > "Flag Account" tab
+2. Enter wallet address of the account
+3. Select severity level:
+   - Low: Minor concerns, requires monitoring
+   - Medium: Clear issues, may need investigation
+   - High: Critical issues, immediate action needed
+4. Provide a reason explaining why you're flagging
+5. Add optional notes for other admins
+6. Click "Flag Account"
+
+Effects of Flagging:
+• Flagged account cannot receive new endorsements
+• Account appears in "Flagged Accounts" list
+• Admin can remove shadow score to further restrict user
+• Action is logged in audit trail
+
+═══════════════════════════════════════════════════════════════════════════════
+REMOVING SHADOW SCORES
+═══════════════════════════════════════════════════════════════════════════════
+
+Purpose:
+• Prevents a flagged user from being used in endorsement chains
+• Invalidates their ability to earn or utilize shadow scores
+• Part of anti-sybil attack measures
+
+How to Remove:
+1. Go to Admin Panel > "Flagged Accounts" tab
+2. Find the flagged account
+3. Click "Remove Shadow Score" button
+4. Score is immediately removed
+5. Action is logged with timestamp
+
+Reversing Removal:
+• Current system doesn't support re-adding shadow scores
+• If removal was a mistake, resolve the flag and create a new account assessment
+
+═══════════════════════════════════════════════════════════════════════════════
+RESOLVING FLAGS
+═══════════════════════════════════════════════════════════════════════════════
+
+When an investigation is complete:
+1. Go to Admin Panel > "Flagged Accounts" tab
+2. Click "Resolve" on the completed flag
+3. Flag is marked as resolved
+4. Account can now receive endorsements again (if shadow score wasn't removed)
+5. Flag remains in history for audit purposes
+
+═══════════════════════════════════════════════════════════════════════════════
+AUDIT LOGS
+═══════════════════════════════════════════════════════════════════════════════
+
+What's Tracked:
+• Flag creation and details
+• Shadow score removals
+• Flag resolutions
+• Mini-admin assignments
+• Admin role changes
+• Timestamp of every action
+• Which admin performed the action
+
+Access Audit Logs:
+1. Go to Admin Panel > "Audit Log" tab
+2. Displays last 50 actions in reverse chronological order
+3. Shows action type, timestamp, admin, and target wallet
+
+═══════════════════════════════════════════════════════════════════════════════
+ANTI-SYBIL INTEGRATION
+═══════════════════════════════════════════════════════════════════════════════
+
+Automatic Blocking:
+• System automatically checks if accounts are flagged before allowing endorsements
+• Flagged accounts are silently prevented from receiving endorsements
+• Error message informs users: "Cannot endorse: this account has been flagged"
+
+How It Works:
+1. User attempts to endorse another account
+2. System checks if target account is flagged
+3. If flagged and not resolved, endorsement is blocked
+4. Flag information is logged
+
+═══════════════════════════════════════════════════════════════════════════════
+SECURITY NOTES
+═══════════════════════════════════════════════════════════════════════════════
+
+Password Security:
+• Global admin password format: Aleo2Admin{commitmentHash}
+• Password is never stored - verified on demand
+• Commitment hash must match user's shadow ID
+• Only accessible through Settings account recovery page
+
+Admin Access:
+• Only registered admins can access /admin page
+• Mini-admins are not visible as admins to users
+• No special badge or indicator on profiles
+• Status checked on every page load
+
+Data Storage:
+• All admin data stored in browser localStorage
+• Recommended: Use production database integration
+• Audit logs kept for complete history
+• Flag records maintained indefinitely
+
+═══════════════════════════════════════════════════════════════════════════════
+TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════════════
+
+Q: I can't see the Admin Panel button on the dashboard
+A: You need to be registered as an admin first. Have a current global admin 
+   assign you a mini-admin role, or initialize yourself if you're the first admin.
+
+Q: The password doesn't work in Settings
+A: Make sure you're entering exactly: Aleo2Admin{commitmentHash}
+   The commitment hash must match your ShadowID's commitment hash.
+
+Q: A flagged account can still receive endorsements
+A: Check if the flag was resolved. Resolved flags no longer block endorsements.
+   If account should be blocked, flag it again with appropriate severity.
+
+Q: I want to remove a mini-admin
+A: Go to Admin Panel > "Manage Admins" tab > Click "Remove" on the mini-admin.
+   Only Global and Universal admins can remove other admins.
+
+Q: How do I see what actions other admins took?
+A: Go to Admin Panel > "Audit Log" tab. Shows all actions with timestamps
+   and which admin performed them.
+
+═══════════════════════════════════════════════════════════════════════════════
