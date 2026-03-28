@@ -16,8 +16,10 @@ import {
   AlertCircle,
   ArrowLeft,
   Award,
-  Download
+  Download,
+  Key
 } from 'lucide-react'
+import { getAdminStore } from '@/lib/admin-store'
 import Link from 'next/link'
 import QRCode from 'qrcode'
 import { STANDARD_ATTRIBUTES } from '@/lib/attribute-schema'
@@ -41,6 +43,8 @@ export function IdentityManagementPage() {
   const [qrUrl, setQrUrl] = useState<string>('')
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [showAdminForm, setShowAdminForm] = useState(false)
+  const [adminPassword, setAdminPassword] = useState('')
 
   useEffect(() => {
     loadIdentity()
@@ -200,7 +204,8 @@ export function IdentityManagementPage() {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
-        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:px-8 space-y-6">
+          {/* Create/Restore Identity */}
           <div className="rounded-lg border border-border bg-card p-8 text-center">
             <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <h2 className="text-xl font-semibold mb-2">No ShadowID Found</h2>
@@ -213,6 +218,71 @@ export function IdentityManagementPage() {
                 <Button variant="outline">Restore from QR</Button>
               </Link>
             </div>
+          </div>
+
+          {/* Admin Recovery Section */}
+          <div className="rounded-lg border border-purple-500/30 bg-purple-500/5 p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <Key className="h-5 w-5 text-purple-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-semibold text-purple-600">Admin Access</h3>
+                <p className="text-sm text-purple-600/80 mt-1">Enter your admin credentials to access the admin panel</p>
+              </div>
+            </div>
+
+            {!showAdminForm ? (
+              <Button
+                onClick={() => setShowAdminForm(true)}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+              >
+                Recover Admin Access
+              </Button>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-purple-700 mb-2">
+                    Enter: Aleo2Admin + Your Commitment Hash
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Aleo2Admin..."
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm"
+                  />
+                  <p className="text-xs text-purple-600/80 mt-2">
+                    Format: Aleo2Admin + your commitment hash (e.g., Aleo2Admin927B-0714FE5AEB7CE9...)
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => {
+                      setShowAdminForm(false)
+                      setAdminPassword('')
+                    }}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      const adminStore = getAdminStore()
+                      const commitment = localStorage.getItem('shadowid-commitment') || ''
+                      if (adminPassword === `Aleo2Admin${commitment}`) {
+                        window.location.href = '/admin'
+                      } else {
+                        alert('Invalid admin password')
+                        setAdminPassword('')
+                      }
+                    }}
+                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
+                  >
+                    Access Admin Panel
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

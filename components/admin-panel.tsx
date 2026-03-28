@@ -107,17 +107,20 @@ export function AdminPanel({ adminWallet, adminType }: AdminPanelProps) {
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-4">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Admin Control Panel</h1>
-        <p className="text-gray-600">
-          Logged in as: <span className="font-mono font-semibold">{adminWallet.slice(0, 8)}...{adminWallet.slice(-6)}</span>
-        </p>
-        <p className="text-gray-600">Admin Type: <span className="font-semibold capitalize">{adminType}</span></p>
-      </div>
+    <div className="w-full min-h-screen bg-background">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2">Admin Control Panel</h1>
+          <div className="flex flex-col gap-2 text-muted-foreground">
+            <p>
+              Logged in as: <span className="font-mono font-semibold text-foreground">{adminWallet.slice(0, 8)}...{adminWallet.slice(-6)}</span>
+            </p>
+            <p>Admin Type: <span className="font-semibold capitalize text-foreground">{adminType}</span></p>
+          </div>
+        </div>
 
-      <Tabs defaultValue="flags" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <Tabs defaultValue="flags" className="w-full">
+        <TabsList className="grid w-full grid-cols-5 mb-6">
           <TabsTrigger value="flags">Flagged Accounts</TabsTrigger>
           <TabsTrigger value="flag-new">Flag Account</TabsTrigger>
           <TabsTrigger value="assign-admin">Assign Mini-Admin</TabsTrigger>
@@ -126,8 +129,8 @@ export function AdminPanel({ adminWallet, adminType }: AdminPanelProps) {
         </TabsList>
 
         {/* Flagged Accounts Tab */}
-        <TabsContent value="flags" className="space-y-4">
-          <Card className="p-6">
+        <TabsContent value="flags" className="space-y-4 mt-0">
+          <div className="rounded-lg border border-border bg-card p-6">
             <h2 className="text-xl font-bold mb-4">Flagged Accounts</h2>
             {flaggedAccounts.length === 0 ? (
               <p className="text-gray-600">No flagged accounts</p>
@@ -184,13 +187,13 @@ export function AdminPanel({ adminWallet, adminType }: AdminPanelProps) {
                 ))}
               </div>
             )}
-          </Card>
+          </div>
         </TabsContent>
 
         {/* Assign Mini-Admin Tab */}
-        <TabsContent value="assign-admin" className="space-y-4">
+        <TabsContent value="assign-admin" className="space-y-4 mt-0">
           {(adminType === 'global' || adminType === 'universal') ? (
-            <Card className="p-6">
+            <div className="rounded-lg border border-border bg-card p-6">
               <h2 className="text-xl font-bold mb-4">Assign Mini-Admin Role</h2>
               <p className="text-gray-600 mb-6 text-sm">
                 Assign mini-admin roles to users. Choose the type of mini-admin and optionally specify the organization.
@@ -240,19 +243,19 @@ export function AdminPanel({ adminWallet, adminType }: AdminPanelProps) {
                   Assign Mini-Admin
                 </Button>
               </div>
-            </Card>
+            </div>
           ) : (
-            <Card className="p-6 border-orange-200 bg-orange-50">
+            <div className="rounded-lg border border-orange-200 bg-orange-50/50 p-6">
               <p className="text-orange-800">
                 Only Global and Universal admins can assign mini-admin roles.
               </p>
-            </Card>
+            </div>
           )}
         </TabsContent>
 
         {/* Flag New Account Tab */}
-        <TabsContent value="flag-new" className="space-y-4">
-          <Card className="p-6">
+        <TabsContent value="flag-new" className="space-y-4 mt-0">
+          <div className="rounded-lg border border-border bg-card p-6">
             <h2 className="text-xl font-bold mb-4">Flag New Account</h2>
             <div className="space-y-4">
               <div>
@@ -303,12 +306,12 @@ export function AdminPanel({ adminWallet, adminType }: AdminPanelProps) {
                 Flag Account
               </Button>
             </div>
-          </Card>
+          </div>
         </TabsContent>
 
         {/* Manage Admins Tab */}
-        <TabsContent value="admins" className="space-y-4">
-          <Card className="p-6">
+        <TabsContent value="admins" className="space-y-4 mt-0">
+          <div className="rounded-lg border border-border bg-card p-6">
             <h2 className="text-xl font-bold mb-4">Current Admins</h2>
             {allAdmins.length === 0 ? (
               <p className="text-gray-600">No admins</p>
@@ -336,12 +339,12 @@ export function AdminPanel({ adminWallet, adminType }: AdminPanelProps) {
                 ))}
               </div>
             )}
-          </Card>
+          </div>
         </TabsContent>
 
         {/* Audit Log Tab */}
-        <TabsContent value="audit" className="space-y-4">
-          <Card className="p-6">
+        <TabsContent value="audit" className="space-y-4 mt-0">
+          <div className="rounded-lg border border-border bg-card p-6">
             <h2 className="text-xl font-bold mb-4">Audit Log (Last 50 Actions)</h2>
             {auditLogs.length === 0 ? (
               <p className="text-gray-600">No audit logs</p>
@@ -360,9 +363,10 @@ export function AdminPanel({ adminWallet, adminType }: AdminPanelProps) {
                 ))}
               </div>
             )}
-          </Card>
+          </div>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   )
 }
